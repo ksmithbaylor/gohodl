@@ -1,0 +1,12 @@
+test_string: hello world
+test_number: 42
+test_list:
+  - hello
+  - world
+nested:
+  nested_string: nested
+  nested_number: 31
+  nested_list:
+    - one
+    - two
+    - three
