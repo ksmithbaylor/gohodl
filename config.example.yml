@@ -1,0 +1,25 @@
+ownership:
+  bitcoin:
+    xpubs:
+      hot-wallet:
+        type: segwit
+        key: xpub123
+      cold-wallet:
+        type: nested-segwit
+        key: ypub456
+  ethereum:
+    addresses:
+      defi: 0xabc123
+      nfts: 0xabc123
+    instadapp:
+      ethereum:
+        dsa1: 0xabc123
+      polygon:
+        dsa1: 0xabc123
+        dsa2: 0xabc123
+  solana:
+    addresses:
+      main: abc123
+  cosmos:
+    cosmos-hub:
+      main: cosmos123

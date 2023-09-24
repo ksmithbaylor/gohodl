@@ -8,5 +8,4 @@ import (
 
 func main() {
 	fmt.Printf("Config: %#+v\n", config.Config)
-	fmt.Printf("nested string: %s\n", config.Config.Nested.NestedString)
 }
