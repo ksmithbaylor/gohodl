@@ -15,14 +15,17 @@ var Config config
 // Top-level
 
 type config struct {
-	Ownership blockchains `mapstructure:"ownership"`
+	Ownership   blockchains                    `mapstructure:"ownership"`
+	EvmNetworks map[types.EthNetwork]evmConfig `mapstructure:"evm_networks"`
 }
 
 type blockchains struct {
-	Bitcoin  bitcoin  `mapstructure:"bitcoin"`
+	Bitcoin  utxo     `mapstructure:"bitcoin"`
 	Ethereum ethereum `mapstructure:"ethereum"`
 	Solana   solana   `mapstructure:"solana"`
 	Cosmos   cosmos   `mapstructure:"cosmos"`
+	Dogecoin utxo     `mapstructure:"dogecoin"`
+	Litecoin utxo     `mapstructure:"litecoin"`
 }
 
 type addresses[t any] map[string]t
@@ -30,7 +33,7 @@ type addresses[t any] map[string]t
 ////////////////////////////////////////////////////////////////////////////////
 // UTXO networks
 
-type bitcoin struct {
+type utxo struct {
 	Xpubs map[string]xpub `mapstructure:"xpubs"`
 }
 
@@ -45,6 +48,12 @@ type xpub struct {
 type ethereum struct {
 	Addresses addresses[types.EthAddress]                      `mapstructure:"addresses"`
 	Instadapp map[types.EthNetwork]map[string]types.EthAddress `mapstructure:"instadapp"`
+}
+
+type evmConfig struct {
+	ChainID  uint     `mapstructure:"chain_id"`
+	Currency string   `mapstructure:"currency"`
+	RPCs     []string `mapstructure:"rpcs"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +72,7 @@ type cosmos map[types.CosmosNetwork]addresses[types.CosmosAddress]
 // Initialization
 
 func init() {
-  v := viper.NewWithOptions(viper.KeyDelimiter("::"))
+	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
 	v.AddConfigPath(".")
 	v.SetConfigFile("config.yml")
 

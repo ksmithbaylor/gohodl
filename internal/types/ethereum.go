@@ -1,6 +1,12 @@
 package types
 
+import "github.com/ethereum/go-ethereum/common"
+
 type EthAddress string
+
+func (a EthAddress) ToGeth() common.Address {
+  return common.HexToAddress(string(a))
+}
 
 type EthNetwork string
 
