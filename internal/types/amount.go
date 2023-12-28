@@ -36,7 +36,7 @@ func NewAmountWithDecimals(strValue string, decimals int, currency string) (Amou
 }
 
 func (a Amount) String() string {
-  return fmt.Sprintf("%s %s", a.Value.String(), a.Currency)
+	return fmt.Sprintf("%s %s", a.Value.String(), a.Currency)
 }
 
 func (a Amount) Add(other Amount) (Amount, error) {

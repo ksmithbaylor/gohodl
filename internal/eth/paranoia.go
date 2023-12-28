@@ -3,9 +3,15 @@ package eth
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ksmithbaylor/gohodl/internal/util"
+)
+
+const (
+	QUORUM            int = 2
+	CONSENSUS_RETRIES int = 5
 )
 
 func withRetry[R comparable](
@@ -17,11 +23,14 @@ func withRetry[R comparable](
 
 	for i := 0; i < CONSENSUS_RETRIES; i++ {
 		ret, err = ensureAgreement(connections, action)
+
 		if err == nil {
 			return ret, nil
 		} else {
 			util.Debug(err)
 		}
+
+		time.Sleep(time.Millisecond * 500)
 	}
 
 	return ret, err
@@ -32,12 +41,14 @@ func ensureAgreement[R comparable](
 	getUsing func(*ethclient.Client) (R, error),
 ) (R, error) {
 	tried := make(map[string]bool, len(connections))
+	var rpcs []string
 	var clients []*ethclient.Client
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
 	for rpc, client := range connections {
 		clients = append(clients, client)
+		rpcs = append(rpcs, rpc)
 		tried[rpc] = true
 		if len(clients) == QUORUM {
 			break
@@ -46,21 +57,21 @@ func ensureAgreement[R comparable](
 
 	answers := make(map[R]int, 0)
 
-	for _, client := range clients {
+	for i, client := range clients {
 		wg.Add(1)
-		go func(c *ethclient.Client) {
+		go func(rpc string, c *ethclient.Client) {
 			defer wg.Done()
 
 			result, err := getUsing(c)
 			if err == nil {
 				mu.Lock()
 				answers[result]++
-				util.Debugf("got answer: %#+v\n", result)
+				util.Debugf("Success from %s: %#+v\n", rpc, result)
 				mu.Unlock()
 			} else {
-				util.Debug(err)
+				util.Debugf("Problem with %s: %s", rpc, err.Error())
 			}
-		}(client)
+		}(rpcs[i], client)
 	}
 	wg.Wait()
 
@@ -78,12 +89,12 @@ func ensureAgreement[R comparable](
 		result, err := getUsing(client)
 		if err == nil {
 			answers[result]++
-			util.Debugf("got answer: %#+v\n", result)
+			util.Debugf("Success from %s: %#+v\n", rpc, result)
 		} else {
-			util.Debug(err)
+			util.Debugf("Problem with %s: %s", rpc, err.Error())
 		}
 	}
 
 	var nothing R
-	return nothing, fmt.Errorf("No two nodes were successful and agreed")
+	return nothing, fmt.Errorf("No quorum was successful and agreed")
 }

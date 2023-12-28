@@ -17,11 +17,6 @@ type Client struct {
 	connections map[string]*ethclient.Client
 }
 
-const (
-	QUORUM            int = 2
-	CONSENSUS_RETRIES int = 5
-)
-
 func NewClient(chainID uint, currency string, rpcs []string) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
 

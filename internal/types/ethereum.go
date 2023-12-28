@@ -5,7 +5,7 @@ import "github.com/ethereum/go-ethereum/common"
 type EthAddress string
 
 func (a EthAddress) ToGeth() common.Address {
-  return common.HexToAddress(string(a))
+	return common.HexToAddress(string(a))
 }
 
 type EthNetwork string
@@ -21,3 +21,7 @@ const (
 	Fantom    EthNetwork = "fantom"
 	Evmos     EthNetwork = "evmos"
 )
+
+func (n EthNetwork) String() string {
+	return string(n)
+}
