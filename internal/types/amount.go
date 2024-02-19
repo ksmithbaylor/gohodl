@@ -7,8 +7,9 @@ import (
 )
 
 type Amount struct {
-	Value    decimal.Decimal
-	Currency string
+	Value       decimal.Decimal
+	Currency    string
+	MaxDecimals uint
 }
 
 func NewAmount(strValue, currency string) (Amount, error) {
