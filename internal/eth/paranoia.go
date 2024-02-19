@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	QUORUM            int = 2
+	QUORUM            int = 3
 	CONSENSUS_RETRIES int = 5
 )
 
