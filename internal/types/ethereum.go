@@ -6,8 +6,15 @@ import "github.com/ethereum/go-ethereum/common"
 
 type EthAddress string
 
+const EthNullAddress EthAddress = "0x0000000000000000000000000000000000000000"
+
 func (a EthAddress) ToGeth() common.Address {
 	return common.HexToAddress(string(a))
+}
+
+func (a EthAddress) String() string {
+	// Round-trip to get casing/checksum
+	return a.ToGeth().String()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,4 +50,15 @@ type EthNetworkConfig struct {
 type EthNetwork struct {
 	Name   EthNetworkName
 	Config EthNetworkConfig
+}
+
+func (n EthNetwork) NativeEvmAsset() Asset {
+	return Asset{
+		NetworkKind: EvmNetworkKind,
+		NetworkID:   n.Name,
+		Kind:        EVMNative,
+		Identifier:  EthNullAddress.String(),
+		Symbol:      n.Config.NativeAsset,
+		Decimals:    18,
+	}
 }

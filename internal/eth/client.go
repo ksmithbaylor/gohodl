@@ -10,17 +10,15 @@ import (
 )
 
 type Client struct {
-	ChainID  uint
-	Currency string
-	RPCs     []string
+	Network types.EthNetwork
 
 	connections map[string]*ethclient.Client
 }
 
-func NewClient(chainID uint, currency string, rpcs []string) (*Client, error) {
+func NewClient(network types.EthNetwork) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
 
-	for _, rpc := range rpcs {
+	for _, rpc := range network.Config.RPCs {
 		client, err := ethclient.Dial(rpc)
 		if err == nil {
 			connections[rpc] = client
@@ -29,13 +27,11 @@ func NewClient(chainID uint, currency string, rpcs []string) (*Client, error) {
 	}
 
 	if len(connections) < QUORUM {
-		return nil, fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, chainID, len(connections))
+		return nil, fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, network.Config.ChainID, len(connections))
 	}
 
 	return &Client{
-		ChainID:     chainID,
-		Currency:    currency,
-		RPCs:        rpcs,
+		Network:     network,
 		connections: connections,
 	}, nil
 }
@@ -60,5 +56,5 @@ func (c *Client) Balance(a types.EthAddress) (types.Amount, error) {
 		return types.Amount{}, fmt.Errorf("Could not get balance: %w", err)
 	}
 
-	return types.NewAmountWithDecimals(balance, 18, c.Currency)
+	return types.NewAmountFromCentsString(c.Network.NativeEvmAsset(), balance)
 }
