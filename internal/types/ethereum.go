@@ -1,6 +1,10 @@
 package types
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"fmt"
+
+	"github.com/ethereum/go-ethereum/common"
+)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,5 +64,27 @@ func (n EthNetwork) NativeEvmAsset() Asset {
 		Identifier:  EthNullAddress.String(),
 		Symbol:      n.Config.NativeAsset,
 		Decimals:    18,
+	}
+}
+
+func (n EthNetwork) Erc20TokenAsset(contractAddress, symbol string, decimals uint8) Asset {
+	return Asset{
+		NetworkKind: EvmNetworkKind,
+		NetworkID:   n.Name,
+		Kind:        ERC20Token,
+		Identifier:  EthAddress(contractAddress).String(),
+		Symbol:      symbol,
+		Decimals:    decimals,
+	}
+}
+
+func (n EthNetwork) Erc721NftAsset(contractAddress, symbol string, tokenID uint64) Asset {
+	return Asset{
+		NetworkKind: EvmNetworkKind,
+		NetworkID:   n.Name,
+		Kind:        ERC721NFT,
+		Identifier:  fmt.Sprintf("%s/%d", EthAddress(contractAddress).String(), tokenID),
+		Symbol:      symbol,
+		Decimals:    0,
 	}
 }
