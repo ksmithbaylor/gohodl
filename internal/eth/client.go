@@ -69,3 +69,83 @@ func (c *Client) Balance(a types.EthAddress) (types.Amount, error) {
 
 	return types.NewAmountFromCentsString(c.Network.NativeEvmAsset(), balance)
 }
+
+func (c *Client) Erc20Decimals(token types.EthAddress) (uint8, error) {
+	if dec, ok := c.decimalCache[token.String()]; ok {
+		return dec, nil
+	}
+
+	contract := token.ToGeth()
+
+	decimals, err := withRetry(c.connections, func(client *ethclient.Client) (uint8, error) {
+		result, e := client.CallContract(context.Background(), decimalsCall(contract), nil)
+		if e != nil {
+			return 0, e
+		}
+		return decodeUint8(result), nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("Could not get token decimals: %w", err)
+	}
+	c.decimalCache[token.String()] = decimals
+	return decimals, nil
+}
+
+func (c *Client) TokenSymbol(token types.EthAddress) (string, error) {
+	if sym, ok := c.symbolCache[token.String()]; ok {
+		return sym, nil
+	}
+
+	contract := token.ToGeth()
+
+	symbol, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
+		result, e := client.CallContract(context.Background(), symbolCall(contract), nil)
+		if e != nil {
+			return "", e
+		}
+		sym, e := decodeString(result)
+		if e != nil {
+			return "", e
+		}
+		return sym, nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("Could not get token symbol: %w", err)
+	}
+	c.symbolCache[token.String()] = symbol
+	return symbol, nil
+}
+
+func (c *Client) Erc20Balance(token types.EthAddress, a types.EthAddress) (types.Amount, error) {
+	decimals, err := c.Erc20Decimals(token)
+	if err != nil {
+		return types.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
+	}
+
+	symbol, err := c.TokenSymbol(token)
+	if err != nil {
+		return types.Amount{}, fmt.Errorf("Could not get token symbol: %w", err)
+	}
+
+	asset := c.Network.Erc20TokenAsset(token.String(), symbol, decimals)
+
+	contract := token.ToGeth()
+	address := a.ToGeth()
+
+	balanceStr, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
+		result, e := client.CallContract(context.Background(), balanceCall(contract, address), nil)
+		if e != nil {
+			return "", e
+		}
+		cents := decodeBigInt(result)
+		return cents.String(), nil
+	})
+	if err != nil {
+		return types.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
+	}
+	balance, err := types.NewAmountFromCentsString(asset, balanceStr)
+	if err != nil {
+		return types.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
+	}
+	return balance, nil
+}

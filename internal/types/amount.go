@@ -57,6 +57,15 @@ func NewAmountFromCents(asset Asset, cents uint64) Amount {
 	}
 }
 
+func NewAmountFromCentsDecimal(asset Asset, cents decimal.Decimal) Amount {
+	value := cents.Shift(-int32(asset.Decimals))
+
+	return Amount{
+		Value: value,
+		Asset: asset,
+	}
+}
+
 func (a Amount) String() string {
 	return fmt.Sprintf("%s %s", a.Value.StringFixed(int32(a.Asset.Decimals)), a.Asset)
 }
