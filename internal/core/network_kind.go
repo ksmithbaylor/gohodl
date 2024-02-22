@@ -12,8 +12,3 @@ const (
 func (n NetworkKind) String() string {
 	return string(n)
 }
-
-type Network struct {
-	Kind    NetworkKind
-	Details any
-}
