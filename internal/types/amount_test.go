@@ -11,8 +11,8 @@ import (
 var eth types.Asset = types.Asset{
 	NetworkKind: types.EvmNetworkKind,
 	NetworkID:   types.Ethereum,
-	Kind:        types.EVMNative,
-	Identifier:  types.EthNullAddress.String(),
+	Kind:        types.EvmNative,
+	Identifier:  types.EvmNullAddress.String(),
 	Symbol:      "ETH",
 	Decimals:    18,
 }
@@ -20,8 +20,8 @@ var eth types.Asset = types.Asset{
 var usdc types.Asset = types.Asset{
 	NetworkKind: types.EvmNetworkKind,
 	NetworkID:   types.Ethereum,
-	Kind:        types.ERC20Token,
-	Identifier:  types.EthAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48").String(),
+	Kind:        types.Erc20Token,
+	Identifier:  types.EvmAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48").String(),
 	Symbol:      "USDC",
 	Decimals:    6,
 }

@@ -7,13 +7,13 @@ import (
 type AssetKind string
 
 const (
-	UTXOAsset  AssetKind = "utxo_asset"
-	EVMNative  AssetKind = "evm_native"
-	ERC20Token AssetKind = "erc20"
-	ERC721NFT  AssetKind = "erc721"
-	SVMNative  AssetKind = "svm_native"
-	SPLToken   AssetKind = "spl_token"
-	SPLNFT     AssetKind = "spl_nft"
+	UtxoAsset  AssetKind = "utxo_asset"
+	EvmNative  AssetKind = "evm_native"
+	Erc20Token AssetKind = "erc20"
+	Erc721Nft  AssetKind = "erc721"
+	SvmNative  AssetKind = "svm_native"
+	SplToken   AssetKind = "spl_token"
+	SplNft     AssetKind = "spl_nft"
 )
 
 type Asset struct {
@@ -41,7 +41,7 @@ func (a Asset) FungibleWith(other Asset) bool {
 	}
 
 	bothEvm := a.NetworkKind == EvmNetworkKind && other.NetworkKind == EvmNetworkKind
-	bothNative := a.Kind == EVMNative && other.Kind == EVMNative
+	bothNative := a.Kind == EvmNative && other.Kind == EvmNative
 
 	if bothEvm && bothNative {
 		return a.Symbol == other.Symbol

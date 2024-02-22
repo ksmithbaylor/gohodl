@@ -15,8 +15,8 @@ var Config config
 // Top-level
 
 type config struct {
-	Ownership   blockchains                                     `mapstructure:"ownership"`
-	EvmNetworks map[types.EthNetworkName]types.EthNetworkConfig `mapstructure:"evm_networks"`
+	Ownership   blockchains        `mapstructure:"ownership"`
+	EvmNetworks []types.EvmNetwork `mapstructure:"evm_networks"`
 }
 
 type blockchains struct {
@@ -46,8 +46,8 @@ type xpub struct {
 // Ethereum
 
 type ethereum struct {
-	Addresses addresses[types.EthAddress]                          `mapstructure:"addresses"`
-	Instadapp map[types.EthNetworkName]map[string]types.EthAddress `mapstructure:"instadapp"`
+	Addresses addresses[types.EvmAddress]                          `mapstructure:"addresses"`
+	Instadapp map[types.EvmNetworkName]map[string]types.EvmAddress `mapstructure:"instadapp"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////

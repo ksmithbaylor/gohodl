@@ -10,24 +10,24 @@ import (
 )
 
 type Client struct {
-	Network types.EthNetwork // The network the client is for
+	Network types.EvmNetwork // The network the client is for
 
 	connections  map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
 	symbolCache  map[string]string            // Caches token contract `symbol()` lookups
 	decimalCache map[string]uint8             // Caches token contract `decimals()` lookups
 }
 
-func NewClient(network types.EthNetwork) (*Client, error) {
+func NewClient(network types.EvmNetwork) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
 	symbolCache := make(map[string]string, 0)
 	decimalCache := make(map[string]uint8, 0)
 
-	for _, rpc := range network.Config.RPCs {
+	for _, rpc := range network.RPCs {
 		client, err := ethclient.Dial(rpc)
 		if err == nil {
 			chainID, err := client.ChainID(context.Background())
 			if err == nil && chainID != nil {
-				if chainID.Int64() == int64(network.Config.ChainID) {
+				if chainID.Int64() == int64(network.ChainID) {
 					connections[rpc] = client
 					util.Debugf("Connected to %s\n", rpc)
 				}
@@ -36,7 +36,7 @@ func NewClient(network types.EthNetwork) (*Client, error) {
 	}
 
 	if len(connections) < QUORUM {
-		return nil, fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, network.Config.ChainID, len(connections))
+		return nil, fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, network.ChainID, len(connections))
 	}
 
 	return &Client{
@@ -53,7 +53,7 @@ func (c *Client) LatestBlock() (uint64, error) {
 	})
 }
 
-func (c *Client) Balance(a types.EthAddress) (types.Amount, error) {
+func (c *Client) Balance(a types.EvmAddress) (types.Amount, error) {
 	address := a.ToGeth()
 
 	balance, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
@@ -70,7 +70,7 @@ func (c *Client) Balance(a types.EthAddress) (types.Amount, error) {
 	return types.NewAmountFromCentsString(c.Network.NativeEvmAsset(), balance)
 }
 
-func (c *Client) Erc20Decimals(token types.EthAddress) (uint8, error) {
+func (c *Client) Erc20Decimals(token types.EvmAddress) (uint8, error) {
 	if dec, ok := c.decimalCache[token.String()]; ok {
 		return dec, nil
 	}
@@ -91,7 +91,7 @@ func (c *Client) Erc20Decimals(token types.EthAddress) (uint8, error) {
 	return decimals, nil
 }
 
-func (c *Client) TokenSymbol(token types.EthAddress) (string, error) {
+func (c *Client) TokenSymbol(token types.EvmAddress) (string, error) {
 	if sym, ok := c.symbolCache[token.String()]; ok {
 		return sym, nil
 	}
@@ -116,7 +116,7 @@ func (c *Client) TokenSymbol(token types.EthAddress) (string, error) {
 	return symbol, nil
 }
 
-func (c *Client) Erc20Balance(token types.EthAddress, a types.EthAddress) (types.Amount, error) {
+func (c *Client) Erc20Balance(token types.EvmAddress, a types.EvmAddress) (types.Amount, error) {
 	decimals, err := c.Erc20Decimals(token)
 	if err != nil {
 		return types.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
