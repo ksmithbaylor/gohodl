@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ksmithbaylor/gohodl/internal/types"
+	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/spf13/viper"
 )
 
@@ -15,8 +15,8 @@ var Config config
 // Top-level
 
 type config struct {
-	Ownership   blockchains        `mapstructure:"ownership"`
-	EvmNetworks []types.EvmNetwork `mapstructure:"evm_networks"`
+	Ownership   blockchains       `mapstructure:"ownership"`
+	EvmNetworks []core.EvmNetwork `mapstructure:"evm_networks"`
 }
 
 type blockchains struct {
@@ -38,29 +38,29 @@ type utxo struct {
 }
 
 type xpub struct {
-	Type types.UtxoWalletScheme `mapstructure:"type"`
-	Key  string                 `mapstructure:"key"`
+	Type core.UtxoWalletScheme `mapstructure:"type"`
+	Key  string                `mapstructure:"key"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ethereum
 
 type ethereum struct {
-	Addresses addresses[types.EvmAddress]                          `mapstructure:"addresses"`
-	Instadapp map[types.EvmNetworkName]map[string]types.EvmAddress `mapstructure:"instadapp"`
+	Addresses addresses[core.EvmAddress]                         `mapstructure:"addresses"`
+	Instadapp map[core.EvmNetworkName]map[string]core.EvmAddress `mapstructure:"instadapp"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Solana
 
 type solana struct {
-	Addresses addresses[types.SolanaAddress] `mapstructure:"addresses"`
+	Addresses addresses[core.SolanaAddress] `mapstructure:"addresses"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cosmos
 
-type cosmos map[types.CosmosNetwork]addresses[types.CosmosAddress]
+type cosmos map[core.CosmosNetwork]addresses[core.CosmosAddress]
 
 ////////////////////////////////////////////////////////////////////////////////
 // Initialization

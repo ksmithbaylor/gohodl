@@ -1,3 +1,3 @@
-package types
+package core
 
 type SolanaAddress string
