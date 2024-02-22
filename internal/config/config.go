@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/ksmithbaylor/gohodl/internal/core"
+	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/spf13/viper"
 )
 
@@ -15,8 +16,8 @@ var Config config
 // Top-level
 
 type config struct {
-	Ownership   blockchains       `mapstructure:"ownership"`
-	EvmNetworks []core.EvmNetwork `mapstructure:"evm_networks"`
+	Ownership   blockchains      `mapstructure:"ownership"`
+	EvmNetworks []evm.EvmNetwork `mapstructure:"evm_networks"`
 }
 
 type blockchains struct {
@@ -46,8 +47,8 @@ type xpub struct {
 // Ethereum
 
 type ethereum struct {
-	Addresses addresses[core.EvmAddress]                         `mapstructure:"addresses"`
-	Instadapp map[core.EvmNetworkName]map[string]core.EvmAddress `mapstructure:"instadapp"`
+	Addresses addresses[evm.EvmAddress]                        `mapstructure:"addresses"`
+	Instadapp map[evm.EvmNetworkName]map[string]evm.EvmAddress `mapstructure:"instadapp"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////

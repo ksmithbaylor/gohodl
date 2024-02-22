@@ -5,23 +5,24 @@ import (
 	"testing"
 
 	"github.com/ksmithbaylor/gohodl/internal/core"
+	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/stretchr/testify/assert"
 )
 
 var eth core.Asset = core.Asset{
 	NetworkKind: core.EvmNetworkKind,
-	NetworkID:   core.Ethereum,
+	NetworkID:   evm.Ethereum,
 	Kind:        core.EvmNative,
-	Identifier:  core.EvmNullAddress.String(),
+	Identifier:  evm.EvmNullAddress.String(),
 	Symbol:      "ETH",
 	Decimals:    18,
 }
 
 var usdc core.Asset = core.Asset{
 	NetworkKind: core.EvmNetworkKind,
-	NetworkID:   core.Ethereum,
+	NetworkID:   evm.Ethereum,
 	Kind:        core.Erc20Token,
-	Identifier:  core.EvmAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48").String(),
+	Identifier:  evm.EvmAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48").String(),
 	Symbol:      "USDC",
 	Decimals:    6,
 }
