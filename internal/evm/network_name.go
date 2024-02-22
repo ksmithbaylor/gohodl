@@ -1,19 +1,19 @@
 package evm
 
-type EvmNetworkName string
+type NetworkName string
 
 const (
-	Ethereum  EvmNetworkName = "ethereum"
-	Polygon   EvmNetworkName = "polygon"
-	Avalanche EvmNetworkName = "avalanche"
-	Base      EvmNetworkName = "base"
-	Optimism  EvmNetworkName = "optimism"
-	Moonbeam  EvmNetworkName = "moonbeam"
-	Moonriver EvmNetworkName = "moonriver"
-	Fantom    EvmNetworkName = "fantom"
-	Evmos     EvmNetworkName = "evmos"
+	Ethereum  NetworkName = "ethereum"
+	Polygon   NetworkName = "polygon"
+	Avalanche NetworkName = "avalanche"
+	Base      NetworkName = "base"
+	Optimism  NetworkName = "optimism"
+	Moonbeam  NetworkName = "moonbeam"
+	Moonriver NetworkName = "moonriver"
+	Fantom    NetworkName = "fantom"
+	Evmos     NetworkName = "evmos"
 )
 
-func (n EvmNetworkName) String() string {
+func (n NetworkName) String() string {
 	return string(n)
 }

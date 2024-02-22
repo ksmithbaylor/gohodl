@@ -10,14 +10,14 @@ import (
 )
 
 type Client struct {
-	Network EvmNetwork // The network the client is for
+	Network Network // The network the client is for
 
 	connections  map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
 	symbolCache  map[string]string            // Caches token contract `symbol()` lookups
 	decimalCache map[string]uint8             // Caches token contract `decimals()` lookups
 }
 
-func NewClient(network EvmNetwork) (*Client, error) {
+func NewClient(network Network) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
 	symbolCache := make(map[string]string, 0)
 	decimalCache := make(map[string]uint8, 0)
@@ -53,7 +53,7 @@ func (c *Client) LatestBlock() (uint64, error) {
 	})
 }
 
-func (c *Client) Balance(a EvmAddress) (core.Amount, error) {
+func (c *Client) Balance(a Address) (core.Amount, error) {
 	address := a.ToGeth()
 
 	balance, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
@@ -70,7 +70,7 @@ func (c *Client) Balance(a EvmAddress) (core.Amount, error) {
 	return core.NewAmountFromCentsString(c.Network.NativeEvmAsset(), balance)
 }
 
-func (c *Client) Erc20Decimals(token EvmAddress) (uint8, error) {
+func (c *Client) Erc20Decimals(token Address) (uint8, error) {
 	if dec, ok := c.decimalCache[token.String()]; ok {
 		return dec, nil
 	}
@@ -91,7 +91,7 @@ func (c *Client) Erc20Decimals(token EvmAddress) (uint8, error) {
 	return decimals, nil
 }
 
-func (c *Client) TokenSymbol(token EvmAddress) (string, error) {
+func (c *Client) TokenSymbol(token Address) (string, error) {
 	if sym, ok := c.symbolCache[token.String()]; ok {
 		return sym, nil
 	}
@@ -116,7 +116,7 @@ func (c *Client) TokenSymbol(token EvmAddress) (string, error) {
 	return symbol, nil
 }
 
-func (c *Client) Erc20Balance(token EvmAddress, a EvmAddress) (core.Amount, error) {
+func (c *Client) Erc20Balance(token Address, a Address) (core.Amount, error) {
 	decimals, err := c.Erc20Decimals(token)
 	if err != nil {
 		return core.Amount{}, fmt.Errorf("Could not get token balance: %w", err)

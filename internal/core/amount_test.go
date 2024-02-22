@@ -13,7 +13,7 @@ var eth core.Asset = core.Asset{
 	NetworkKind: core.EvmNetworkKind,
 	NetworkID:   evm.Ethereum,
 	Kind:        core.EvmNative,
-	Identifier:  evm.EvmNullAddress.String(),
+	Identifier:  evm.NullAddress.String(),
 	Symbol:      "ETH",
 	Decimals:    18,
 }
@@ -22,7 +22,7 @@ var usdc core.Asset = core.Asset{
 	NetworkKind: core.EvmNetworkKind,
 	NetworkID:   evm.Ethereum,
 	Kind:        core.Erc20Token,
-	Identifier:  evm.EvmAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48").String(),
+	Identifier:  evm.Address("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48").String(),
 	Symbol:      "USDC",
 	Decimals:    6,
 }
