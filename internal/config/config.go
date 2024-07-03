@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/spf13/viper"
@@ -47,8 +48,8 @@ type xpub struct {
 // Ethereum
 
 type ethereum struct {
-	Addresses addresses[evm.Address]                     `mapstructure:"addresses"`
-	Instadapp map[evm.NetworkName]map[string]evm.Address `mapstructure:"instadapp"`
+	Addresses addresses[common.Address]                     `mapstructure:"addresses"`
+	Instadapp map[evm.NetworkName]map[string]common.Address `mapstructure:"instadapp"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -7,6 +7,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
+// TODO: consider replacing these with something more generic that decodes any
+// abi-encoded values
+
 func decodeUint8(data []byte) uint8 {
 	if len(data) == 0 {
 		return 0

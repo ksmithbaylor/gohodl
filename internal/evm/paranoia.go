@@ -14,7 +14,7 @@ const (
 	CONSENSUS_RETRIES int = 5
 )
 
-func withRetry[R comparable](
+func ensureAgreementWithRetry[R comparable](
 	connections map[string]*ethclient.Client,
 	action func(*ethclient.Client) (R, error),
 ) (R, error) {

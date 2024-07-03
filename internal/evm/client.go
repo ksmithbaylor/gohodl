@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/util"
@@ -13,14 +14,12 @@ type Client struct {
 	Network Network // The network the client is for
 
 	connections  map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
-	symbolCache  map[string]string            // Caches token contract `symbol()` lookups
-	decimalCache map[string]uint8             // Caches token contract `decimals()` lookups
+	symbolCache  map[common.Address]string    // Caches token contract `symbol()` lookups
+	decimalCache map[common.Address]uint8     // Caches token contract `decimals()` lookups
 }
 
 func NewClient(network Network) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
-	symbolCache := make(map[string]string, 0)
-	decimalCache := make(map[string]uint8, 0)
 
 	for _, rpc := range network.RPCs {
 		client, err := ethclient.Dial(rpc)
@@ -39,6 +38,9 @@ func NewClient(network Network) (*Client, error) {
 		return nil, fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, network.ChainID, len(connections))
 	}
 
+	symbolCache := make(map[common.Address]string, 0)
+	decimalCache := make(map[common.Address]uint8, 0)
+
 	return &Client{
 		Network:      network,
 		connections:  connections,
@@ -48,15 +50,13 @@ func NewClient(network Network) (*Client, error) {
 }
 
 func (c *Client) LatestBlock() (uint64, error) {
-	return withRetry(c.connections, func(client *ethclient.Client) (uint64, error) {
+	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint64, error) {
 		return client.BlockNumber(context.Background())
 	})
 }
 
-func (c *Client) Balance(a Address) (core.Amount, error) {
-	address := a.ToGeth()
-
-	balance, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
+func (c *Client) Balance(address common.Address) (core.Amount, error) {
+	balance, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, error) {
 		bal, e := client.BalanceAt(context.Background(), address, nil)
 		if e != nil {
 			return "", e
@@ -67,18 +67,16 @@ func (c *Client) Balance(a Address) (core.Amount, error) {
 		return core.Amount{}, fmt.Errorf("Could not get balance: %w", err)
 	}
 
-	return core.NewAmountFromCentsString(c.Network.NativeEvmAsset(), balance)
+	return core.NewAmountFromAtomicString(c.Network.NativeAsset(), balance)
 }
 
-func (c *Client) Erc20Decimals(token Address) (uint8, error) {
-	if dec, ok := c.decimalCache[token.String()]; ok {
+func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
+	if dec, ok := c.decimalCache[token]; ok {
 		return dec, nil
 	}
 
-	contract := token.ToGeth()
-
-	decimals, err := withRetry(c.connections, func(client *ethclient.Client) (uint8, error) {
-		result, e := client.CallContract(context.Background(), decimalsCall(contract), nil)
+	decimals, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint8, error) {
+		result, e := client.CallContract(context.Background(), decimalsCall(token), nil)
 		if e != nil {
 			return 0, e
 		}
@@ -87,19 +85,17 @@ func (c *Client) Erc20Decimals(token Address) (uint8, error) {
 	if err != nil {
 		return 0, fmt.Errorf("Could not get token decimals: %w", err)
 	}
-	c.decimalCache[token.String()] = decimals
+	c.decimalCache[token] = decimals
 	return decimals, nil
 }
 
-func (c *Client) TokenSymbol(token Address) (string, error) {
-	if sym, ok := c.symbolCache[token.String()]; ok {
+func (c *Client) TokenSymbol(token common.Address) (string, error) {
+	if sym, ok := c.symbolCache[token]; ok {
 		return sym, nil
 	}
 
-	contract := token.ToGeth()
-
-	symbol, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
-		result, e := client.CallContract(context.Background(), symbolCall(contract), nil)
+	symbol, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, error) {
+		result, e := client.CallContract(context.Background(), symbolCall(token), nil)
 		if e != nil {
 			return "", e
 		}
@@ -112,14 +108,14 @@ func (c *Client) TokenSymbol(token Address) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Could not get token symbol: %w", err)
 	}
-	c.symbolCache[token.String()] = symbol
+	c.symbolCache[token] = symbol
 	return symbol, nil
 }
 
-func (c *Client) Erc20Balance(token Address, a Address) (core.Amount, error) {
+func (c *Client) Erc20Balance(token common.Address, address common.Address) (core.Amount, error) {
 	decimals, err := c.Erc20Decimals(token)
 	if err != nil {
-		return core.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
+		return core.Amount{}, fmt.Errorf("Could not get token decimals: %w", err)
 	}
 
 	symbol, err := c.TokenSymbol(token)
@@ -129,11 +125,8 @@ func (c *Client) Erc20Balance(token Address, a Address) (core.Amount, error) {
 
 	asset := c.Network.Erc20TokenAsset(token.String(), symbol, decimals)
 
-	contract := token.ToGeth()
-	address := a.ToGeth()
-
-	balanceStr, err := withRetry(c.connections, func(client *ethclient.Client) (string, error) {
-		result, e := client.CallContract(context.Background(), balanceCall(contract, address), nil)
+	balanceStr, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, error) {
+		result, e := client.CallContract(context.Background(), balanceCall(token, address), nil)
 		if e != nil {
 			return "", e
 		}
@@ -143,7 +136,7 @@ func (c *Client) Erc20Balance(token Address, a Address) (core.Amount, error) {
 	if err != nil {
 		return core.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
 	}
-	balance, err := core.NewAmountFromCentsString(asset, balanceStr)
+	balance, err := core.NewAmountFromAtomicString(asset, balanceStr)
 	if err != nil {
 		return core.Amount{}, fmt.Errorf("Could not get token balance: %w", err)
 	}
