@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	QUORUM            int = 3
+	QUORUM            int = 2
 	CONSENSUS_RETRIES int = 5
 )
 
@@ -28,9 +28,8 @@ func ensureAgreementWithRetry[R comparable](
 			return ret, nil
 		} else {
 			util.Debug(err)
+			time.Sleep(time.Millisecond * 500)
 		}
-
-		time.Sleep(time.Millisecond * 500)
 	}
 
 	return ret, err
