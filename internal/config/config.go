@@ -3,10 +3,12 @@ package config
 import (
 	"fmt"
 	"log"
+	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
 
@@ -48,8 +50,7 @@ type xpub struct {
 // Ethereum
 
 type ethereum struct {
-	Addresses addresses[common.Address]                     `mapstructure:"addresses"`
-	Instadapp map[evm.NetworkName]map[string]common.Address `mapstructure:"instadapp"`
+	Addresses addresses[common.Address] `mapstructure:"addresses"`
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +77,21 @@ func init() {
 		log.Fatal(fmt.Errorf("could not read in config: %w", err))
 	}
 
-	if err := v.Unmarshal(&Config); err != nil {
+	if err := v.Unmarshal(&Config, viper.DecodeHook(CustomDecoder())); err != nil {
 		log.Fatal(fmt.Errorf("invalid config: %w", err))
+	}
+}
+
+func CustomDecoder() mapstructure.DecodeHookFunc {
+	return func(dataType reflect.Type, targetType reflect.Type, data any) (any, error) {
+		if dataType.Kind() != reflect.String {
+			return data, nil
+		}
+
+		if targetType != reflect.TypeOf(common.Address{}) {
+			return data, nil
+		}
+
+		return common.HexToAddress(data.(string)), nil
 	}
 }
