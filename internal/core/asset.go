@@ -9,13 +9,13 @@ import (
 type AssetKind string
 
 const (
-	UtxoNative AssetKind = "utxo_native"
+	// UtxoNative AssetKind = "utxo_native"
 	EvmNative  AssetKind = "evm_native"
 	Erc20Token AssetKind = "erc20"
 	Erc721Nft  AssetKind = "erc721"
-	SvmNative  AssetKind = "svm_native"
-	SplToken   AssetKind = "spl_token"
-	SplNft     AssetKind = "spl_nft"
+	// SvmNative  AssetKind = "svm_native"
+	// SplToken   AssetKind = "spl_token"
+	// SplNft     AssetKind = "spl_nft"
 )
 
 // An Asset uniquely identifies an asset across all networks. It is used in
