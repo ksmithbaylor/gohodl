@@ -19,6 +19,10 @@ type Network struct {
 	} `mapstructure:"etherscan"`
 }
 
+func (n Network) GetKind() core.NetworkKind {
+	return core.EvmNetworkKind
+}
+
 func (n Network) GetName() string {
 	return n.Name.String()
 }
