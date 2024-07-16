@@ -39,21 +39,30 @@ func NewEtherscanClient(network Network) (*EtherscanClient, error) {
 }
 
 func (c *EtherscanClient) GetAllTransactionHashes(address string) ([]string, error) {
-	// TODO
-	return []string{}, nil
+	hashes := make(map[string]any)
+
+	normalHashes, err := c.getNormalTransactionHashes(address)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get normal transactions for %s: %w", address, err)
+	}
+	for _, hash := range normalHashes {
+		hashes[hash] = struct{}{}
+	}
+
+	hashesList := make([]string, 0, len(hashes))
+	for hash := range hashes {
+		hashesList = append(hashesList, hash)
+	}
+
+	return hashesList, nil
 }
 
-// func (c *EtherscanClient) request(url string) {
-//   response, err := c.client.Get(url)
-//   if err != nil {
-//     return nil, err
-//   }
-//
-//   // TODO make this generic and parse the response into a struct specified
-// }
-//
-// func (c *EtherscanClient) getAllPages(url string) {
-//   c.client.Get(url)
-//
-//   // TODO cycle through pages and return a slice of whatever
-// }
+func (c *EtherscanClient) getNormalTransactionHashes(address string) ([]string, error) {
+	hashes := make([]string, 0)
+
+	hashes = append(hashes, "asdf")
+	hashes = append(hashes, "foo")
+	hashes = append(hashes, "asdf")
+
+	return hashes, nil
+}
