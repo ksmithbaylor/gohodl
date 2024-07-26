@@ -11,10 +11,6 @@ import (
 func main() {
 	allNetworks := config.Config.EvmNetworks
 
-	clients := make(map[evm.NetworkName]*evm.Client)
-	var clientsMu sync.Mutex
-	var wg sync.WaitGroup
-
 	longestName := 0
 	for _, network := range allNetworks {
 		longestName = max(longestName, len(network.Name))
@@ -22,22 +18,13 @@ func main() {
 
 	fmt.Println("Connecting...")
 
-	for _, network := range allNetworks {
-		network := network
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			client, err := evm.NewClient(network)
-			if err != nil {
-				fmt.Printf("%-*s  %s\n", longestName, network.Name, err.Error())
-			}
-			clientsMu.Lock()
-			clients[network.Name] = client
-			clientsMu.Unlock()
-		}()
+	clients, errs := evm.AllClients(allNetworks)
+	if len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Println(err.Error())
+		}
+		return
 	}
-	wg.Wait()
 
 	forAll("Block numbers", clients, func(networkName evm.NetworkName, client *evm.Client) {
 		block, err := client.LatestBlock()

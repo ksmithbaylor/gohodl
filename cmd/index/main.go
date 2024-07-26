@@ -14,16 +14,31 @@ import (
 func main() {
 	cfg := config.Config
 
+	clients, errs := evm.AllClients(cfg.EvmNetworks)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			fmt.Println(err.Error())
+		}
+		return
+	}
+
 	fmt.Println("Getting transaction hashes for each address...")
 
-	indexers := make(map[string]core.Indexer, 0)
+	indexers := make(map[evm.NetworkName]core.Indexer, 0)
+	latestBlocks := make(map[evm.NetworkName]int)
 
 	for _, network := range cfg.EvmNetworks {
 		indexer, err := indexing.GetIndexerForNetwork(network)
 		if err != nil {
 			log.Fatal(err)
 		}
-		indexers[string(network.Name)] = indexer
+		indexers[network.Name] = indexer
+
+		block, err := clients[network.Name].LatestBlock()
+		if err != nil {
+			log.Fatal(err)
+		}
+		latestBlocks[network.Name] = int(block)
 	}
 
 	txHashes := make(map[string]map[string][]string, 0) // address -> network -> list of tx hashes
@@ -41,15 +56,21 @@ func main() {
 		go func(network evm.Network) {
 			defer wg.Done()
 
-			indexer, found := indexers[string(network.Name)]
+			indexer, found := indexers[network.Name]
 			if !found {
 				fmt.Printf("No indexer found for %s, skipping\n", network.Name)
 				return
 			}
 
+			latestBlock, found := latestBlocks[network.Name]
+			if !found {
+				fmt.Printf("No latest block found for %s, skipping\n", network.Name)
+				return
+			}
+
 			for name, addr := range cfg.Ownership.Ethereum.Addresses {
 				label := fmt.Sprintf("%s (%s)", addr.Hex(), name)
-				txs, err := indexer.GetAllTransactionHashes(addr.Hex())
+				txs, err := indexer.GetAllTransactionHashes(addr.Hex(), nil, &latestBlock)
 				if err != nil {
 					fmt.Printf("%s - %s: Error getting transactions: %s\n", label, network.Name, err.Error())
 					errors[label][string(network.Name)] = err

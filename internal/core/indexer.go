@@ -1,5 +1,5 @@
 package core
 
 type Indexer interface {
-	GetAllTransactionHashes(address string) ([]string, error)
+	GetAllTransactionHashes(address string, startBlock, endBlock *int) ([]string, error)
 }
