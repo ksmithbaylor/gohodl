@@ -9,10 +9,23 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/indexing"
+	"github.com/ksmithbaylor/gohodl/internal/util"
 )
+
+type cachedTxs struct {
+	Network string   `json:"network"`
+	Block   int      `json:"block"`
+	Address string   `json:"address"`
+	Txs     []string `json:"txs"`
+}
 
 func main() {
 	cfg := config.Config
+
+	cache, err := util.NewFileCache("evm_tx_hashes")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	clients, errs := evm.AllClients(cfg.EvmNetworks)
 	if len(errs) > 0 {
@@ -70,15 +83,51 @@ func main() {
 
 			for name, addr := range cfg.Ownership.Ethereum.Addresses {
 				label := fmt.Sprintf("%s (%s)", addr.Hex(), name)
-				txs, err := indexer.GetAllTransactionHashes(addr.Hex(), nil, &latestBlock)
+				cacheKey := fmt.Sprintf("%s-%s", network.Name, addr.Hex())
+
+				var firstBlock *int
+				knownTxs := make([]string, 0)
+
+				var cached cachedTxs
+				cacheFound, err := cache.Read(cacheKey, &cached)
+				if err != nil {
+					fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
+				} else if cacheFound {
+					if cached.Address == addr.Hex() && cached.Network == string(network.Name) {
+						firstBlock = &cached.Block
+						knownTxs = cached.Txs
+					} else {
+						fmt.Printf("Mismatched cache contents for %s, skipping\n", cacheKey)
+					}
+				}
+
+				txs, err := indexer.GetAllTransactionHashes(addr.Hex(), firstBlock, &latestBlock)
 				if err != nil {
 					fmt.Printf("%s - %s: Error getting transactions: %s\n", label, network.Name, err.Error())
 					errors[label][string(network.Name)] = err
 					continue
 				}
 
-				fmt.Printf("%s - %s: %d transactions found\n", label, network.Name, len(txs))
-				txHashes[label][string(network.Name)] = txs
+				allTxs := util.UniqueItems(knownTxs, txs)
+
+				fmt.Printf(
+					"%s - %s: %d txs already known, %d new txs found, %d total\n",
+					label,
+					network.Name,
+					len(knownTxs),
+					len(txs),
+					len(allTxs),
+				)
+				err = cache.Write(cacheKey, cachedTxs{
+					Network: string(network.Name),
+					Address: addr.Hex(),
+					Block:   latestBlock,
+					Txs:     allTxs,
+				})
+				if err != nil {
+					fmt.Printf("Failed to write cache for %s: %s\n", cacheKey, err.Error())
+				}
+				txHashes[label][string(network.Name)] = allTxs
 			}
 		}(network)
 	}

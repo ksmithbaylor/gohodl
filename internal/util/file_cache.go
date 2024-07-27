@@ -9,7 +9,8 @@ import (
 )
 
 const CACHE_DATA_PATH = ".cache"
-const CACHE_PERMS = 0777
+const CACHE_DIR_PERMS = 0755
+const CACHE_FILE_PERMS = 0644
 
 type FileCache struct {
 	CollectionName string
@@ -20,7 +21,7 @@ func NewFileCache(collectionName string) (*FileCache, error) {
 		CollectionName: collectionName,
 	}
 
-	err := os.MkdirAll(fc.folder(), CACHE_PERMS)
+	err := os.MkdirAll(fc.folder(), CACHE_DIR_PERMS)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create cache directory %s: %w", CACHE_DATA_PATH, err)
 	}
@@ -41,7 +42,7 @@ func (fc *FileCache) Write(key string, value any) error {
 		return fmt.Errorf("Could not marshal value for key %s in collection %s: %w", key, fc.CollectionName, err)
 	}
 
-	err = os.WriteFile(path, data, CACHE_PERMS)
+	err = os.WriteFile(path, data, CACHE_FILE_PERMS)
 	if err != nil {
 		return fmt.Errorf("Could not write value for key %s in collection %s: %w", key, fc.CollectionName, err)
 	}
