@@ -20,7 +20,8 @@ type cachedTxs struct {
 func main() {
 	cfg := config.Config
 
-	cache := util.NewFileCache("evm_tx_hashes")
+	db := util.NewFileDB("data")
+	txHashesDB := db.NewCollection("evm_tx_hashes")
 	indexers := generic.NewAllIndexers(cfg.AllNetworks())
 	clients := generic.NewAllNodeClients(cfg.AllNetworks())
 	latestBlocks := clients.LatestBlocks()
@@ -62,7 +63,7 @@ func main() {
 				knownTxs := make([]string, 0)
 
 				var cached cachedTxs
-				cacheFound, err := cache.Read(cacheKey, &cached)
+				cacheFound, err := txHashesDB.Read(cacheKey, &cached)
 				if err != nil {
 					fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
 				} else if cacheFound {
@@ -92,7 +93,7 @@ func main() {
 					len(txs),
 					len(allTxs),
 				)
-				err = cache.Write(cacheKey, cachedTxs{
+				err = txHashesDB.Write(cacheKey, cachedTxs{
 					Network: network.GetName(),
 					Address: addr.Hex(),
 					Block:   latestBlockInt,
