@@ -14,10 +14,7 @@ type thingy struct {
 }
 
 func main() {
-	cache, err := util.NewFileCache("stuff")
-	if err != nil {
-		log.Fatal(err)
-	}
+	cache := util.NewFileCache("stuff")
 
 	var foo []string
 	fooFound, err := cache.Read("foo", &foo)

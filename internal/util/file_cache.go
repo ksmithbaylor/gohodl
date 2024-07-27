@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 )
 
@@ -16,17 +17,17 @@ type FileCache struct {
 	CollectionName string
 }
 
-func NewFileCache(collectionName string) (*FileCache, error) {
+func NewFileCache(collectionName string) *FileCache {
 	fc := FileCache{
 		CollectionName: collectionName,
 	}
 
 	err := os.MkdirAll(fc.folder(), CACHE_DIR_PERMS)
 	if err != nil {
-		return nil, fmt.Errorf("Could not create cache directory %s: %w", CACHE_DATA_PATH, err)
+		log.Fatalf("Could not create cache directory %s: %s", CACHE_DATA_PATH, err.Error())
 	}
 
-	return &fc, nil
+	return &fc
 }
 
 func (fc *FileCache) Write(key string, value any) error {

@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/core"
-	"github.com/ksmithbaylor/gohodl/internal/evm"
-	"github.com/ksmithbaylor/gohodl/internal/indexing"
+	"github.com/ksmithbaylor/gohodl/internal/generic"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
@@ -22,37 +20,12 @@ type cachedTxs struct {
 func main() {
 	cfg := config.Config
 
-	cache, err := util.NewFileCache("evm_tx_hashes")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	clients, errs := evm.AllClients(cfg.EvmNetworks)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			fmt.Println(err.Error())
-		}
-		return
-	}
+	cache := util.NewFileCache("evm_tx_hashes")
+	indexers := generic.NewAllIndexers(cfg.AllNetworks())
+	clients := generic.NewAllNodeClients(cfg.AllNetworks())
+	latestBlocks := clients.LatestBlocks()
 
 	fmt.Println("Getting transaction hashes for each address...")
-
-	indexers := make(map[evm.NetworkName]core.Indexer, 0)
-	latestBlocks := make(map[evm.NetworkName]int)
-
-	for _, network := range cfg.EvmNetworks {
-		indexer, err := indexing.GetIndexerForNetwork(network)
-		if err != nil {
-			log.Fatal(err)
-		}
-		indexers[network.Name] = indexer
-
-		block, err := clients[network.Name].LatestBlock()
-		if err != nil {
-			log.Fatal(err)
-		}
-		latestBlocks[network.Name] = int(block)
-	}
 
 	txHashes := make(map[string]map[string][]string, 0) // address -> network -> list of tx hashes
 	errors := make(map[string]map[string]error, 0)      // address -> network -> error
@@ -64,26 +37,26 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	for _, network := range cfg.EvmNetworks {
+	for _, network := range cfg.AllNetworks() {
 		wg.Add(1)
-		go func(network evm.Network) {
+		go func(network core.Network) {
 			defer wg.Done()
 
-			indexer, found := indexers[network.Name]
+			indexer, found := indexers[network.GetName()]
 			if !found {
-				fmt.Printf("No indexer found for %s, skipping\n", network.Name)
+				fmt.Printf("No indexer found for %s, skipping\n", network.GetName())
 				return
 			}
 
-			latestBlock, found := latestBlocks[network.Name]
+			latestBlock, found := latestBlocks[network.GetName()]
 			if !found {
-				fmt.Printf("No latest block found for %s, skipping\n", network.Name)
+				fmt.Printf("No latest block found for %s, skipping\n", network.GetName())
 				return
 			}
 
 			for name, addr := range cfg.Ownership.Ethereum.Addresses {
 				label := fmt.Sprintf("%s (%s)", addr.Hex(), name)
-				cacheKey := fmt.Sprintf("%s-%s", network.Name, addr.Hex())
+				cacheKey := fmt.Sprintf("%s-%s", network.GetName(), addr.Hex())
 
 				var firstBlock *int
 				knownTxs := make([]string, 0)
@@ -93,7 +66,7 @@ func main() {
 				if err != nil {
 					fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
 				} else if cacheFound {
-					if cached.Address == addr.Hex() && cached.Network == string(network.Name) {
+					if cached.Address == addr.Hex() && cached.Network == network.GetName() {
 						firstBlock = &cached.Block
 						knownTxs = cached.Txs
 					} else {
@@ -101,10 +74,11 @@ func main() {
 					}
 				}
 
-				txs, err := indexer.GetAllTransactionHashes(addr.Hex(), firstBlock, &latestBlock)
+				latestBlockInt := int(latestBlock)
+				txs, err := indexer.GetAllTransactionHashes(addr.Hex(), firstBlock, &latestBlockInt)
 				if err != nil {
-					fmt.Printf("%s - %s: Error getting transactions: %s\n", label, network.Name, err.Error())
-					errors[label][string(network.Name)] = err
+					fmt.Printf("%s - %s: Error getting transactions: %s\n", label, network.GetName(), err.Error())
+					errors[label][network.GetName()] = err
 					continue
 				}
 
@@ -113,21 +87,21 @@ func main() {
 				fmt.Printf(
 					"%s - %s: %d txs already known, %d new txs found, %d total\n",
 					label,
-					network.Name,
+					network.GetName(),
 					len(knownTxs),
 					len(txs),
 					len(allTxs),
 				)
 				err = cache.Write(cacheKey, cachedTxs{
-					Network: string(network.Name),
+					Network: network.GetName(),
 					Address: addr.Hex(),
-					Block:   latestBlock,
+					Block:   latestBlockInt,
 					Txs:     allTxs,
 				})
 				if err != nil {
 					fmt.Printf("Failed to write cache for %s: %s\n", cacheKey, err.Error())
 				}
-				txHashes[label][string(network.Name)] = allTxs
+				txHashes[label][network.GetName()] = allTxs
 			}
 		}(network)
 	}

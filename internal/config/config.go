@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -93,4 +94,15 @@ func CustomDecoder() mapstructure.DecodeHookFunc {
 
 		return common.HexToAddress(data.(string)), nil
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Methods
+
+func (c config) AllNetworks() []core.Network {
+	networks := make([]core.Network, 0)
+	for _, evmNetwork := range c.EvmNetworks {
+		networks = append(networks, core.Network(evmNetwork))
+	}
+	return networks
 }

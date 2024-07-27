@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/ksmithbaylor/gohodl/internal/config"
+	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
+	"github.com/ksmithbaylor/gohodl/internal/generic"
 )
 
 func main() {
@@ -18,15 +19,10 @@ func main() {
 
 	fmt.Println("Connecting...")
 
-	clients, errs := evm.AllClients(allNetworks)
-	if len(errs) != 0 {
-		for _, err := range errs {
-			fmt.Println(err.Error())
-		}
-		return
-	}
+	clients := generic.NewAllNodeClients(config.Config.AllNetworks())
 
-	forAll("Block numbers", clients, func(networkName evm.NetworkName, client *evm.Client) {
+	fmt.Printf("\nBlock numbers:\n")
+	clients.ForEach(func(networkName string, client core.NodeClient) {
 		block, err := client.LatestBlock()
 		if err != nil {
 			fmt.Printf("%-*s  %s\n", longestName, networkName, err.Error())
@@ -37,29 +33,14 @@ func main() {
 
 	for label, addr := range config.Config.Ownership.Ethereum.Addresses {
 		a := addr
-		forAll(fmt.Sprintf("Balance of %s", label), clients, func(networkName evm.NetworkName, client *evm.Client) {
-			balance, err := client.Balance(a)
+		fmt.Printf("\nBalance of %s:\n", label)
+		clients.ForEach(func(networkName string, client core.NodeClient) {
+			evmClient := client.(*evm.Client)
+			balance, err := evmClient.Balance(a)
 			if err != nil {
 				fmt.Printf("%-*s  %s\n", longestName, networkName, err.Error())
 			}
-
 			fmt.Printf("%-*s  %s (%s)\n", longestName, networkName, balance, balance.Asset.Symbol)
 		})
 	}
-}
-
-func forAll(label string, clients map[evm.NetworkName]*evm.Client, action func(evm.NetworkName, *evm.Client)) {
-	var wg sync.WaitGroup
-
-	fmt.Printf("\n%s:\n", label)
-	for n, c := range clients {
-		networkName := n
-		client := c
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			action(networkName, client)
-		}()
-	}
-	wg.Wait()
 }
