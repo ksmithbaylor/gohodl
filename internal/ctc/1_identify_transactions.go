@@ -1,4 +1,4 @@
-package main
+package ctc
 
 import (
 	"fmt"
@@ -17,10 +17,9 @@ type cachedTxs struct {
 	Txs     []string `json:"txs"`
 }
 
-func main() {
+func IdentifyTransactions(db *util.FileDB) {
 	cfg := config.Config
 
-	db := util.NewFileDB("data")
 	txHashesDB := db.NewCollection("evm_tx_hashes")
 	indexers := generic.NewAllIndexers(cfg.AllNetworks())
 	clients := generic.NewAllNodeClients(cfg.AllNetworks())
