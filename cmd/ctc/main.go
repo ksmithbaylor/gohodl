@@ -1,12 +1,17 @@
 package main
 
 import (
+	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/ctc"
+	"github.com/ksmithbaylor/gohodl/internal/generic"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
 func main() {
-	db := util.NewFileDB("data")
+	cfg := config.Config
 
-	ctc.IdentifyTransactions(db)
+	db := util.NewFileDB("data")
+	clients := generic.NewAllNodeClients(cfg.AllNetworks())
+
+	ctc.IdentifyTransactions(db, clients)
 }

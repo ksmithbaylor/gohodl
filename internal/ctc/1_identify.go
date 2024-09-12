@@ -17,12 +17,11 @@ type cachedTxs struct {
 	Txs     []string `json:"txs"`
 }
 
-func IdentifyTransactions(db *util.FileDB) {
+func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	cfg := config.Config
 
 	txHashesDB := db.NewCollection("evm_tx_hashes")
 	indexers := generic.NewAllIndexers(cfg.AllNetworks())
-	clients := generic.NewAllNodeClients(cfg.AllNetworks())
 	latestBlocks := clients.LatestBlocks()
 
 	fmt.Println("Getting transaction hashes for each address...")
