@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strings"
 )
 
 const (
@@ -95,6 +96,21 @@ func (c *FileDBCollection) Read(key string, val any) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (c *FileDBCollection) List() ([]string, error) {
+	entries, err := os.ReadDir(c.Folder())
+	if err != nil {
+		return nil, fmt.Errorf("Could not list collection %s: %w", c.Name, err)
+	}
+
+	keys := make([]string, len(entries))
+
+	for i, entry := range entries {
+		keys[i] = strings.TrimSuffix(entry.Name(), ".json")
+	}
+
+	return keys, nil
 }
 
 func (c *FileDBCollection) Folder() string {
