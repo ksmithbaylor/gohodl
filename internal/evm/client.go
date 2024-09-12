@@ -50,18 +50,19 @@ func NewClient(network Network) (*Client, error) {
 }
 
 func (c *Client) LatestBlock() (uint64, error) {
-	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint64, error) {
-		return client.BlockNumber(context.Background())
+	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint64, uint64, error) {
+		num, err := client.BlockNumber(context.Background())
+		return num, num, err
 	})
 }
 
 func (c *Client) Balance(address common.Address) (core.Amount, error) {
-	balance, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, error) {
+	balance, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, string, error) {
 		bal, e := client.BalanceAt(context.Background(), address, nil)
 		if e != nil {
-			return "", e
+			return "", "", e
 		}
-		return bal.String(), nil
+		return bal.String(), bal.String(), nil
 	})
 	if err != nil {
 		return core.Amount{}, fmt.Errorf("Could not get balance: %w", err)
@@ -75,12 +76,14 @@ func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
 		return dec, nil
 	}
 
-	decimals, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint8, error) {
+	decimals, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint8, uint8, error) {
 		result, e := client.CallContract(context.Background(), decimalsCall(token), nil)
 		if e != nil {
-			return 0, e
+			return 0, 0, e
 		}
-		return decodeUint8(result), nil
+
+		decoded := decodeUint8(result)
+		return decoded, decoded, nil
 	})
 	if err != nil {
 		return 0, fmt.Errorf("Could not get token decimals: %w", err)
@@ -94,16 +97,16 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 		return sym, nil
 	}
 
-	symbol, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, error) {
+	symbol, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, string, error) {
 		result, e := client.CallContract(context.Background(), symbolCall(token), nil)
 		if e != nil {
-			return "", e
+			return "", "", e
 		}
 		sym, e := decodeString(result)
 		if e != nil {
-			return "", e
+			return "", "", e
 		}
-		return sym, nil
+		return sym, sym, nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("Could not get token symbol: %w", err)
@@ -125,13 +128,13 @@ func (c *Client) Erc20Balance(token common.Address, address common.Address) (cor
 
 	asset := c.Network.Erc20TokenAsset(token.String(), symbol, decimals)
 
-	balanceStr, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, error) {
+	balanceStr, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, string, error) {
 		result, e := client.CallContract(context.Background(), balanceCall(token, address), nil)
 		if e != nil {
-			return "", e
+			return "", "", e
 		}
 		cents := decodeBigInt(result)
-		return cents.String(), nil
+		return cents.String(), cents.String(), nil
 	})
 	if err != nil {
 		return core.Amount{}, fmt.Errorf("Could not get token balance: %w", err)

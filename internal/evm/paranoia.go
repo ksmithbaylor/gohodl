@@ -14,9 +14,9 @@ const (
 	CONSENSUS_RETRIES int = 5
 )
 
-func ensureAgreementWithRetry[R comparable](
+func ensureAgreementWithRetry[R any, C comparable](
 	connections map[string]*ethclient.Client,
-	action func(*ethclient.Client) (R, error),
+	action func(*ethclient.Client) (R, C, error),
 ) (R, error) {
 	var ret R
 	var err error
@@ -35,9 +35,9 @@ func ensureAgreementWithRetry[R comparable](
 	return ret, err
 }
 
-func ensureAgreement[R comparable](
+func ensureAgreement[R any, C comparable](
 	connections map[string]*ethclient.Client,
-	getUsing func(*ethclient.Client) (R, error),
+	getUsing func(*ethclient.Client) (R, C, error),
 ) (R, error) {
 	tried := make(map[string]bool, len(connections))
 	var rpcs []string
@@ -54,17 +54,19 @@ func ensureAgreement[R comparable](
 		}
 	}
 
-	answers := make(map[R]int, 0)
+	votes := make(map[C]int, 0)
+	answers := make(map[C]R, 0)
 
 	for i, client := range clients {
 		wg.Add(1)
 		go func(rpc string, c *ethclient.Client) {
 			defer wg.Done()
 
-			result, err := getUsing(c)
+			result, compKey, err := getUsing(c)
 			if err == nil {
 				mu.Lock()
-				answers[result]++
+				answers[compKey] = result
+				votes[compKey]++
 				util.Debugf("Success from %s: %#+v\n", rpc, result)
 				mu.Unlock()
 			} else {
@@ -75,9 +77,9 @@ func ensureAgreement[R comparable](
 	wg.Wait()
 
 	for rpc, client := range connections {
-		for answer, votes := range answers {
-			if votes >= QUORUM {
-				return answer, nil
+		for compKey, voteCount := range votes {
+			if voteCount >= QUORUM {
+				return answers[compKey], nil
 			}
 		}
 
@@ -85,10 +87,13 @@ func ensureAgreement[R comparable](
 			continue
 		}
 		tried[rpc] = true
-		result, err := getUsing(client)
+		result, compKey, err := getUsing(client)
 		if err == nil {
-			answers[result]++
+			mu.Lock()
+			answers[compKey] = result
+			votes[compKey]++
 			util.Debugf("Success from %s: %#+v\n", rpc, result)
+			mu.Unlock()
 		} else {
 			util.Debugf("Problem with %s: %s", rpc, err.Error())
 		}
