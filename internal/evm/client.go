@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/util"
@@ -53,6 +54,22 @@ func (c *Client) LatestBlock() (uint64, error) {
 	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint64, uint64, error) {
 		num, err := client.BlockNumber(context.Background())
 		return num, num, err
+	})
+}
+
+func (c *Client) GetTransaction(hash string) (*types.Transaction, error) {
+	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (*types.Transaction, string, error) {
+		tx, _, err := client.TransactionByHash(context.Background(), common.HexToHash(hash))
+		if err != nil {
+			return nil, "", err
+		}
+
+		json, err := tx.MarshalJSON()
+		if err != nil {
+			return nil, "", fmt.Errorf("Unable to marshal tx to json: %w", err)
+		}
+
+		return tx, common.Bytes2Hex(json), nil
 	})
 }
 
