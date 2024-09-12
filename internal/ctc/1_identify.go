@@ -2,6 +2,7 @@ package ctc
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/ksmithbaylor/gohodl/internal/config"
@@ -21,6 +22,12 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	cfg := config.Config
 
 	txHashesDB := db.NewCollection("evm_tx_hashes")
+
+	if os.Getenv("SKIP_IDENTIFY") != "" {
+		fmt.Println("Skipping transaction identification step")
+		return
+	}
+
 	indexers := generic.NewAllIndexers(cfg.AllNetworks())
 	latestBlocks := clients.LatestBlocks()
 
