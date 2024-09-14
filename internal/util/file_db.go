@@ -77,6 +77,22 @@ func (c *FileDBCollection) Write(key string, value any) error {
 	return nil
 }
 
+func (c *FileDBCollection) WriteRaw(key string, value []byte) error {
+	path := c.pathFor(key)
+
+	err := os.RemoveAll(path)
+	if err != nil {
+		return fmt.Errorf("Could not remove old cache key %s from collection %s: %w", key, c.Name, err)
+	}
+
+	err = os.WriteFile(path, value, FILEDB_FILE_PERMS)
+	if err != nil {
+		return fmt.Errorf("Could not write value for key %s in collection %s: %w", key, c.Name, err)
+	}
+
+	return nil
+}
+
 func (c *FileDBCollection) Read(key string, val any) (bool, error) {
 	path := c.pathFor(key)
 
