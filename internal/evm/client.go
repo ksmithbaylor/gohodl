@@ -73,6 +73,22 @@ func (c *Client) GetTransaction(hash string) (*types.Transaction, error) {
 	})
 }
 
+func (c *Client) GetTransactionReceipt(hash string) (*types.Receipt, error) {
+	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (*types.Receipt, string, error) {
+		receipt, err := client.TransactionReceipt(context.Background(), common.HexToHash(hash))
+		if err != nil {
+			return nil, "", err
+		}
+
+		json, err := receipt.MarshalJSON()
+		if err != nil {
+			return nil, "", fmt.Errorf("Unable to marshal tx receipt to json: %w", err)
+		}
+
+		return receipt, common.Bytes2Hex(json), nil
+	})
+}
+
 func (c *Client) Balance(address common.Address) (core.Amount, error) {
 	balance, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, string, error) {
 		bal, e := client.BalanceAt(context.Background(), address, nil)
