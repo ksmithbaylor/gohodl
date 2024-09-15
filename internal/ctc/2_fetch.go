@@ -96,11 +96,31 @@ func fetch(
 
 	fmt.Printf("Fetching %d transactions on %s\n", len(txs), network)
 
-	for _, txHash := range txs {
-		cacheKey := fmt.Sprintf("%s-%s", network, txHash)
+	unfetched := txs
 
-		fetchTransaction(client, txsDB, cacheKey, network, txHash)
-		fetchTransactionReceipt(client, receiptsDB, cacheKey, network, txHash)
+	for {
+		retryTx := make([]string, 0)
+		retryReceipt := make([]string, 0)
+
+		for _, txHash := range unfetched {
+			cacheKey := fmt.Sprintf("%s-%s", network, txHash)
+
+			txSuccess := fetchTransaction(client, txsDB, cacheKey, network, txHash)
+			receiptSuccess := fetchTransactionReceipt(client, receiptsDB, cacheKey, network, txHash)
+
+			if !txSuccess {
+				retryTx = append(retryTx, txHash)
+			}
+			if !receiptSuccess {
+				retryReceipt = append(retryReceipt, txHash)
+			}
+		}
+
+		if len(retryTx) > 0 || len(retryReceipt) > 0 {
+			unfetched = util.UniqueItems(retryTx, retryReceipt)
+		} else {
+			break
+		}
 	}
 
 	fmt.Printf("Done fetching transactions for %s\n", network)
@@ -112,27 +132,27 @@ func fetchTransaction(
 	cacheKey string,
 	network string,
 	txHash string,
-) {
+) bool {
 	var cachedTx types.Transaction
 	cacheFound, err := txsDB.Read(cacheKey, &cachedTx)
 	if err != nil {
 		fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
-		return
+		return true
 	}
 
 	if cacheFound {
 		checkTransaction(&cachedTx, network, txHash)
-		return
+		return true
 	}
 
 	tx, err := client.GetTransaction(txHash)
 	if err != nil {
 		fmt.Printf("Error fetching %s tx %s: %s\n", network, txHash, err.Error())
-		return
+		return false
 	}
 	if tx == nil {
 		fmt.Printf("Nil response for %s tx %s\n", network, txHash)
-		return
+		return false
 	}
 
 	if tx.IsDepositTx() {
@@ -140,20 +160,20 @@ func fetchTransaction(
 		newTxJson, err := newTx.MarshalJSON()
 		if err != nil {
 			fmt.Printf("Error marshaling original deposit tx for %s on %s: %s\n", txHash, network, err.Error())
-			return
+			return false
 		}
 
 		var jsonToModify map[string]json.RawMessage
 		err = json.Unmarshal(newTxJson, &jsonToModify)
 		if err != nil {
 			fmt.Printf("Error unmarshaling replacement deposit tx for %s on %s: %s\n", txHash, network, err.Error())
-			return
+			return false
 		}
 
 		from, err := types.Sender(types.LatestSignerForChainID(tx.ChainId()), tx)
 		if err != nil {
 			fmt.Printf("Error getting sender for deposit tx %s on %s: %s\n", txHash, network, err.Error())
-			return
+			return false
 		}
 		jsonToModify["from"] = json.RawMessage("\"" + strings.ToLower(from.Hex()) + "\"")
 		jsonToModify["type"] = json.RawMessage("\"0x7e\"")
@@ -163,7 +183,7 @@ func fetchTransaction(
 		finalJson, err := json.Marshal(jsonToModify)
 		if err != nil {
 			fmt.Printf("Error marshaling replacement deposit tx for %s on %s: %s\n", txHash, network, err.Error())
-			return
+			return false
 		}
 
 		err = txsDB.WriteRaw(cacheKey, finalJson)
@@ -172,7 +192,7 @@ func fetchTransaction(
 		}
 
 		fmt.Printf("Fetched %s deposit transaction %s\n", network, txHash)
-		return
+		return true
 	}
 
 	checkTransaction(tx, network, txHash)
@@ -183,6 +203,7 @@ func fetchTransaction(
 	}
 
 	fmt.Printf("Fetched %s transaction %s\n", network, txHash)
+	return true
 }
 
 func fetchTransactionReceipt(
@@ -191,28 +212,28 @@ func fetchTransactionReceipt(
 	cacheKey string,
 	network string,
 	txHash string,
-) {
+) bool {
 	var cachedReceipt types.Receipt
 	cacheFound, err := receiptsDB.Read(cacheKey, &cachedReceipt)
 	if err != nil {
 		fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
 		fmt.Printf("%#v\n", cachedReceipt)
-		return
+		return true
 	}
 
 	if cacheFound {
 		checkReceipt(&cachedReceipt, network, txHash)
-		return
+		return true
 	}
 
 	receipt, err := client.GetTransactionReceipt(txHash)
 	if err != nil {
 		fmt.Printf("Error fetching %s tx %s receipt: %s\n", network, txHash, err.Error())
-		return
+		return false
 	}
 	if receipt == nil {
 		fmt.Printf("Nil response for %s tx %s receipt\n", network, txHash)
-		return
+		return false
 	}
 
 	checkReceipt(receipt, network, txHash)
@@ -223,6 +244,7 @@ func fetchTransactionReceipt(
 	}
 
 	fmt.Printf("Fetched %s transaction %s receipt\n", network, txHash)
+	return true
 }
 
 func checkReceipt(receipt *types.Receipt, network string, txHash string) {
