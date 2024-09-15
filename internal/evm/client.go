@@ -21,24 +21,6 @@ type Client struct {
 
 func NewClient(network Network) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
-
-	for _, rpc := range network.RPCs {
-		client, err := ethclient.Dial(rpc)
-		if err == nil {
-			chainID, err := client.ChainID(context.Background())
-			if err == nil && chainID != nil {
-				if chainID.Int64() == int64(network.ChainID) {
-					connections[rpc] = client
-					util.Debugf("Connected to %s\n", rpc)
-				}
-			}
-		}
-	}
-
-	if len(connections) < QUORUM {
-		return nil, fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, network.ChainID, len(connections))
-	}
-
 	symbolCache := make(map[common.Address]string, 0)
 	decimalCache := make(map[common.Address]uint8, 0)
 
@@ -50,7 +32,37 @@ func NewClient(network Network) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) Connect() error {
+	if len(c.connections) >= QUORUM {
+		return nil
+	}
+
+	for _, rpc := range c.Network.RPCs {
+		client, err := ethclient.Dial(rpc)
+		if err == nil {
+			chainID, err := client.ChainID(context.Background())
+			if err == nil && chainID != nil {
+				if chainID.Int64() == int64(c.Network.ChainID) {
+					c.connections[rpc] = client
+					util.Debugf("Connected to %s\n", rpc)
+				}
+			}
+		}
+	}
+
+	if len(c.connections) < QUORUM {
+		return fmt.Errorf("Connected to less than quorum of %d clients for chain ID %d (only found %d)", QUORUM, c.Network.ChainID, len(c.connections))
+	}
+
+	return nil
+}
+
 func (c *Client) LatestBlock() (uint64, error) {
+	err := c.Connect()
+	if err != nil {
+		return 0, err
+	}
+
 	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint64, uint64, error) {
 		num, err := client.BlockNumber(context.Background())
 		return num, num, err
@@ -58,6 +70,11 @@ func (c *Client) LatestBlock() (uint64, error) {
 }
 
 func (c *Client) GetTransaction(hash string) (*types.Transaction, error) {
+	err := c.Connect()
+	if err != nil {
+		return nil, err
+	}
+
 	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (*types.Transaction, string, error) {
 		tx, _, err := client.TransactionByHash(context.Background(), common.HexToHash(hash))
 		if err != nil {
@@ -74,6 +91,11 @@ func (c *Client) GetTransaction(hash string) (*types.Transaction, error) {
 }
 
 func (c *Client) GetTransactionReceipt(hash string) (*types.Receipt, error) {
+	err := c.Connect()
+	if err != nil {
+		return nil, err
+	}
+
 	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (*types.Receipt, string, error) {
 		receipt, err := client.TransactionReceipt(context.Background(), common.HexToHash(hash))
 		if err != nil {
@@ -90,6 +112,11 @@ func (c *Client) GetTransactionReceipt(hash string) (*types.Receipt, error) {
 }
 
 func (c *Client) Balance(address common.Address) (core.Amount, error) {
+	err := c.Connect()
+	if err != nil {
+		return core.Amount{}, err
+	}
+
 	balance, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, string, error) {
 		bal, e := client.BalanceAt(context.Background(), address, nil)
 		if e != nil {
@@ -107,6 +134,11 @@ func (c *Client) Balance(address common.Address) (core.Amount, error) {
 func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
 	if dec, ok := c.decimalCache[token]; ok {
 		return dec, nil
+	}
+
+	err := c.Connect()
+	if err != nil {
+		return 0, err
 	}
 
 	decimals, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (uint8, uint8, error) {
@@ -130,6 +162,11 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 		return sym, nil
 	}
 
+	err := c.Connect()
+	if err != nil {
+		return "", err
+	}
+
 	symbol, err := ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (string, string, error) {
 		result, e := client.CallContract(context.Background(), symbolCall(token), nil)
 		if e != nil {
@@ -149,6 +186,11 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 }
 
 func (c *Client) Erc20Balance(token common.Address, address common.Address) (core.Amount, error) {
+	err := c.Connect()
+	if err != nil {
+		return core.Amount{}, err
+	}
+
 	decimals, err := c.Erc20Decimals(token)
 	if err != nil {
 		return core.Amount{}, fmt.Errorf("Could not get token decimals: %w", err)
