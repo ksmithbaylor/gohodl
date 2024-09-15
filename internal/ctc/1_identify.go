@@ -121,22 +121,22 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	fmt.Printf("\n------------------------------------------------------------\n\n")
 
-	totalTxs := 0
+	allTxHashes := make([]string, 0)
 
 	for addrLabel, txsByNetwork := range txHashes {
-		totalAddressTxs := 0
+		addressTxHashes := make([]string, 0)
 		for _, txs := range txsByNetwork {
-			totalAddressTxs += len(txs)
+			addressTxHashes = util.UniqueItems(addressTxHashes, txs)
+			allTxHashes = util.UniqueItems(allTxHashes, txs)
 		}
-		totalTxs += totalAddressTxs
-		fmt.Printf("%s: %d total txs\n", addrLabel, totalAddressTxs)
+		fmt.Printf("%s: %d total txs\n", addrLabel, len(addressTxHashes))
 		for network, txs := range txsByNetwork {
 			fmt.Printf("  %s: %d txs\n", network, len(txs))
 		}
 		fmt.Println()
 	}
 
-	fmt.Printf("%d total txs across all addresses and networks\n", totalTxs)
+	fmt.Printf("%d total txs across all addresses and networks\n", len(allTxHashes))
 
 	fmt.Printf("\n------------------------------------------------------------\n\n")
 
