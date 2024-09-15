@@ -33,6 +33,7 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	fmt.Println("Getting transaction hashes for each address...")
 
+	var mu sync.Mutex
 	txHashes := make(map[string]map[string][]string, 0) // address -> network -> list of tx hashes
 	errors := make(map[string]map[string]error, 0)      // address -> network -> error
 	for name, addr := range cfg.Ownership.Ethereum.Addresses {
@@ -84,7 +85,9 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 				txs, err := indexer.GetAllTransactionHashes(addr.Hex(), firstBlock, &latestBlockInt)
 				if err != nil {
 					fmt.Printf("%s - %s: Error getting transactions: %s\n", label, network.GetName(), err.Error())
+					mu.Lock()
 					errors[label][network.GetName()] = err
+					mu.Unlock()
 					continue
 				}
 
@@ -107,7 +110,9 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 				if err != nil {
 					fmt.Printf("Failed to write cache for %s: %s\n", cacheKey, err.Error())
 				}
+				mu.Lock()
 				txHashes[label][network.GetName()] = allTxs
+				mu.Unlock()
 			}
 		}(network)
 	}
