@@ -7,6 +7,8 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/core"
 )
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 type Network struct {
 	Name              NetworkName `mapstructure:"name"`
 	ChainID           uint        `mapstructure:"chain_id"`

@@ -1,11 +1,14 @@
 package ctc
 
 import (
+	"encoding/csv"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
@@ -74,7 +77,57 @@ func AnalyzeTransactions(db *util.FileDB) {
 		receipts[network][hash] = &receipt
 	}
 
+	csvFile, err := os.Create(db.Path + "/txs.csv")
+	if err != nil {
+		fmt.Printf("Error creating csv file: %s\n", err.Error())
+		return
+	}
+	defer csvFile.Close()
+
+	csvWriter := csv.NewWriter(csvFile)
+	defer csvWriter.Flush()
+
+	err = csvWriter.Write([]string{"network", "hash", "from", "to", "method", "value", "success"})
+	if err != nil {
+		fmt.Printf("Error writing csv header row: %s\n", err.Error())
+		return
+	}
+
 	for network, networkTxs := range txs {
 		fmt.Printf("%s: %d txs\n", network, len(networkTxs))
+
+		for txHash, tx := range networkTxs {
+			receipt := receipts[network][txHash]
+
+			from, err := types.Sender(types.LatestSignerForChainID(tx.ChainId()), tx)
+			if err != nil {
+				from = common.HexToAddress(evm.ZERO_ADDRESS)
+			}
+
+			method := ""
+			if len(tx.Data()) >= 4 {
+				method = "0x" + common.Bytes2Hex(tx.Data()[:4])
+			}
+
+			status := "success"
+			if receipt.Status == 0 {
+				status = "failed"
+			}
+
+			err = csvWriter.Write([]string{
+				network,
+				tx.Hash().Hex(),
+				from.Hex(),
+				tx.To().Hex(),
+				method,
+				tx.Value().String(),
+				status,
+			})
+			if err != nil {
+				fmt.Printf("Error writing csv row for %s tx %s: %s\n", network, txHash, err.Error())
+			}
+		}
 	}
+
+	fmt.Println("Done analyzing transactions!")
 }
