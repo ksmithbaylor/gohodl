@@ -77,17 +77,17 @@ func AnalyzeTransactions(db *util.FileDB) {
 		receipts[network][hash] = &receipt
 	}
 
-	csvFile, err := os.Create(db.Path + "/txs.csv")
+	txCsvFile, err := os.Create(getTxsCsvPath(db))
 	if err != nil {
 		fmt.Printf("Error creating csv file: %s\n", err.Error())
 		return
 	}
-	defer csvFile.Close()
+	defer txCsvFile.Close()
 
-	csvWriter := csv.NewWriter(csvFile)
-	defer csvWriter.Flush()
+	txCsvWriter := csv.NewWriter(txCsvFile)
+	defer txCsvWriter.Flush()
 
-	err = csvWriter.Write([]string{"network", "hash", "from", "to", "method", "value", "success"})
+	err = txCsvWriter.Write([]string{"network", "hash", "from", "to", "method", "value", "success"})
 	if err != nil {
 		fmt.Printf("Error writing csv header row: %s\n", err.Error())
 		return
@@ -114,7 +114,7 @@ func AnalyzeTransactions(db *util.FileDB) {
 				status = "failed"
 			}
 
-			err = csvWriter.Write([]string{
+			err = txCsvWriter.Write([]string{
 				network,
 				tx.Hash().Hex(),
 				from.Hex(),
@@ -130,4 +130,8 @@ func AnalyzeTransactions(db *util.FileDB) {
 	}
 
 	fmt.Println("Done analyzing transactions!")
+}
+
+func getTxsCsvPath(db *util.FileDB) string {
+	return db.Path + "/txs.csv"
 }
