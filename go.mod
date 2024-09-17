@@ -1,6 +1,6 @@
 module github.com/ksmithbaylor/gohodl
 
-go 1.21.0
+go 1.23.1
 
 replace github.com/ethereum/go-ethereum v1.13.4 => github.com/ethereum-optimism/op-geth v1.101408.0
 
