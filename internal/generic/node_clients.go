@@ -26,7 +26,6 @@ func NewAllNodeClients(networks []core.Network) AllNodeClients {
 		wg.Add(1)
 		go func(network core.Network) {
 			defer wg.Done()
-			fmt.Printf("Connecting to %s\n", network.GetName())
 			client, err := GetNodeClientForNetwork(network)
 			if err != nil {
 				errsMu.Lock()
@@ -36,7 +35,6 @@ func NewAllNodeClients(networks []core.Network) AllNodeClients {
 			}
 
 			clientsMu.Lock()
-			fmt.Printf("Connected to %s\n", network.GetName())
 			clients[network.GetName()] = client
 			clientsMu.Unlock()
 		}(network)
