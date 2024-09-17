@@ -1,0 +1,3 @@
+internal/private/** filter=git-crypt diff=git-crypt
+internal/private/111_interface.go !filter !diff
+internal/private/example.go !filter !diff
