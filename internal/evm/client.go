@@ -14,21 +14,24 @@ import (
 type Client struct {
 	Network Network // The network the client is for
 
-	connections  map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
-	symbolCache  map[common.Address]string    // Caches token contract `symbol()` lookups
-	decimalCache map[common.Address]uint8     // Caches token contract `decimals()` lookups
+	connections    map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
+	symbolCache    map[common.Address]string    // Caches token contract `symbol()` lookups
+	decimalCache   map[common.Address]uint8     // Caches token contract `decimals()` lookups
+	tokenDataCache *util.FileDBCollection       // File cache for token data
 }
 
 func NewClient(network Network) (*Client, error) {
 	connections := make(map[string]*ethclient.Client, 0)
 	symbolCache := make(map[common.Address]string, 0)
 	decimalCache := make(map[common.Address]uint8, 0)
+	tokenDataCache := util.NewFileDB("data").NewCollection("token_data")
 
 	return &Client{
-		Network:      network,
-		connections:  connections,
-		symbolCache:  symbolCache,
-		decimalCache: decimalCache,
+		Network:        network,
+		connections:    connections,
+		symbolCache:    symbolCache,
+		decimalCache:   decimalCache,
+		tokenDataCache: tokenDataCache,
 	}, nil
 }
 
@@ -136,7 +139,18 @@ func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
 		return dec, nil
 	}
 
-	err := c.Connect()
+	cacheKey := fmt.Sprintf("%s-%s-decimals", c.Network.Name, token.Hex())
+	var cachedDecimals uint8
+	cacheFound, err := c.tokenDataCache.Read(cacheKey, &cachedDecimals)
+	if err != nil {
+		fmt.Printf("Error reading from token decimal cache: %s\n", err.Error())
+	}
+	if cacheFound {
+		c.decimalCache[token] = cachedDecimals
+		return cachedDecimals, nil
+	}
+
+	err = c.Connect()
 	if err != nil {
 		return 0, err
 	}
@@ -153,6 +167,12 @@ func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
 	if err != nil {
 		return 0, fmt.Errorf("Could not get token decimals: %w", err)
 	}
+
+	err = c.tokenDataCache.Write(cacheKey, decimals)
+	if err != nil {
+		fmt.Printf("Error writing to token decimal cache: %s\n", err.Error())
+	}
+
 	c.decimalCache[token] = decimals
 	return decimals, nil
 }
@@ -162,7 +182,18 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 		return sym, nil
 	}
 
-	err := c.Connect()
+	cacheKey := fmt.Sprintf("%s-%s-symbol", c.Network.Name, token.Hex())
+	var cachedSymbol string
+	cacheFound, err := c.tokenDataCache.Read(cacheKey, &cachedSymbol)
+	if err != nil {
+		fmt.Printf("Error reading from token symbol cache: %s\n", err.Error())
+	}
+	if cacheFound {
+		c.symbolCache[token] = cachedSymbol
+		return cachedSymbol, nil
+	}
+
+	err = c.Connect()
 	if err != nil {
 		return "", err
 	}
@@ -181,6 +212,12 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Could not get token symbol: %w", err)
 	}
+
+	err = c.tokenDataCache.Write(cacheKey, symbol)
+	if err != nil {
+		fmt.Printf("Error writing to token symbol cache: %s\n", err.Error())
+	}
+
 	c.symbolCache[token] = symbol
 	return symbol, nil
 }
