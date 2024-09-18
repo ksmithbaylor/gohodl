@@ -38,6 +38,9 @@ func ExportTransactions(db *util.FileDB) {
 		return readTransaction(db, network, hash)
 	}
 
+	totalTxs := 0
+	handledTxs := 0
+
 	for {
 		row, err := txCsvReader.Read()
 		if err != nil {
@@ -47,6 +50,7 @@ func ExportTransactions(db *util.FileDB) {
 			break
 		}
 
+		totalTxs++
 		info := evm.TxInfo{
 			Network: row[0],
 			Hash:    row[1],
@@ -57,13 +61,17 @@ func ExportTransactions(db *util.FileDB) {
 			Success: row[6] == "success",
 		}
 
-		err = privateImplementation.HandleTransaction(&info, txReader, ctcWriter)
-		if err == private.UnimplementedError {
+		handled, err := privateImplementation.HandleTransaction(&info, txReader, ctcWriter)
+		if handled {
+			handledTxs++
+		}
+		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 	}
 
+	fmt.Printf("%d transactions handled out of %d (%.2f%%)\n", handledTxs, totalTxs, 100.0*float32(handledTxs)/float32(totalTxs))
 	fmt.Println("Finished reading txs from CSV!")
 }
 

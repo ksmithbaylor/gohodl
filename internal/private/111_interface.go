@@ -24,7 +24,7 @@ type transactionBundle struct {
 }
 
 type Private interface {
-	HandleTransaction(info *evm.TxInfo, readTransaction transactionReader, export ctcWriter) error
+	HandleTransaction(info *evm.TxInfo, readTransaction transactionReader, export ctcWriter) (bool, error)
 }
 
 // The below code allows the program to compile before implementing the above.
@@ -35,8 +35,12 @@ var Implementation Private
 
 type placeholder struct{}
 
-func (p placeholder) HandleTransaction(info *evm.TxInfo, readTransaction transactionReader, export ctcWriter) error {
-	return UnimplementedError
+func (p placeholder) HandleTransaction(
+	info *evm.TxInfo,
+	readTransaction transactionReader,
+	export ctcWriter,
+) (bool, error) {
+	return false, UnimplementedError
 }
 
 func init() {

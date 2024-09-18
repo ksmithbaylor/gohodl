@@ -10,7 +10,11 @@ package private
 //
 // type example struct{}
 //
-// func (e example) HandleTransaction(info *evm.TxInfo, readTransaction transactionReader, export ctcWriter) error {
+// func (e example) HandleTransaction(
+//   info *evm.TxInfo,
+//   readTransaction transactionReader,
+//   export ctcWriter,
+// ) (bool, error) {
 //   readAndThen := func(handle transactionHandler) error {
 //     tx, receipt, err := readTransaction(info.Network, info.Hash)
 //     if err != nil {
@@ -19,14 +23,12 @@ package private
 //     return handle(transactionBundle{info, tx, receipt}, export)
 //   }
 //
-//   var err error
-//
-//   switch info.Method {
-//   case "0xa9059cbb": // ERC-20 transfer, as an example
-//     err = readAndThen(handleTransfer)
+//   // ERC-20 transfer, as an example
+//   if info.Method == "0xa9059cbb" {
+//     return true, readAndThen(handleTransfer)
 //   }
 //
-//   return err
+//   return false, nil
 // }
 //
 // ////////////////////////////////////////////////////////////////////////////////
