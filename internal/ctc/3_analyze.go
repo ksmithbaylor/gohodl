@@ -20,14 +20,16 @@ func AnalyzeTransactions(db *util.FileDB) {
 
 	txsDB, txsFound := db.Collections["txs"]
 	receiptsDB, receiptsFound := db.Collections["receipts"]
-	if !txsFound || txsDB == nil || !receiptsFound || receiptsDB == nil {
+	blocksDB, blocksFound := db.Collections["blocks"]
+	if !txsFound || txsDB == nil || !receiptsFound || receiptsDB == nil || !blocksFound || blocksDB == nil {
 		fmt.Println("Cannot analyze transactions without first fetching them")
 		return
 	}
 
-	// network => tx hash => tx/receipt
+	// network => tx/block hash => tx/receipt/block
 	txs := make(map[string]map[string]*types.Transaction)
 	receipts := make(map[string]map[string]*types.Receipt)
+	blocks := make(map[string]map[string]*types.Header)
 
 	txKeys, err := txsDB.List()
 	if err != nil {
@@ -39,6 +41,10 @@ func AnalyzeTransactions(db *util.FileDB) {
 		if !strings.Contains(key, "-") {
 			continue
 		}
+
+		keyParts := strings.Split(key, "-")
+		network := keyParts[0]
+		hash := keyParts[1]
 
 		var tx types.Transaction
 		found, err := txsDB.Read(key, &tx)
@@ -62,9 +68,18 @@ func AnalyzeTransactions(db *util.FileDB) {
 			continue
 		}
 
-		keyParts := strings.Split(key, "-")
-		network := keyParts[0]
-		hash := keyParts[1]
+		var block types.Header
+		blockHash := receipt.BlockHash.Hex()
+		blockKey := fmt.Sprintf("%s-%s", network, blockHash)
+		found, err = blocksDB.Read(blockKey, &block)
+		if err != nil {
+			fmt.Printf("Error reading block from cache for %s: %s\n", blockKey, err.Error())
+			continue
+		}
+		if !found {
+			fmt.Printf("Block cache disappeared for %s\n", blockKey)
+			continue
+		}
 
 		if txs[network] == nil {
 			txs[network] = make(map[string]*types.Transaction)
@@ -72,9 +87,13 @@ func AnalyzeTransactions(db *util.FileDB) {
 		if receipts[network] == nil {
 			receipts[network] = make(map[string]*types.Receipt)
 		}
+		if blocks[network] == nil {
+			blocks[network] = make(map[string]*types.Header)
+		}
 
 		txs[network][hash] = &tx
 		receipts[network][hash] = &receipt
+		blocks[network][blockHash] = &block
 	}
 
 	txCsvFile, err := os.Create(getTxsCsvPath(db))
@@ -87,7 +106,7 @@ func AnalyzeTransactions(db *util.FileDB) {
 	txCsvWriter := csv.NewWriter(txCsvFile)
 	defer txCsvWriter.Flush()
 
-	err = txCsvWriter.Write([]string{"network", "hash", "from", "to", "method", "value", "success"})
+	err = txCsvWriter.Write([]string{"network", "hash", "blockhash", "from", "to", "method", "value", "success"})
 	if err != nil {
 		fmt.Printf("Error writing csv header row: %s\n", err.Error())
 		return
@@ -98,6 +117,7 @@ func AnalyzeTransactions(db *util.FileDB) {
 
 		for txHash, tx := range networkTxs {
 			receipt := receipts[network][txHash]
+			block := blocks[network][receipt.BlockHash.Hex()]
 
 			from, err := types.Sender(types.LatestSignerForChainID(tx.ChainId()), tx)
 			if err != nil {
@@ -117,6 +137,7 @@ func AnalyzeTransactions(db *util.FileDB) {
 			err = txCsvWriter.Write([]string{
 				network,
 				tx.Hash().Hex(),
+				block.Hash().Hex(),
 				from.Hex(),
 				tx.To().Hex(),
 				method,
