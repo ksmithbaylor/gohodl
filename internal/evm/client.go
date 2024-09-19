@@ -114,6 +114,27 @@ func (c *Client) GetTransactionReceipt(hash string) (*types.Receipt, error) {
 	})
 }
 
+func (c *Client) GetBlock(hash string) (*types.Header, error) {
+	err := c.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	return ensureAgreementWithRetry(c.connections, func(client *ethclient.Client) (*types.Header, string, error) {
+		blockHeader, err := client.HeaderByHash(context.Background(), common.HexToHash(hash))
+		if err != nil {
+			return nil, "", err
+		}
+
+		json, err := blockHeader.MarshalJSON()
+		if err != nil {
+			return nil, "", fmt.Errorf("Unable to marshal block header to json: %w", err)
+		}
+
+		return blockHeader, common.Bytes2Hex(json), nil
+	})
+}
+
 func (c *Client) Balance(address common.Address) (core.Amount, error) {
 	err := c.Connect()
 	if err != nil {

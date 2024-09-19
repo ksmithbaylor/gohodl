@@ -16,6 +16,7 @@ import (
 func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	txsDB := db.NewCollection("txs")
 	receiptsDB := db.NewCollection("receipts")
+	blocksDB := db.NewCollection("blocks")
 
 	if os.Getenv("SKIP_FETCH") != "" {
 		fmt.Println("Skipping transaction fetching step")
@@ -77,7 +78,7 @@ func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		}
 
 		wg.Add(1)
-		go fetch(&wg, evmClient, txsDB, receiptsDB, network, txs)
+		go fetch(&wg, evmClient, txsDB, receiptsDB, blocksDB, network, txs)
 	}
 
 	wg.Wait()
@@ -89,6 +90,7 @@ func fetch(
 	client *evm.Client,
 	txsDB *util.FileDBCollection,
 	receiptsDB *util.FileDBCollection,
+	blocksDB *util.FileDBCollection,
 	network string,
 	txs []string,
 ) {
@@ -101,12 +103,14 @@ func fetch(
 	for {
 		retryTx := make([]string, 0)
 		retryReceipt := make([]string, 0)
+		retryBlock := make([]string, 0)
 
 		for _, txHash := range unfetched {
 			cacheKey := fmt.Sprintf("%s-%s", network, txHash)
 
 			txSuccess := fetchTransaction(client, txsDB, cacheKey, network, txHash)
-			receiptSuccess := fetchTransactionReceipt(client, receiptsDB, cacheKey, network, txHash)
+			receiptSuccess, blockHash := fetchTransactionReceipt(client, receiptsDB, cacheKey, network, txHash)
+			blockSuccess := fetchBlock(client, blocksDB, network, blockHash)
 
 			if !txSuccess {
 				retryTx = append(retryTx, txHash)
@@ -114,10 +118,13 @@ func fetch(
 			if !receiptSuccess {
 				retryReceipt = append(retryReceipt, txHash)
 			}
+			if !blockSuccess {
+				retryBlock = append(retryBlock, txHash)
+			}
 		}
 
 		if len(retryTx) > 0 || len(retryReceipt) > 0 {
-			unfetched = util.UniqueItems(retryTx, retryReceipt)
+			unfetched = util.UniqueItems(retryTx, retryReceipt, retryBlock)
 		} else {
 			break
 		}
@@ -136,7 +143,7 @@ func fetchTransaction(
 	var cachedTx types.Transaction
 	cacheFound, err := txsDB.Read(cacheKey, &cachedTx)
 	if err != nil {
-		fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
+		fmt.Printf("Error reading tx cache for %s: %s\n", cacheKey, err.Error())
 		return true
 	}
 
@@ -212,28 +219,28 @@ func fetchTransactionReceipt(
 	cacheKey string,
 	network string,
 	txHash string,
-) bool {
+) (bool, string) {
 	var cachedReceipt types.Receipt
 	cacheFound, err := receiptsDB.Read(cacheKey, &cachedReceipt)
 	if err != nil {
-		fmt.Printf("Error reading cache for %s: %s\n", cacheKey, err.Error())
+		fmt.Printf("Error reading receipt cache for %s: %s\n", cacheKey, err.Error())
 		fmt.Printf("%#v\n", cachedReceipt)
-		return true
+		return true, "<invalid-cache>"
 	}
 
 	if cacheFound {
 		checkReceipt(&cachedReceipt, network, txHash)
-		return true
+		return true, cachedReceipt.BlockHash.String()
 	}
 
 	receipt, err := client.GetTransactionReceipt(txHash)
 	if err != nil {
 		fmt.Printf("Error fetching %s tx %s receipt: %s\n", network, txHash, err.Error())
-		return false
+		return false, ""
 	}
 	if receipt == nil {
 		fmt.Printf("Nil response for %s tx %s receipt\n", network, txHash)
-		return false
+		return false, ""
 	}
 
 	checkReceipt(receipt, network, txHash)
@@ -244,17 +251,64 @@ func fetchTransactionReceipt(
 	}
 
 	fmt.Printf("Fetched %s transaction %s receipt\n", network, txHash)
+	return true, receipt.BlockHash.String()
+}
+
+func fetchBlock(
+	client *evm.Client,
+	blocksDB *util.FileDBCollection,
+	network string,
+	blockHash string,
+) bool {
+	cacheKey := fmt.Sprintf("%s-%s", network, blockHash)
+
+	var cachedBlock types.Header
+	cacheFound, err := blocksDB.Read(cacheKey, &cachedBlock)
+	if err != nil {
+		fmt.Printf("Error reading cache for block %s: %s\n", cacheKey, err.Error())
+		return true
+	}
+
+	if cacheFound {
+		checkBlock(&cachedBlock, network, blockHash)
+		return true
+	}
+
+	block, err := client.GetBlock(blockHash)
+	if err != nil {
+		fmt.Printf("Error fetching %s block %s: %s\n", network, blockHash, err.Error())
+		return false
+	}
+	if block == nil {
+		fmt.Printf("Nil response for %s block %s\n", network, blockHash)
+		return false
+	}
+
+	checkBlock(block, network, blockHash)
+
+	err = blocksDB.Write(cacheKey, block)
+	if err != nil {
+		fmt.Printf("Error caching block %s: %s\n", cacheKey, err.Error())
+	}
+
+	fmt.Printf("Fetched %s block %s\n", network, blockHash)
 	return true
 }
 
+func checkTransaction(tx *types.Transaction, network string, txHash string) {
+	if tx == nil || len(tx.Hash().String()) < 4 {
+		fmt.Printf("--- Transaction %s on %s appears to be invalid\n", txHash, network)
+	}
+}
+
 func checkReceipt(receipt *types.Receipt, network string, txHash string) {
-	if receipt.GasUsed == 0 && len(receipt.Logs) == 0 {
+	if receipt == nil || receipt.GasUsed == 0 && len(receipt.Logs) == 0 {
 		fmt.Printf("--- Receipt for %s tx %s appears to be empty\n", network, txHash)
 	}
 }
 
-func checkTransaction(tx *types.Transaction, network string, txHash string) {
-	if len(tx.Hash().String()) < 4 {
-		fmt.Printf("--- Transaction %s on %s appears to be invalid\n", txHash, network)
+func checkBlock(block *types.Header, network string, blockHash string) {
+	if block == nil || block.SanityCheck() != nil {
+		fmt.Printf("--- Block %s on %s appears to be empty\n", blockHash, network)
 	}
 }

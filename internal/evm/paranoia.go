@@ -70,7 +70,7 @@ func ensureAgreement[R any, C comparable](
 				util.Debugf("Success from %s: %#+v\n", rpc, result)
 				mu.Unlock()
 			} else {
-				util.Debugf("Problem with %s: %s", rpc, err.Error())
+				util.Debugf("Problem with %s: %s\n", rpc, err.Error())
 			}
 		}(rpcs[i], client)
 	}
@@ -95,7 +95,7 @@ func ensureAgreement[R any, C comparable](
 			util.Debugf("Success from %s: %#+v\n", rpc, result)
 			mu.Unlock()
 		} else {
-			util.Debugf("Problem with %s: %s", rpc, err.Error())
+			util.Debugf("Problem with %s: %s\n", rpc, err.Error())
 		}
 	}
 
