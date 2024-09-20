@@ -15,16 +15,27 @@ import (
 // allowing it to be overridden by the other files in the directory.
 
 type ctcWriter func([]string) error
-type transactionReader func(network, hash string) (*types.Transaction, *types.Receipt, error)
-type transactionHandler func(bundle transactionBundle, export ctcWriter) error
+type transactionReader func(network, hash string) (
+	*types.Transaction,
+	*types.Receipt,
+	*types.Header,
+	error,
+)
+type transactionHandler func(bundle transactionBundle, client *evm.Client, export ctcWriter) error
 type transactionBundle struct {
 	info    *evm.TxInfo
 	tx      *types.Transaction
 	receipt *types.Receipt
+	block   *types.Header
 }
 
 type Private interface {
-	HandleTransaction(info *evm.TxInfo, readTransaction transactionReader, export ctcWriter) (bool, error)
+	HandleTransaction(
+		info *evm.TxInfo,
+		client *evm.Client,
+		readTransaction transactionReader,
+		export ctcWriter,
+	) (bool, error)
 }
 
 // The below code allows the program to compile before implementing the above.
@@ -37,6 +48,7 @@ type placeholder struct{}
 
 func (p placeholder) HandleTransaction(
 	info *evm.TxInfo,
+	client *evm.Client,
 	readTransaction transactionReader,
 	export ctcWriter,
 ) (bool, error) {
