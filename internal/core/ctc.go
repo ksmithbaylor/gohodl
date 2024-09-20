@@ -1,0 +1,98 @@
+package core
+
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
+
+type CTCTransaction struct {
+	Timestamp              time.Time
+	Type                   CTCTransactionType
+	BaseCurrency           string
+	BaseAmount             decimal.Decimal
+	QuoteCurrency          string
+	QuoteAmount            decimal.Decimal
+	FeeCurrency            string
+	FeeAmount              decimal.Decimal
+	From                   string
+	To                     string
+	Blockchain             string
+	ID                     string
+	ReferencePricePerUnit  decimal.Decimal
+	ReferencePriceCurrency string
+}
+
+func (t CTCTransaction) ToCSV() []string {
+	return []string{
+		t.Timestamp.Format("2006-01-02 15:04:05"),
+		string(t.Type),
+		t.BaseCurrency,
+		t.BaseAmount.String(),
+		t.QuoteCurrency,
+		t.QuoteAmount.String(),
+		t.FeeCurrency,
+		t.FeeAmount.String(),
+		t.From,
+		t.To,
+		t.Blockchain,
+		t.ID,
+		t.ReferencePricePerUnit.String(),
+		t.ReferencePriceCurrency,
+	}
+}
+
+type CTCTransactionType string
+
+const (
+	CTCBuy                  CTCTransactionType = "buy"
+	CTCSell                 CTCTransactionType = "sell"
+	CTCFiatDeposit          CTCTransactionType = "fiat-deposit"
+	CTCFiatWithdrawal       CTCTransactionType = "fiat-withdrawal"
+	CTCFee                  CTCTransactionType = "fee"
+	CTCApproval             CTCTransactionType = "approval"
+	CTCReceive              CTCTransactionType = "receive"
+	CTCSend                 CTCTransactionType = "send"
+	CTCChainSplit           CTCTransactionType = "chain-split"
+	CTCExpense              CTCTransactionType = "expense"
+	CTCStolen               CTCTransactionType = "stolen"
+	CTCLost                 CTCTransactionType = "lost"
+	CTCBurn                 CTCTransactionType = "burn"
+	CTCIncome               CTCTransactionType = "income"
+	CTCInterest             CTCTransactionType = "interest"
+	CTCMining               CTCTransactionType = "mining"
+	CTCAirdrop              CTCTransactionType = "airdrop"
+	CTCStaking              CTCTransactionType = "staking"
+	CTCStakingDeposit       CTCTransactionType = "staking-deposit"
+	CTCStakingWithdrawal    CTCTransactionType = "staking-withdrawal"
+	CTCRebate               CTCTransactionType = "rebate"
+	CTCRoyalty              CTCTransactionType = "royalty"
+	CTCPersonalUse          CTCTransactionType = "personal-use"
+	CTCIncomingGift         CTCTransactionType = "incoming-gift"
+	CTCOutgoingGift         CTCTransactionType = "outgoing-gift"
+	CTCBorrow               CTCTransactionType = "borrow"
+	CTCLoanRepayment        CTCTransactionType = "loan-repayment"
+	CTCLiquidate            CTCTransactionType = "liquidate"
+	CTCBridgeIn             CTCTransactionType = "bridge-in"
+	CTCBridgeOut            CTCTransactionType = "bridge-out"
+	CTCMint                 CTCTransactionType = "mint"
+	CTCCollateralWithdrawal CTCTransactionType = "collateral-withdrawal"
+	CTCAddLiquidity         CTCTransactionType = "add-liquidity"
+	CTCReceiveLPToken       CTCTransactionType = "receive-lp-token"
+	CTCRemoveLiquidity      CTCTransactionType = "remove-liquidity"
+	CTCReturnLPToken        CTCTransactionType = "return-lp-token"
+	CTCFailedIn             CTCTransactionType = "failed-in"
+	CTCFailedOut            CTCTransactionType = "failed-out"
+	CTCSpam                 CTCTransactionType = "spam"
+	CTCSwapIn               CTCTransactionType = "swap-in"
+	CTCSwapOut              CTCTransactionType = "swap-out"
+	CTCBridgeTradeIn        CTCTransactionType = "bridge-trade-in"
+	CTCBridgeTradeOut       CTCTransactionType = "bridge-trade-out"
+	CTCRealizedProfit       CTCTransactionType = "realized-profit"
+	CTCRealizedLoss         CTCTransactionType = "realized-loss"
+	CTCMarginFee            CTCTransactionType = "margin-fee"
+	CTCOpenPosition         CTCTransactionType = "open-position"
+	CTCClosePosition        CTCTransactionType = "close-position"
+	CTCReceivePQ            CTCTransactionType = "receive-pq"
+	CTCSendPQ               CTCTransactionType = "send-pq"
+)

@@ -106,3 +106,26 @@ func (c config) AllNetworks() []core.Network {
 	}
 	return networks
 }
+
+func (c config) IsMyEvmAddress(addr common.Address) bool {
+	for _, address := range c.Ownership.Ethereum.Addresses {
+		if address == addr {
+			return true
+		}
+	}
+	return false
+}
+
+func (c config) IsMyEvmAddressString(addr string) bool {
+	return c.IsMyEvmAddress(common.HexToAddress(addr))
+}
+
+func (c config) EvmNetworkByName(name string) evm.Network {
+	for _, network := range c.EvmNetworks {
+		if string(network.Name) == name {
+			return network
+		}
+	}
+
+	return evm.Network{}
+}

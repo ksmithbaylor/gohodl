@@ -16,5 +16,5 @@ func main() {
 	ctc.IdentifyTransactions(db, clients)
 	ctc.FetchTransactions(db, clients)
 	ctc.AnalyzeTransactions(db)
-	ctc.ExportTransactions(db)
+	ctc.ExportTransactions(db, clients)
 }
