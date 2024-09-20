@@ -9,29 +9,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 
+	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/generic"
 	"github.com/ksmithbaylor/gohodl/internal/private"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
-
-var CTC_HEADERS = []string{
-	"Timestamp (UTC)",
-	"Type",
-	"Base Currency",
-	"Base Amount",
-	"Quote Currency (Optional)",
-	"Quote Amount (Optional)",
-	"Fee Currency (Optional)",
-	"Fee Amount (Optional)",
-	"From (Optional)",
-	"To (Optional)",
-	"Blockchain (Optional)",
-	"ID (Optional)",
-	"Description (Optional)",
-	"Reference Price Per Unit (Optional)",
-	"Reference Price Currency (Optional)",
-}
 
 func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	if os.Getenv("SKIP_EXPORT") != "" {
@@ -57,7 +40,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	ctcCsvWriter := csv.NewWriter(ctcCsvFile)
 	defer ctcCsvWriter.Flush()
 
-	err = ctcCsvWriter.Write(CTC_HEADERS)
+	err = ctcCsvWriter.Write(core.CTC_HEADERS)
 	if err != nil {
 		fmt.Printf("Error writing CTC CSV headers: %s\n", err.Error())
 		return

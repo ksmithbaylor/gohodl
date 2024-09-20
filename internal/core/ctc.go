@@ -19,8 +19,27 @@ type CTCTransaction struct {
 	To                     string
 	Blockchain             string
 	ID                     string
+	Description            string
 	ReferencePricePerUnit  decimal.Decimal
 	ReferencePriceCurrency string
+}
+
+var CTC_HEADERS = []string{
+	"Timestamp (UTC)",
+	"Type",
+	"Base Currency",
+	"Base Amount",
+	"Quote Currency (Optional)",
+	"Quote Amount (Optional)",
+	"Fee Currency (Optional)",
+	"Fee Amount (Optional)",
+	"From (Optional)",
+	"To (Optional)",
+	"Blockchain (Optional)",
+	"ID (Optional)",
+	"Description (Optional)",
+	"Reference Price Per Unit (Optional)",
+	"Reference Price Currency (Optional)",
 }
 
 func (t CTCTransaction) ToCSV() []string {
@@ -30,16 +49,24 @@ func (t CTCTransaction) ToCSV() []string {
 		t.BaseCurrency,
 		t.BaseAmount.String(),
 		t.QuoteCurrency,
-		t.QuoteAmount.String(),
+		emptyIfZero(t.QuoteAmount.String()),
 		t.FeeCurrency,
-		t.FeeAmount.String(),
+		emptyIfZero(t.FeeAmount.String()),
 		t.From,
 		t.To,
 		t.Blockchain,
 		t.ID,
-		t.ReferencePricePerUnit.String(),
+		t.Description,
+		emptyIfZero(t.ReferencePricePerUnit.String()),
 		t.ReferencePriceCurrency,
 	}
+}
+
+func emptyIfZero(s string) string {
+	if s == "0" {
+		return ""
+	}
+	return s
 }
 
 type CTCTransactionType string
