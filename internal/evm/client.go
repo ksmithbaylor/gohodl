@@ -243,6 +243,27 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 	return symbol, nil
 }
 
+func (c *Client) TokenAsset(token common.Address) (core.Asset, error) {
+	symbol, err := c.TokenSymbol(token)
+	if err != nil {
+		return core.Asset{}, fmt.Errorf("Could not get token symbol for %s on %s: %w", token, c.Network.Name, err)
+	}
+
+	decimals, err := c.Erc20Decimals(token)
+	if err != nil {
+		return core.Asset{}, fmt.Errorf("Could not get token decimals for %s on %s: %w", token, c.Network.Name, err)
+	}
+
+	return core.Asset{
+		NetworkKind: core.EvmNetworkKind,
+		NetworkName: c.Network.GetName(),
+		Kind:        core.Erc20Token,
+		Symbol:      symbol,
+		Decimals:    decimals,
+		Identifier:  token.Hex(),
+	}, nil
+}
+
 func (c *Client) Erc20Balance(token common.Address, address common.Address) (core.Amount, error) {
 	err := c.Connect()
 	if err != nil {
