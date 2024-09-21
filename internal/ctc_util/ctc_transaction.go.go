@@ -1,8 +1,10 @@
-package core
+package ctc_util
 
 import (
 	"time"
 
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/shopspring/decimal"
 )
 
@@ -42,7 +44,7 @@ var CTC_HEADERS = []string{
 	"Reference Price Currency (Optional)",
 }
 
-func (t CTCTransaction) ToCSV() []string {
+func (t *CTCTransaction) ToCSV() []string {
 	return []string{
 		t.Timestamp.Format("2006-01-02 15:04:05"),
 		string(t.Type),
@@ -59,6 +61,29 @@ func (t CTCTransaction) ToCSV() []string {
 		t.Description,
 		emptyIfZero(t.ReferencePricePerUnit.String()),
 		t.ReferencePriceCurrency,
+	}
+}
+
+func (t *CTCTransaction) AddTransactionFeeIfMine(from, network string, receipt *types.Receipt) {
+	if config.Config.IsMyEvmAddressString(from) {
+		evmNetwork := config.Config.EvmNetworkByName(network)
+
+		gasPrice, err := decimal.NewFromString(receipt.EffectiveGasPrice.String())
+		if err != nil {
+			panic("Could not parse gas price")
+		}
+		gasUsed := decimal.NewFromInt(int64(receipt.GasUsed))
+		networkFee := gasPrice.Mul(gasUsed)
+
+		l1Fee, err := decimal.NewFromString(receipt.L1Fee.String())
+		if err != nil {
+			networkFee = networkFee.Add(l1Fee)
+		}
+
+		transactionFee := evmNetwork.NativeAsset().WithAtomicDecimalValue(networkFee)
+
+		t.FeeCurrency = transactionFee.Asset.Symbol
+		t.FeeAmount = transactionFee.Value
 	}
 }
 

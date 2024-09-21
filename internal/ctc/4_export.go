@@ -9,7 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/ksmithbaylor/gohodl/internal/core"
+	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/generic"
 	"github.com/ksmithbaylor/gohodl/internal/private"
@@ -40,7 +40,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	ctcCsvWriter := csv.NewWriter(ctcCsvFile)
 	defer ctcCsvWriter.Flush()
 
-	err = ctcCsvWriter.Write(core.CTC_HEADERS)
+	err = ctcCsvWriter.Write(ctc_util.CTC_HEADERS)
 	if err != nil {
 		fmt.Printf("Error writing CTC CSV headers: %s\n", err.Error())
 		return
