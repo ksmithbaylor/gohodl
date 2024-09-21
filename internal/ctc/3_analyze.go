@@ -114,7 +114,7 @@ func AnalyzeTransactions(db *util.FileDB) {
 
 			err = txCsvWriter.Write([]string{
 				network,
-				tx.Hash().Hex(),
+				txHash,
 				block.Hash().Hex(),
 				from.Hex(),
 				tx.To().Hex(),
