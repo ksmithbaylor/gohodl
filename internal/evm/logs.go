@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
 type ParsedEvent struct {
@@ -22,7 +23,7 @@ func ParseKnownEvents(network string, logs []*types.Log, contractAbi abi.ABI) ([
 	for _, log := range logs {
 		tokenID := fmt.Sprintf("%s-%s", network, log.Address.Hex())
 		if slices.Contains(SPAM_TOKENS, tokenID) {
-			fmt.Printf("SPAM FOUND, skipping (%s)\n", tokenID)
+			util.Debugf("SPAM FOUND, skipping (%s)\n", tokenID)
 			continue
 		}
 
