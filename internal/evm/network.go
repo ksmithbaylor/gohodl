@@ -14,6 +14,7 @@ type Network struct {
 	ChainID           uint        `mapstructure:"chain_id"`
 	NativeAssetSymbol string      `mapstructure:"native_asset"`
 	RPCs              []string    `mapstructure:"rpcs"`
+	SettlesTo         NetworkName `mapstructure:"settles_to"`
 	Etherscan         struct {
 		URL string `mapstructure:"url"`
 		Key string `mapstructure:"key"`
