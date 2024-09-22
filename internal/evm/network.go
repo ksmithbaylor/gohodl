@@ -2,6 +2,8 @@ package evm
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ksmithbaylor/gohodl/internal/core"
@@ -15,7 +17,11 @@ type Network struct {
 	NativeAssetSymbol string      `mapstructure:"native_asset"`
 	RPCs              []string    `mapstructure:"rpcs"`
 	SettlesTo         NetworkName `mapstructure:"settles_to"`
-	Etherscan         struct {
+	ExplorerURLs      struct {
+		Tx   string `mapstructure:"tx"`
+		Addr string `mapstructure:"addr"`
+	} `mapstructure:"explorer_urls"`
+	Etherscan struct {
 		URL string `mapstructure:"url"`
 		Key string `mapstructure:"key"`
 		RPS uint   `mapstructure:"rps"`
@@ -60,5 +66,19 @@ func (n Network) Erc721NftAsset(contractAddress, symbol string, tokenID uint64) 
 		Identifier:  fmt.Sprintf("%s/%d", contractAddress, tokenID),
 		Symbol:      symbol,
 		Decimals:    0,
+	}
+}
+
+func (n Network) OpenTransactionInExplorer(hash string, wait ...bool) {
+	url := strings.Replace(n.ExplorerURLs.Tx, "TX", hash, 1)
+	cmd := exec.Command("/usr/bin/open", "-u", url, "-a", "Google Chrome")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(cmd.String())
+		fmt.Println(string(output))
+		fmt.Println(err.Error())
+	}
+	if len(wait) > 0 && wait[0] {
+		_, _ = fmt.Scanln()
 	}
 }

@@ -243,6 +243,10 @@ func (c *Client) TokenSymbol(token common.Address) (string, error) {
 	return symbol, nil
 }
 
+func (c *Client) OpenTransactionInExplorer(hash string, wait ...bool) {
+	c.Network.OpenTransactionInExplorer(hash, wait...)
+}
+
 func (c *Client) TokenAsset(token common.Address) (core.Asset, error) {
 	symbol, err := c.TokenSymbol(token)
 	if err != nil {
