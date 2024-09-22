@@ -64,6 +64,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	totalTxs := 0
 	handledTxs := 0
+	unhandled := 0
 
 	for {
 		row, err := txCsvReader.Read()
@@ -104,9 +105,13 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 		handled, err := privateImplementation.HandleTransaction(&info, evmClient, txReader, ctcWriter)
 		if handled {
-			handledTxs++
+			if err == nil {
+				handledTxs++
+			} else if err == private.NOT_HANDLED {
+				unhandled++
+			}
 		}
-		if err != nil {
+		if err != nil && err != private.NOT_HANDLED {
 			fmt.Println(err.Error())
 			return
 		}
@@ -120,6 +125,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	}
 
 	fmt.Printf("%d transactions handled out of %d (%.2f%%)\n", handledTxs, totalTxs, 100.0*float32(handledTxs)/float32(totalTxs))
+	fmt.Printf("%d transactions temporarily not handled\n", unhandled)
 	fmt.Println("Finished reading txs from CSV!")
 }
 
