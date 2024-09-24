@@ -9,15 +9,18 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/util"
+	"github.com/nanmu42/etherscan-api"
 )
 
 type Client struct {
-	Network Network // The network the client is for
+	Network   Network          // The network the client is for
+	Etherscan *EtherscanClient // A client for the etherscan-compatible explorer
 
-	connections    map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
-	symbolCache    map[common.Address]string    // Caches token contract `symbol()` lookups
-	decimalCache   map[common.Address]uint8     // Caches token contract `decimals()` lookups
-	tokenDataCache *util.FileDBCollection       // File cache for token data
+	connections     map[string]*ethclient.Client // Maps RPC URL to the corresponding eth client
+	symbolCache     map[common.Address]string    // Caches token contract `symbol()` lookups
+	decimalCache    map[common.Address]uint8     // Caches token contract `decimals()` lookups
+	tokenDataCache  *util.FileDBCollection       // File cache for token data
+	internalTxCache *util.FileDBCollection       // File cache for etherscan internal txs
 }
 
 func NewClient(network Network) (*Client, error) {
@@ -25,13 +28,20 @@ func NewClient(network Network) (*Client, error) {
 	symbolCache := make(map[common.Address]string, 0)
 	decimalCache := make(map[common.Address]uint8, 0)
 	tokenDataCache := util.NewFileDB("data").NewCollection("token_data")
+	internalTxCache := util.NewFileDB("data").NewCollection("internal_txs")
+	etherscanClient, err := NewEtherscanClient(network)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
-		Network:        network,
-		connections:    connections,
-		symbolCache:    symbolCache,
-		decimalCache:   decimalCache,
-		tokenDataCache: tokenDataCache,
+		Network:         network,
+		Etherscan:       etherscanClient,
+		connections:     connections,
+		symbolCache:     symbolCache,
+		decimalCache:    decimalCache,
+		tokenDataCache:  tokenDataCache,
+		internalTxCache: internalTxCache,
 	}, nil
 }
 
@@ -112,6 +122,31 @@ func (c *Client) GetTransactionReceipt(hash string) (*types.Receipt, error) {
 
 		return receipt, common.Bytes2Hex(json), nil
 	})
+}
+
+func (c *Client) GetInternalTransactions(hash string) ([]etherscan.InternalTx, bool, error) {
+	cacheKey := fmt.Sprintf("%s-%s", c.Network.Name, hash)
+
+	var txs []etherscan.InternalTx
+	cacheFound, err := c.internalTxCache.Read(cacheKey, &txs)
+	if err != nil {
+		return nil, false, err
+	}
+	if cacheFound {
+		return txs, true, nil
+	}
+
+	txs, err = c.Etherscan.GetInternalTransfers(hash)
+	if err != nil {
+		return nil, false, err
+	}
+
+	err = c.internalTxCache.Write(cacheKey, txs)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return txs, false, nil
 }
 
 func (c *Client) GetBlock(hash string) (*types.Header, error) {

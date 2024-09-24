@@ -57,6 +57,18 @@ type labeledGetter struct {
 	getTxs func(string, int, int, bool) ([]any, error)
 }
 
+func (c *EtherscanClient) GetInternalTransfers(txHash string) ([]etherscan.InternalTx, error) {
+	internalTxs, err := c.client.InternalTxForTransaction(txHash)
+	if err != nil {
+		if strings.Contains(err.Error(), "No transactions found") {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return internalTxs, nil
+}
+
 func (c *EtherscanClient) GetAllTransactionHashes(address string, startBlock, endBlock *int) ([]string, error) {
 	s := 0
 	if startBlock != nil {

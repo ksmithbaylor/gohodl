@@ -4,6 +4,8 @@ go 1.23.1
 
 replace github.com/ethereum/go-ethereum v1.13.4 => github.com/ethereum-optimism/op-geth v1.101408.0
 
+replace github.com/nanmu42/etherscan-api v1.10.0 => github.com/ksmithbaylor/etherscan-api v1.11.0
+
 require (
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/k0kubun/pp/v3 v3.2.0

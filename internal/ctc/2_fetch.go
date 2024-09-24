@@ -104,6 +104,7 @@ func fetch(
 		retryTx := make([]string, 0)
 		retryReceipt := make([]string, 0)
 		retryBlock := make([]string, 0)
+		retryInternal := make([]string, 0)
 
 		for _, txHash := range unfetched {
 			cacheKey := fmt.Sprintf("%s-%s", network, txHash)
@@ -111,6 +112,7 @@ func fetch(
 			txSuccess := fetchTransaction(client, txsDB, cacheKey, network, txHash)
 			receiptSuccess, blockHash := fetchTransactionReceipt(client, receiptsDB, cacheKey, network, txHash)
 			blockSuccess := fetchBlock(client, blocksDB, network, blockHash)
+			internalSuccess := fetchInternalTxs(client, network, txHash)
 
 			if !txSuccess {
 				retryTx = append(retryTx, txHash)
@@ -121,10 +123,13 @@ func fetch(
 			if !blockSuccess {
 				retryBlock = append(retryBlock, txHash)
 			}
+			if !internalSuccess {
+				retryInternal = append(retryInternal, txHash)
+			}
 		}
 
-		if len(retryTx) > 0 || len(retryReceipt) > 0 {
-			unfetched = util.UniqueItems(retryTx, retryReceipt, retryBlock)
+		if len(retryTx) > 0 || len(retryReceipt) > 0 || len(retryBlock) > 0 || len(retryInternal) > 0 {
+			unfetched = util.UniqueItems(retryTx, retryReceipt, retryBlock, retryInternal)
 		} else {
 			break
 		}
@@ -292,6 +297,19 @@ func fetchBlock(
 	}
 
 	fmt.Printf("Fetched %s block %s\n", network, blockHash)
+	return true
+}
+
+func fetchInternalTxs(client *evm.Client, network, txHash string) bool {
+	_, cached, err := client.GetInternalTransactions(txHash)
+	if err != nil {
+		fmt.Printf("Error fetching internal txs for %s tx %s: %s\n", network, txHash, err.Error())
+		return false
+	}
+
+	if !cached {
+		fmt.Printf("Fetched internal txs for %s tx %s\n", network, txHash)
+	}
 	return true
 }
 
