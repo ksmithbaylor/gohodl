@@ -17,6 +17,10 @@ type ParsedEvent struct {
 	Data     map[string]any
 }
 
+var KNOWN_STRANGE_CONTRACTS = []string{
+	"0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+}
+
 func ParseKnownEvents(network string, logs []*types.Log, contractAbi abi.ABI) ([]ParsedEvent, error) {
 	events := make([]ParsedEvent, 0)
 
@@ -46,6 +50,9 @@ func ParseKnownEvents(network string, logs []*types.Log, contractAbi abi.ABI) ([
 
 		err = abi.ParseTopicsIntoMap(eventData, indexedArgs, log.Topics[1:])
 		if err != nil {
+			if slices.Contains(KNOWN_STRANGE_CONTRACTS, log.Address.Hex()) {
+				continue
+			}
 			return nil, fmt.Errorf("Could not unpack indexed log topics: %w", err)
 		}
 

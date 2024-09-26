@@ -1,6 +1,7 @@
 package evm_util
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -14,6 +15,23 @@ import (
 
 type TokenTransfers map[common.Address]*core.Amount
 type NetTransfers map[core.Asset]TokenTransfers
+
+func (nt NetTransfers) String() string {
+	s := ""
+
+	if len(nt) == 0 {
+		return s
+	}
+
+	for asset, transfers := range nt {
+		s += fmt.Sprintf("%s:\n", asset)
+		for addr, amount := range transfers {
+			s += fmt.Sprintf("  %s: %s\n", addr.Hex(), amount)
+		}
+	}
+
+	return s[:len(s)-1]
+}
 
 type transfer struct {
 	from   common.Address
