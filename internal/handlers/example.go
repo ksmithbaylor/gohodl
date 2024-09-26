@@ -1,4 +1,4 @@
-package private
+package handlers
 
 // import (
 //   "github.com/ksmithbaylor/gohodl/internal/evm"

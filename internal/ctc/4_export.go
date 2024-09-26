@@ -12,7 +12,7 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/generic"
-	"github.com/ksmithbaylor/gohodl/internal/private"
+	"github.com/ksmithbaylor/gohodl/internal/handlers"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
@@ -48,7 +48,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	rowsToWrite := make([][]string, 0)
 
-	privateImplementation := private.Implementation
+	privateImplementation := handlers.Implementation
 	ctcWriter := func(row []string) error {
 		rowsToWrite = append(rowsToWrite, row)
 		return nil
@@ -107,11 +107,11 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		if handled {
 			if err == nil {
 				handledTxs++
-			} else if err == private.NOT_HANDLED {
+			} else if err == handlers.NOT_HANDLED {
 				unhandled++
 			}
 		}
-		if err != nil && err != private.NOT_HANDLED {
+		if err != nil && err != handlers.NOT_HANDLED {
 			fmt.Println(err.Error())
 			return
 		}
