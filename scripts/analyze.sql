@@ -1,5 +1,6 @@
 .mode csv
 .import ./data/txs.csv txs
+.import ./data/ctc.csv ctc
 
 .mode table
 
@@ -8,16 +9,19 @@ create temp view unique_networks as
     network,
     count(*) as how_many
   from txs
+  where txs.hash not in (select "ID (Optional)" from ctc)
   group by network
   order by how_many desc;
 
-select * from by_network;
+select * from unique_networks;
 
 create temp view unique_methods as
   select
     method,
-    count(*) as how_many
+    count(*) as how_many,
+    count(distinct "to") as destinations
   from txs
+  where txs.hash not in (select "ID (Optional)" from ctc)
   group by method
   order by how_many desc;
 
@@ -25,6 +29,7 @@ select count(*) as 'unique methods' from unique_methods;
 select
   method,
   how_many,
+  destinations,
   sum(how_many) over (order by how_many desc rows unbounded preceding) as cumulative
 from unique_methods
 limit 20;
@@ -33,8 +38,10 @@ create temp view unique_destinations as
   select
     network,
     "to",
-    count(*) as how_many
+    count(*) as how_many,
+    count(distinct method) as methods
   from txs
+  where txs.hash not in (select "ID (Optional)" from ctc)
   group by network, "to"
   order by how_many desc;
 
@@ -43,6 +50,7 @@ select
   network,
   "to",
   how_many,
+  methods,
   sum(how_many) over (order by how_many desc rows unbounded preceding) as cumulative
 from unique_destinations
 limit 20;
@@ -54,6 +62,7 @@ create temp view unique_calls as
     method,
     count(*) as how_many
   from txs
+  where txs.hash not in (select "ID (Optional)" from ctc)
   group by network, "to", method
   order by how_many desc;
 
