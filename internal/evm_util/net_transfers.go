@@ -1,12 +1,15 @@
-package evm
+package evm_util
 
 import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+
 	"github.com/ksmithbaylor/gohodl/internal/abis"
+	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/core"
+	"github.com/ksmithbaylor/gohodl/internal/evm"
 )
 
 type TokenTransfers map[common.Address]*core.Amount
@@ -18,7 +21,7 @@ type transfer struct {
 	amount core.Amount
 }
 
-func NetTokenTransfers(client *Client, info *TxInfo, logs []*types.Log) (NetTransfers, error) {
+func NetTokenTransfers(client *evm.Client, info *evm.TxInfo, logs []*types.Log) (NetTransfers, error) {
 	transfers := make([]transfer, 0)
 	netTransfers := make(NetTransfers)
 
@@ -39,7 +42,7 @@ func NetTokenTransfers(client *Client, info *TxInfo, logs []*types.Log) (NetTran
 		})
 	}
 
-	erc20Logs, err := ParseKnownEvents(info.Network, logs, abis.Erc20Abi)
+	erc20Logs, err := evm.ParseKnownEvents(info.Network, logs, abis.Erc20Abi)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +134,26 @@ func NetTokenTransfers(client *Client, info *TxInfo, logs []*types.Log) (NetTran
 			return nil, err
 		}
 		netTransfers[asset][transfer.to] = &newToAmount
+	}
+
+	return netTransfers, nil
+}
+
+func NetTokenTransfersOnlyMine(client *evm.Client, info *evm.TxInfo, logs []*types.Log) (NetTransfers, error) {
+	netTransfers, err := NetTokenTransfers(client, info, logs)
+	if err != nil {
+		return nil, err
+	}
+
+	for asset, transfers := range netTransfers {
+		for addr := range transfers {
+			if !config.Config.IsMyEvmAddress(addr) {
+				delete(transfers, addr)
+			}
+		}
+		if len(transfers) == 0 {
+			delete(netTransfers, asset)
+		}
 	}
 
 	return netTransfers, nil

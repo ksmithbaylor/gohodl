@@ -45,6 +45,10 @@ var CTC_HEADERS = []string{
 }
 
 func (t *CTCTransaction) ToCSV() []string {
+	if t.Type == "" || t.Timestamp.IsZero() || t.BaseCurrency == "" {
+		panic("Invalid transaction, missing type or timestamp or base currency")
+	}
+
 	return []string{
 		t.Timestamp.Format("2006-01-02 15:04:05"),
 		string(t.Type),
@@ -62,6 +66,17 @@ func (t *CTCTransaction) ToCSV() []string {
 		emptyIfZero(t.ReferencePricePerUnit.String()),
 		t.ReferencePriceCurrency,
 	}
+}
+
+func (t *CTCTransaction) ToPrintable() map[string]string {
+	printable := make(map[string]string)
+	values := t.ToCSV()
+
+	for i, header := range CTC_HEADERS {
+		printable[header] = values[i]
+	}
+
+	return printable
 }
 
 func (t *CTCTransaction) AddTransactionFeeIfMine(from, network string, receipt *types.Receipt) {
