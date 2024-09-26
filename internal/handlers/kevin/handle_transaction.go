@@ -44,6 +44,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleErc20Transfer
 	case info.Method == abis.ERC20_APPROVE:
 		handle = handleErc20Approve
+	case info.Method == abis.INSTADAPP_CAST:
+		handle = handleInstadapp
 	}
 
 	if handle != nil {
