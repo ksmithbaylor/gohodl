@@ -45,7 +45,7 @@ var CTC_HEADERS = []string{
 }
 
 func (t *CTCTransaction) ToCSV() []string {
-	if t.Type == "" || t.Timestamp.IsZero() || t.BaseCurrency == "" {
+	if t.Type == "" || t.Timestamp.IsZero() {
 		panic("Invalid transaction, missing type or timestamp or base currency")
 	}
 
@@ -53,7 +53,7 @@ func (t *CTCTransaction) ToCSV() []string {
 		t.Timestamp.Format("2006-01-02 15:04:05"),
 		string(t.Type),
 		t.BaseCurrency,
-		t.BaseAmount.String(),
+		emptyIfZero(t.BaseAmount.String()),
 		t.QuoteCurrency,
 		emptyIfZero(t.QuoteAmount.String()),
 		t.FeeCurrency,
