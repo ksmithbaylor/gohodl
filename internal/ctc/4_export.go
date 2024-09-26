@@ -12,7 +12,7 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/generic"
-	"github.com/ksmithbaylor/gohodl/internal/handlers"
+	handlers "github.com/ksmithbaylor/gohodl/internal/handlers/kevin"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
