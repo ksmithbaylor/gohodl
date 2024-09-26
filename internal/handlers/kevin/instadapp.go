@@ -31,6 +31,15 @@ type instadappSubEvent struct {
 	targetName string
 }
 
+type instadappTargetHandlerArgs struct {
+	event        instadappEvent
+	subEvent     instadappSubEvent
+	netTransfers evm_util.NetTransfers
+	bundle       handlers.TransactionBundle
+	client       *evm.Client
+	export       handlers.CTCWriter
+}
+
 func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	fmt.Printf("--------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
 
@@ -118,11 +127,7 @@ func handleSingleInstadappEvent(
 		panic("Instadapp sender does not match transaction signer")
 	}
 
-	dsa := common.HexToAddress(bundle.Info.To)
-	signer := common.HexToAddress(bundle.Info.From)
-	fmt.Printf("%s -> %s\n", signer, dsa)
-
-	_, err := evm_util.NetTokenTransfers(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfers(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
@@ -130,45 +135,115 @@ func handleSingleInstadappEvent(
 	err = nil
 
 	for _, subEvent := range event.subEvents {
+		args := instadappTargetHandlerArgs{event, subEvent, netTransfers, bundle, client, export}
+
 		switch subEvent.targetName {
 		case "BASIC-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetBasicA(args))
 		case "AUTHORITY-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetAuthorityA(args))
 		case "WETH-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetWethA(args))
 		case "HOP-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetHopA(args))
 		case "INSTAPOOL-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetInstapoolA(args))
 		case "AAVE-V2-A":
-			err = errors.Join(err, NOT_HANDLED)
-		case "AAVE-V2-IMPORT-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetAaveV2A(args))
 		case "AAVE-CLAIM-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetAaveClaimA(args))
 		case "AAVE-CLAIM-B":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetAaveClaimB(args))
 		case "AAVE-V3-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetAaveV3A(args))
 		case "AAVE-V3-CLAIM-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetAaveV3ClaimA(args))
+		case "AAVE-V2-IMPORT-A":
+			err = errors.Join(err, handleInstadappTargetAaveV2ImportA(args))
 		case "UNISWAP-V3-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetUniswapV3A(args))
 		case "1INCH-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTarget1inchA(args))
 		case "1INCH-V4-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTarget1inchV4A(args))
 		case "PARASWAP-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetParaswapA(args))
 		case "PARASWAP-V5-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetParaswapV5A(args))
 		case "SWAP-AGGREGATOR-A":
-			err = errors.Join(err, NOT_HANDLED)
+			err = errors.Join(err, handleInstadappTargetSwapAggregatorA(args))
 		default:
 			panic("Unknown instadapp target: " + subEvent.targetName)
 		}
 	}
 
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAuthorityA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetWethA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetHopA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetInstapoolA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAaveV2A(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAaveV3A(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAaveV3ClaimA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetAaveV2ImportA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetUniswapV3A(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTarget1inchA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTarget1inchV4A(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetParaswapA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetParaswapV5A(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
+
+func handleInstadappTargetSwapAggregatorA(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
