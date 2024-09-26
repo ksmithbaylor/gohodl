@@ -35,16 +35,19 @@ func (h personalHandler) HandleTransaction(
 		return handle(bundle, client, export)
 	}
 
-	if info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM {
-		return true, readAndThen(handleErc20Transfer)
+	var handle handlers.TransactionHandlerFunc
+
+	switch {
+	case info.Method == "":
+		handle = handleNoData
+	case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
+		handle = handleErc20Transfer
+	case info.Method == abis.ERC20_APPROVE:
+		handle = handleErc20Approve
 	}
 
-	if info.Method == abis.ERC20_APPROVE {
-		return true, readAndThen(handleErc20Approve)
-	}
-
-	if info.Method == "" {
-		return true, readAndThen(handleNoData)
+	if handle != nil {
+		return true, readAndThen(handle)
 	}
 
 	return false, nil
