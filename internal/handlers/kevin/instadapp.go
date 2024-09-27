@@ -167,33 +167,41 @@ func handleSingleInstadappEvent(
 
 		switch subEvent.targetName {
 		case "BASIC-A":
-			err = errors.Join(err, handleInstadappTargetBasicA(args))
+			err = combineErrs(err, handleInstadappTargetBasicA(args))
 		case "AUTHORITY-A":
-			err = errors.Join(err, handleInstadappTargetAuthorityA(args))
+			err = combineErrs(err, handleInstadappTargetAuthorityA(args))
 		case "INSTAPOOL-A":
-			err = errors.Join(err, handleInstadappTargetInstapoolA(args))
+			err = combineErrs(err, handleInstadappTargetInstapoolA(args))
 		case "AAVE-V2-A":
-			err = errors.Join(err, handleInstadappTargetAaveV2A(args))
+			err = combineErrs(err, handleInstadappTargetAaveV2A(args))
 		case "AAVE-CLAIM-A":
-			err = errors.Join(err, handleInstadappTargetAaveClaimA(args))
+			err = combineErrs(err, handleInstadappTargetAaveClaimA(args))
 		case "AAVE-CLAIM-B":
-			err = errors.Join(err, handleInstadappTargetAaveClaimB(args))
+			err = combineErrs(err, handleInstadappTargetAaveClaimB(args))
 		case "AAVE-V2-IMPORT-A":
-			err = errors.Join(err, handleInstadappTargetAaveV2ImportA(args))
+			err = combineErrs(err, handleInstadappTargetAaveV2ImportA(args))
 		case "1INCH-A":
-			err = errors.Join(err, handleInstadappTarget1inchA(args))
+			err = combineErrs(err, handleInstadappTarget1inchA(args))
 		case "1INCH-V4-A":
-			err = errors.Join(err, handleInstadappTarget1inchV4A(args))
+			err = combineErrs(err, handleInstadappTarget1inchV4A(args))
 		case "PARASWAP-A":
-			err = errors.Join(err, handleInstadappTargetParaswapA(args))
+			err = combineErrs(err, handleInstadappTargetParaswapA(args))
 		case "PARASWAP-V5-A":
-			err = errors.Join(err, handleInstadappTargetParaswapV5A(args))
+			err = combineErrs(err, handleInstadappTargetParaswapV5A(args))
 		default:
 			panic("Unknown instadapp target: " + subEvent.targetName)
 		}
 	}
 
-	return NOT_HANDLED
+	return err
+}
+
+func combineErrs(a, b error) error {
+	if a == NOT_HANDLED || b == NOT_HANDLED {
+		return NOT_HANDLED
+	}
+
+	return errors.Join(a, b)
 }
 
 func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
