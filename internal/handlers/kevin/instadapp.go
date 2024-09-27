@@ -75,6 +75,8 @@ func (args instadappTargetHandlerArgs) Print() {
 				for _, num := range arg {
 					fmt.Printf("          - %s\n", num)
 				}
+			case bool:
+				fmt.Printf("        - bool %t\n", arg)
 			default:
 				pp.Println(arg)
 				panic("Unknown instadapp sub-event arg type")
@@ -431,10 +433,58 @@ func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
 
 		return args.export(ctcTx.ToCSV())
 	}
+
 	return NOT_HANDLED
 }
 
 func handleInstadappTargetAaveV2ImportA(args instadappTargetHandlerArgs) error {
+	if len(args.event.subEvents) > 1 {
+		panic("Unexpected multiple instadapp events")
+	}
+	if args.subEvent.selector != "LogAaveV2Import(address,bool,address[],address[],uint256[],uint256[],uint256[])" {
+		panic("Unknown AAVE-V2-IMPORT-A selector: " + args.subEvent.selector)
+	}
+	if len(args.netTransfersOnlyMine) != 1 {
+		panic("Imported multiple assets to instadapp")
+	}
+
+	for _, transfers := range args.netTransfers {
+		if len(transfers) != 2 {
+			panic("Extra net transfer in instadapp aave import")
+		}
+
+		dsaInflow, ok := transfers[common.HexToAddress(args.bundle.Info.To)]
+		if !ok {
+			panic("No DSA inflow in instadapp aave import")
+		}
+
+		myOutflow, ok := transfers[common.HexToAddress(args.bundle.Info.From)]
+		if !ok {
+			panic("No self-outflow in instadapp aave import")
+		}
+
+		if dsaInflow.Value.Abs().Cmp(myOutflow.Value.Abs()) != 0 {
+			panic("Unbalanced instadapp aave import flows")
+		}
+
+		ctcTx := ctc_util.CTCTransaction{
+			Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain: args.bundle.Info.Network,
+			ID:         args.bundle.Info.Hash,
+			Type:       ctc_util.CTCFee,
+			From:       args.bundle.Info.From,
+			Description: fmt.Sprintf("instadapp: import %s aave position to dsa %s on %s",
+				dsaInflow,
+				args.bundle.Info.To,
+				args.bundle.Info.Network,
+			),
+		}
+
+		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
+
+		return args.export(ctcTx.ToCSV())
+	}
+
 	return NOT_HANDLED
 }
 
