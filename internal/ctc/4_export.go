@@ -126,7 +126,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	fmt.Printf("%d transactions handled out of %d (%.2f%%)\n", handledTxs, totalTxs, 100.0*float32(handledTxs)/float32(totalTxs))
 	fmt.Printf("%d transactions temporarily not handled (will be %.2f%% when done)\n", unhandled, 100.0*float32(handledTxs+unhandled)/float32(totalTxs))
-	fmt.Println("Finished reading txs from CSV!")
+	fmt.Println("Finished exporting transactions!")
 }
 
 type byFirstField [][]string

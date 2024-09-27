@@ -14,7 +14,7 @@ func main() {
 	clients := generic.NewAllNodeClients(cfg.AllNetworks())
 
 	ctc.IdentifyTransactions(db, clients)
-	ctc.FetchTransactions(db, clients)
-	ctc.AnalyzeTransactions(db)
+	txHashes := ctc.FetchTransactions(db, clients)
+	ctc.AnalyzeTransactions(db, txHashes)
 	ctc.ExportTransactions(db, clients)
 }

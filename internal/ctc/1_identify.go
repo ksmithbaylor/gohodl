@@ -3,6 +3,7 @@ package ctc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/ksmithbaylor/gohodl/internal/config"
@@ -78,6 +79,18 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 						knownTxs = cached.Txs
 					} else {
 						fmt.Printf("Mismatched cache contents for %s, skipping\n", cacheKey)
+					}
+				}
+
+				// Instadapp DSA accounts are only valid on a single chain, and because
+				// they seem to be created using CREATE and not CREATE2, the resulting
+				// address may be used by another DSA on a different chain that isn't
+				// mine.
+				if strings.Contains(name, "instadapp") {
+					instadappNetwork := strings.Split(name, "-")[1]
+					if instadappNetwork != network.GetName() {
+						fmt.Printf("Skipping instadapp DSA %s (%s) on network %s\n", addr, name, network.GetName())
+						continue
 					}
 				}
 

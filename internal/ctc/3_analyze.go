@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -12,7 +11,7 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
-func AnalyzeTransactions(db *util.FileDB) {
+func AnalyzeTransactions(db *util.FileDB, txHashes map[string][]string) {
 	if os.Getenv("SKIP_ANALYZE") != "" {
 		fmt.Println("Skipping transaction analyze step")
 		return
@@ -29,40 +28,28 @@ func AnalyzeTransactions(db *util.FileDB) {
 	receipts := make(map[string]map[string]*types.Receipt)
 	blocks := make(map[string]map[string]*types.Header)
 
-	txKeys, err := txsDB.List()
-	if err != nil {
-		fmt.Printf("Error reading tx entries: %s\n", err.Error())
-		return
-	}
+	for network, networkTxHashes := range txHashes {
+		for _, txHash := range networkTxHashes {
+			tx, receipt, block, err := readTransactionBundle(db, network, txHash)
+			if err != nil {
+				fmt.Printf("Could not read %s transaction %s: %s\n", network, txHash, err.Error())
+				continue
+			}
 
-	for _, key := range txKeys {
-		if !strings.Contains(key, "-") {
-			continue
-		}
+			if txs[network] == nil {
+				txs[network] = make(map[string]*types.Transaction)
+			}
+			if receipts[network] == nil {
+				receipts[network] = make(map[string]*types.Receipt)
+			}
+			if blocks[network] == nil {
+				blocks[network] = make(map[string]*types.Header)
+			}
 
-		keyParts := strings.Split(key, "-")
-		network := keyParts[0]
-		hash := keyParts[1]
-
-		tx, receipt, block, err := readTransactionBundle(db, network, hash)
-		if err != nil {
-			fmt.Printf("Could not read %s transaction %s: %s\n", network, hash, err.Error())
-			continue
+			txs[network][txHash] = tx
+			receipts[network][txHash] = receipt
+			blocks[network][block.Hash().Hex()] = block
 		}
-
-		if txs[network] == nil {
-			txs[network] = make(map[string]*types.Transaction)
-		}
-		if receipts[network] == nil {
-			receipts[network] = make(map[string]*types.Receipt)
-		}
-		if blocks[network] == nil {
-			blocks[network] = make(map[string]*types.Header)
-		}
-
-		txs[network][hash] = tx
-		receipts[network][hash] = receipt
-		blocks[network][block.Hash().Hex()] = block
 	}
 
 	txCsvFile, err := os.Create(getTxsCsvPath(db))

@@ -13,26 +13,21 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
-func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) {
+func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) map[string][]string {
 	txsDB := db.NewCollection("txs")
 	receiptsDB := db.NewCollection("receipts")
 	blocksDB := db.NewCollection("blocks")
 
-	if os.Getenv("SKIP_FETCH") != "" {
-		fmt.Println("Skipping transaction fetching step")
-		return
-	}
-
 	txHashesDB, found := db.Collections["evm_tx_hashes"]
 	if !found || txHashesDB == nil {
 		fmt.Println("Cannot fetch transactions without first running identification step")
-		return
+		return nil
 	}
 
 	txHashesKeys, err := txHashesDB.List()
 	if err != nil {
 		fmt.Printf("Error listing keys in tx hashes collection: %s\n", err.Error())
-		return
+		return nil
 	}
 
 	txsToFetch := make(map[string][]string)
@@ -62,6 +57,11 @@ func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		txsToFetch[entry.Network] = util.UniqueItems(txsToFetch[entry.Network], entry.Txs)
 	}
 
+	if os.Getenv("SKIP_FETCH") != "" {
+		fmt.Println("Skipping transaction fetching step")
+		return txsToFetch
+	}
+
 	// Fetch all transactions in parallel across networks
 	var wg sync.WaitGroup
 	for network, txs := range txsToFetch {
@@ -83,6 +83,8 @@ func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	wg.Wait()
 	fmt.Println("Done fetching all transactions!")
+
+	return txsToFetch
 }
 
 func fetch(
