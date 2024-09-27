@@ -207,6 +207,9 @@ func combineErrs(a, b error) error {
 }
 
 func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
+	if len(args.event.subEvents) > 1 {
+		panic("Unexpected multiple instadapp events")
+	}
 	if args.subEvent.selector != "LogWithdraw(address,uint256,address,uint256,uint256)" {
 		panic("Unknown BASIC-A selector: " + args.subEvent.selector)
 	}
@@ -262,7 +265,36 @@ func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTargetAuthorityA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
+	if len(args.event.subEvents) > 1 {
+		panic("Unexpected multiple instadapp events")
+	}
+	if args.subEvent.selector != "LogAddAuth(address,address)" {
+		panic("Unknown AUTHORITY-A selector: " + args.subEvent.selector)
+	}
+
+	authorized := args.subEvent.args[1].(common.Address).Hex()
+	authorizor := args.subEvent.args[0].(common.Address).Hex()
+	if authorizor != args.bundle.Info.From {
+		panic("Unexpected instadapp authorizor")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
+		Blockchain: args.bundle.Info.Network,
+		ID:         args.bundle.Info.Hash,
+		From:       authorizor,
+		To:         authorized,
+		Type:       ctc_util.CTCApproval,
+		Description: fmt.Sprintf("instadapp: authorize %s for dsa %s on %s",
+			authorized,
+			args.bundle.Info.To,
+			args.bundle.Info.Network,
+		),
+	}
+
+	ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
+
+	return args.export(ctcTx.ToCSV())
 }
 
 func handleInstadappTargetInstapoolA(args instadappTargetHandlerArgs) error {
