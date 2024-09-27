@@ -142,10 +142,6 @@ func handleSingleInstadappEvent(
 			err = errors.Join(err, handleInstadappTargetBasicA(args))
 		case "AUTHORITY-A":
 			err = errors.Join(err, handleInstadappTargetAuthorityA(args))
-		case "WETH-A":
-			err = errors.Join(err, handleInstadappTargetWethA(args))
-		case "HOP-A":
-			err = errors.Join(err, handleInstadappTargetHopA(args))
 		case "INSTAPOOL-A":
 			err = errors.Join(err, handleInstadappTargetInstapoolA(args))
 		case "AAVE-V2-A":
@@ -154,14 +150,8 @@ func handleSingleInstadappEvent(
 			err = errors.Join(err, handleInstadappTargetAaveClaimA(args))
 		case "AAVE-CLAIM-B":
 			err = errors.Join(err, handleInstadappTargetAaveClaimB(args))
-		case "AAVE-V3-A":
-			err = errors.Join(err, handleInstadappTargetAaveV3A(args))
-		case "AAVE-V3-CLAIM-A":
-			err = errors.Join(err, handleInstadappTargetAaveV3ClaimA(args))
 		case "AAVE-V2-IMPORT-A":
 			err = errors.Join(err, handleInstadappTargetAaveV2ImportA(args))
-		case "UNISWAP-V3-A":
-			err = errors.Join(err, handleInstadappTargetUniswapV3A(args))
 		case "1INCH-A":
 			err = errors.Join(err, handleInstadappTarget1inchA(args))
 		case "1INCH-V4-A":
@@ -170,8 +160,6 @@ func handleSingleInstadappEvent(
 			err = errors.Join(err, handleInstadappTargetParaswapA(args))
 		case "PARASWAP-V5-A":
 			err = errors.Join(err, handleInstadappTargetParaswapV5A(args))
-		case "SWAP-AGGREGATOR-A":
-			err = errors.Join(err, handleInstadappTargetSwapAggregatorA(args))
 		default:
 			panic("Unknown instadapp target: " + subEvent.targetName)
 		}
@@ -185,14 +173,6 @@ func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTargetAuthorityA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetWethA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetHopA(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
 
@@ -212,19 +192,7 @@ func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
 
-func handleInstadappTargetAaveV3A(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetAaveV3ClaimA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
 func handleInstadappTargetAaveV2ImportA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetUniswapV3A(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
 
@@ -241,9 +209,5 @@ func handleInstadappTargetParaswapA(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTargetParaswapV5A(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetSwapAggregatorA(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
