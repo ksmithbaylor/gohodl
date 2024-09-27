@@ -59,7 +59,7 @@ func (args instadappTargetHandlerArgs) Print() {
 		fmt.Printf("    - Target: %s (%s)\n", subEvent.targetName, subEvent.target)
 		fmt.Printf("      Selector: %s\n", subEvent.selector)
 		fmt.Println("      Args:")
-		for _, arg := range args.subEvent.args {
+		for _, arg := range subEvent.args {
 			switch arg := arg.(type) {
 			case common.Address:
 				fmt.Printf("        - address %s\n", arg)
