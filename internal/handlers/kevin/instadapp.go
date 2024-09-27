@@ -207,8 +207,6 @@ func handleSingleInstadappEvent(
 			err = combineErrs(err, handleInstadappTargetBasicA(args))
 		case "AUTHORITY-A":
 			err = combineErrs(err, handleInstadappTargetAuthorityA(args))
-		case "INSTAPOOL-A":
-			err = combineErrs(err, handleInstadappTargetInstapoolA(args))
 		case "AAVE-V2-A":
 			err = combineErrs(err, handleInstadappTargetAaveV2A(args))
 		case "AAVE-CLAIM-A":
@@ -330,10 +328,6 @@ func handleInstadappTargetAuthorityA(args instadappTargetHandlerArgs) error {
 	ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
 
 	return args.export(ctcTx.ToCSV())
-}
-
-func handleInstadappTargetInstapoolA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
 }
 
 func handleInstadappTargetAaveV2A(args instadappTargetHandlerArgs) error {
