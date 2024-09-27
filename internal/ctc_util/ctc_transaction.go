@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/k0kubun/pp/v3"
 	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/shopspring/decimal"
 )
@@ -77,6 +78,10 @@ func (t *CTCTransaction) ToPrintable() map[string]string {
 	}
 
 	return printable
+}
+
+func (t *CTCTransaction) Print() {
+	pp.Println(t.ToPrintable())
 }
 
 func (t *CTCTransaction) AddTransactionFeeIfMine(from, network string, receipt *types.Receipt) {
