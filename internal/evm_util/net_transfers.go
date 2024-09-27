@@ -107,6 +107,60 @@ func NetTokenTransfers(client *evm.Client, info *evm.TxInfo, logs []*types.Log) 
 		transfers = append(transfers, transfer{fromAddr, toAddr, amount})
 	}
 
+	wrappedNativeLogs, err := evm.ParseKnownEvents(info.Network, logs, abis.WrappedNativeAbi)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, log := range wrappedNativeLogs {
+		if log.Name != "Deposit" && log.Name != "Withdrawal" {
+			continue
+		}
+
+		asset, err := client.TokenAsset(log.Contract)
+		if err != nil {
+			return nil, err
+		}
+
+		var addrRaw any
+		var ok bool
+		if log.Name == "Deposit" {
+			addrRaw, ok = log.Data["dst"]
+		} else {
+			addrRaw, ok = log.Data["src"]
+		}
+		if !ok {
+			continue
+		}
+
+		var addr common.Address
+		addr, ok = addrRaw.(common.Address)
+		if !ok {
+			continue
+		}
+
+		wad, ok := log.Data["wad"]
+		if !ok {
+			continue
+		}
+
+		value, ok := wad.(*big.Int)
+		if !ok {
+			continue
+		}
+
+		amount, err := asset.WithAtomicStringValue(value.String())
+		if err != nil {
+			return nil, err
+		}
+
+		if log.Name == "Deposit" {
+			transfers = append(transfers, transfer{log.Contract, addr, amount})
+		} else {
+			transfers = append(transfers, transfer{addr, log.Contract, amount})
+		}
+	}
+
 	internalTxs, _, err := client.GetInternalTransactions(info.Hash)
 	if err != nil {
 		return nil, err
