@@ -271,7 +271,7 @@ func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
 			From:         args.bundle.Info.To,
 			To:           args.bundle.Info.From,
 			Description: fmt.Sprintf("instadapp: withdraw %s to %s from dsa %s on %s",
-				myInflow.String(),
+				myInflow,
 				args.bundle.Info.From,
 				args.bundle.Info.To,
 				args.bundle.Info.Network,
@@ -324,6 +324,66 @@ func handleInstadappTargetAaveV2A(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
+	if len(args.event.subEvents) > 1 {
+		panic("Unexpected multiple instadapp events")
+	}
+	if args.subEvent.selector != "LogClaimed(address[],uint256,uint256,uint256)" {
+		panic("Unknown AAVE-CLAIM-A selector: " + args.subEvent.selector)
+	}
+	if len(args.netTransfersOnlyMine) > 1 {
+		panic("Multiple assets claimed for instadapp")
+	}
+	if len(args.netTransfersOnlyMine) == 0 {
+		ctcTx := ctc_util.CTCTransaction{
+			Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain: args.bundle.Info.Network,
+			ID:         args.bundle.Info.Hash,
+			From:       args.bundle.Info.From,
+			Type:       ctc_util.CTCFee,
+			Description: fmt.Sprintf("instadapp: claim aave rewards for dsa %s on %s, but nothing claimed",
+				args.bundle.Info.To,
+				args.bundle.Info.Network,
+			),
+		}
+
+		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
+
+		return args.export(ctcTx.ToCSV())
+	}
+
+	for asset, transfers := range args.netTransfersOnlyMine {
+		if len(transfers) != 1 {
+			panic("Extra net transfer in instadapp claim")
+		}
+
+		dsaInflow, ok := transfers[common.HexToAddress(args.bundle.Info.To)]
+		if !ok {
+			panic("No DSA inflow in instadapp claim")
+		}
+
+		ctcTx := ctc_util.CTCTransaction{
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain:   args.bundle.Info.Network,
+			ID:           args.bundle.Info.Hash,
+			Type:         ctc_util.CTCIncome,
+			BaseCurrency: asset.Symbol,
+			BaseAmount:   dsaInflow.Value,
+			From:         "Instadapp Aave",
+			To:           args.bundle.Info.To,
+			Description: fmt.Sprintf("instadapp: claim %s in rewards for dsa %s on %s",
+				dsaInflow,
+				args.bundle.Info.To,
+				args.bundle.Info.Network,
+			),
+		}
+
+		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
+
+		ctcTx.Print()
+
+		return args.export(ctcTx.ToCSV())
+	}
+
 	return NOT_HANDLED
 }
 
