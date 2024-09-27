@@ -24,9 +24,9 @@ func (nt NetTransfers) String() string {
 	}
 
 	for asset, transfers := range nt {
-		s += fmt.Sprintf("%s:\n", asset)
+		s += fmt.Sprintf("  %s:\n", asset)
 		for addr, amount := range transfers {
-			s += fmt.Sprintf("  %s: %s\n", addr.Hex(), amount)
+			s += fmt.Sprintf("    %s: %s\n", addr.Hex(), amount)
 		}
 	}
 

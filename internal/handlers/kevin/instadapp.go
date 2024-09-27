@@ -40,9 +40,38 @@ type instadappTargetHandlerArgs struct {
 	export       handlers.CTCWriter
 }
 
-func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	fmt.Printf("--------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
+func (args instadappTargetHandlerArgs) Print() {
+	fmt.Printf("--------- %s: %s -> %s on %s\n",
+		args.bundle.Info.Hash,
+		args.bundle.Info.From,
+		args.bundle.Info.To,
+		args.bundle.Info.Network,
+	)
 
+	fmt.Println("Event: ")
+	fmt.Printf("  Origin: %s\n", args.event.origin)
+	fmt.Printf("  Sender: %s\n", args.event.sender)
+	fmt.Println("  Sub-event:")
+	fmt.Printf("    Target: %s (%s)\n", args.subEvent.targetName, args.subEvent.target)
+	fmt.Printf("    Selector: %s\n", args.subEvent.selector)
+	fmt.Println("    Args:")
+	for _, arg := range args.subEvent.args {
+		switch arg.(type) {
+		case common.Address:
+			fmt.Printf("      - address %s\n", arg)
+		case *big.Int:
+			fmt.Printf("      - numeric %s\n", arg)
+		default:
+			pp.Println(arg)
+			panic("Unknown instadapp sub-event arg type")
+		}
+	}
+
+	fmt.Println("Net transfers:")
+	fmt.Println(args.netTransfers)
+}
+
+func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	events, err := evm.ParseKnownEvents(bundle.Info.Network, bundle.Receipt.Logs, abis.InstadappAbi)
 	if err != nil {
 		return err
@@ -79,7 +108,6 @@ func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, expo
 			if name != "" {
 				name, args, err = abis.DecodeAdhoc(eventNames[i], eventParams[i])
 				if err != nil {
-					pp.Println(event)
 					return err
 				}
 			}
