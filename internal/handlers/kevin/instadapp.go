@@ -82,7 +82,7 @@ func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, expo
 	instadappEvents := make([]instadappEvent, len(events))
 
 	for i, event := range events {
-		if event.Name != "LogCast" {
+		if event.Name != "LogCast" && event.Name != "LogCastMigrate" {
 			panic("Unexpected event emitted from instadapp call")
 		}
 
