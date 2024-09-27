@@ -51,22 +51,40 @@ func (args instadappTargetHandlerArgs) Print() {
 		args.bundle.Info.Network,
 	)
 
-	fmt.Println("Event: ")
-	fmt.Printf("  Origin: %s\n", args.event.origin)
-	fmt.Printf("  Sender: %s\n", args.event.sender)
-	fmt.Println("  Sub-event:")
-	fmt.Printf("    Target: %s (%s)\n", args.subEvent.targetName, args.subEvent.target)
-	fmt.Printf("    Selector: %s\n", args.subEvent.selector)
-	fmt.Println("    Args:")
+	fmt.Println("Sub-event:")
+	fmt.Printf("  Target: %s (%s)\n", args.subEvent.targetName, args.subEvent.target)
+	fmt.Printf("  Selector: %s\n", args.subEvent.selector)
+	fmt.Println("  Args:")
 	for _, arg := range args.subEvent.args {
 		switch arg.(type) {
 		case common.Address:
-			fmt.Printf("      - address %s\n", arg)
+			fmt.Printf("    - address %s\n", arg)
 		case *big.Int:
-			fmt.Printf("      - numeric %s\n", arg)
+			fmt.Printf("    - numeric %s\n", arg)
 		default:
 			pp.Println(arg)
 			panic("Unknown instadapp sub-event arg type")
+		}
+	}
+
+	fmt.Println("Event: ")
+	fmt.Printf("  Origin: %s\n", args.event.origin)
+	fmt.Printf("  Sender: %s\n", args.event.sender)
+	fmt.Println("  Sub-events:")
+	for _, subEvent := range args.event.subEvents {
+		fmt.Printf("    - Target: %s (%s)\n", subEvent.targetName, subEvent.target)
+		fmt.Printf("      Selector: %s\n", subEvent.selector)
+		fmt.Println("      Args:")
+		for _, arg := range subEvent.args {
+			switch arg.(type) {
+			case common.Address:
+				fmt.Printf("        - address %s\n", arg)
+			case *big.Int:
+				fmt.Printf("        - numeric %s\n", arg)
+			default:
+				pp.Println(arg)
+				panic("Unknown instadapp sub-event arg type")
+			}
 		}
 	}
 
