@@ -78,7 +78,7 @@ func (c *EtherscanClient) GetAllTransactionHashes(address string, startBlock, en
 	if endBlock != nil {
 		e = *endBlock
 	}
-	fmt.Printf("Getting txs for %s on %s from %d to %d\n", address, c.network.Name, s, e)
+	util.Debugf("Getting txs for %s on %s from %d to %d\n", address, c.network.Name, s, e)
 
 	return c.getAllTypesOfTransactionHash(address,
 		labeledGetter{"normal", withStartEnd(startBlock, endBlock, withAnyReturn(c.client.NormalTxByAddress))},
