@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/k0kubun/pp/v3"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
+	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/evm_util"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
@@ -205,6 +207,57 @@ func combineErrs(a, b error) error {
 }
 
 func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
+	if args.subEvent.selector != "LogWithdraw(address,uint256,address,uint256,uint256)" {
+		panic("Unknown BASIC-A selector: " + args.subEvent.selector)
+	}
+	if len(args.netTransfers) == 0 {
+		panic("No transfers in instadapp withdrawal")
+	}
+	if len(args.netTransfers) > 1 {
+		panic("Multiple transfers in instadapp withdrawal")
+	}
+
+	for asset, transfers := range args.netTransfers {
+		if len(transfers) != 2 {
+			panic("Extra net transfer in instadapp withdrawal")
+		}
+
+		dsaOutflow, ok := transfers[common.HexToAddress(args.bundle.Info.To)]
+		if !ok {
+			panic("No DSA outflow in instadapp withdrawal")
+		}
+
+		myInflow, ok := transfers[common.HexToAddress(args.bundle.Info.From)]
+		if !ok {
+			panic("No self-inflow in instadapp withdrawal")
+		}
+
+		if dsaOutflow.Value.Abs().Cmp(myInflow.Value.Abs()) != 0 {
+			panic("Unbalanced instadapp withdrawal flows")
+		}
+
+		ctcTx := ctc_util.CTCTransaction{
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain:   args.bundle.Info.Network,
+			ID:           args.bundle.Info.Hash,
+			Type:         ctc_util.CTCSend,
+			BaseCurrency: asset.Symbol,
+			BaseAmount:   myInflow.Value,
+			From:         args.bundle.Info.To,
+			To:           args.bundle.Info.From,
+			Description: fmt.Sprintf("instadapp: withdraw %s to %s from dsa %s on %s",
+				myInflow.String(),
+				args.bundle.Info.From,
+				args.bundle.Info.To,
+				args.bundle.Info.Network,
+			),
+		}
+
+		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
+
+		return args.export(ctcTx.ToCSV())
+	}
+
 	return NOT_HANDLED
 }
 
