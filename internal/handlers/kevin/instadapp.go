@@ -34,12 +34,13 @@ type instadappSubEvent struct {
 }
 
 type instadappTargetHandlerArgs struct {
-	event        instadappEvent
-	subEvent     instadappSubEvent
-	netTransfers evm_util.NetTransfers
-	bundle       handlers.TransactionBundle
-	client       *evm.Client
-	export       handlers.CTCWriter
+	event                instadappEvent
+	subEvent             instadappSubEvent
+	netTransfers         evm_util.NetTransfers
+	netTransfersOnlyMine evm_util.NetTransfers
+	bundle               handlers.TransactionBundle
+	client               *evm.Client
+	export               handlers.CTCWriter
 }
 
 func (args instadappTargetHandlerArgs) Print() {
@@ -71,6 +72,9 @@ func (args instadappTargetHandlerArgs) Print() {
 
 	fmt.Println("Net transfers:")
 	fmt.Println(args.netTransfers)
+
+	fmt.Println("Net transfers (only mine):")
+	fmt.Println(args.netTransfersOnlyMine)
 }
 
 func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
@@ -162,10 +166,23 @@ func handleSingleInstadappEvent(
 		return err
 	}
 
+	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
 	err = nil
 
 	for _, subEvent := range event.subEvents {
-		args := instadappTargetHandlerArgs{event, subEvent, netTransfers, bundle, client, export}
+		args := instadappTargetHandlerArgs{
+			event,
+			subEvent,
+			netTransfers,
+			netTransfersOnlyMine,
+			bundle,
+			client,
+			export,
+		}
 
 		switch subEvent.targetName {
 		case "BASIC-A":

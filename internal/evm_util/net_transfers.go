@@ -164,8 +164,8 @@ func NetTokenTransfersOnlyMine(client *evm.Client, info *evm.TxInfo, logs []*typ
 	}
 
 	for asset, transfers := range netTransfers {
-		for addr := range transfers {
-			if !config.Config.IsMyEvmAddress(addr) {
+		for addr, amount := range transfers {
+			if !config.Config.IsMyEvmAddress(addr) || amount.Value.IsZero() {
 				delete(transfers, addr)
 			}
 		}
