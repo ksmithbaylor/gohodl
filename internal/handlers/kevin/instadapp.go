@@ -244,10 +244,8 @@ func handleInstadappEvents(
 				err = combineErrs(err, handleInstadappTargetInstapoolB(args))
 			case "INSTAPOOL-C":
 				err = combineErrs(err, handleInstadappTargetInstapoolC(args))
-			case "1INCH-A":
+			case "1INCH-A", "1INCH-V4-A":
 				err = combineErrs(err, handleInstadappTarget1inchA(args))
-			case "1INCH-V4-A":
-				err = combineErrs(err, handleInstadappTarget1inchV4A(args))
 			case "PARASWAP-A":
 				err = combineErrs(err, handleInstadappTargetParaswapA(args))
 			case "PARASWAP-V5-A":
@@ -573,13 +571,8 @@ func handleInstadappTarget1inchA(args instadappTargetHandlerArgs) error {
 		To:            connector.Hex(),
 		Description:   fmt.Sprintf("instadapp: sell %s for %s", soldAmount, boughtAmount),
 	}
-	ctcTx.Print()
 
 	return args.export(ctcTx.ToCSV())
-}
-
-func handleInstadappTarget1inchV4A(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
 }
 
 func handleInstadappTargetParaswapA(args instadappTargetHandlerArgs) error {
