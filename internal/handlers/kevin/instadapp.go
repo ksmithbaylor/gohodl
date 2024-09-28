@@ -199,6 +199,7 @@ func handleInstadappEvents(
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 	err = combineErrs(err, export(ctcTx.ToCSV()))
 
+	// TODO: remove and handle the rest of the more complicated ones
 	if len(events) > 1 {
 		return NOT_HANDLED
 	}
@@ -277,9 +278,6 @@ func instadappTxID(args instadappTargetHandlerArgs) string {
 }
 
 func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
-	if args.totalSubEvents > 1 {
-		args.Print()
-	}
 	if args.subEvent.selector != "LogWithdraw(address,uint256,address,uint256,uint256)" {
 		panic("Unknown BASIC-A selector: " + args.subEvent.selector)
 	}
@@ -531,7 +529,6 @@ func handleInstadappTargetInstapoolC(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTarget1inchA(args instadappTargetHandlerArgs) error {
-	args.Print()
 	if args.subEvent.selector != "LogSell(address,address,uint256,uint256,uint256,uint256)" {
 		panic("Unknown 1INCH-A selector: " + args.subEvent.selector)
 	}
