@@ -12,6 +12,8 @@ import (
 	"github.com/nanmu42/etherscan-api"
 )
 
+const AAVE_NATIVE_ASSET = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
 type Client struct {
 	Network   Network          // The network the client is for
 	Etherscan *EtherscanClient // A client for the etherscan-compatible explorer
@@ -286,7 +288,11 @@ func (c *Client) OpenTransactionInExplorer(hash string, wait ...bool) {
 	c.Network.OpenTransactionInExplorer(hash, wait...)
 }
 
-func (c *Client) TokenAsset(token common.Address) (core.Asset, error) {
+func (c *Client) TokenAsset(token common.Address, instadapp ...bool) (core.Asset, error) {
+	if len(instadapp) > 0 && instadapp[0] && token.Hex() == AAVE_NATIVE_ASSET {
+		return c.NativeAsset()
+	}
+
 	symbol, err := c.TokenSymbol(token)
 	if err != nil {
 		return core.Asset{}, fmt.Errorf("Could not get token symbol for %s on %s: %w", token, c.Network.Name, err)

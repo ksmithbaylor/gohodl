@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"slices"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -15,8 +16,6 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/evm_util"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 )
-
-const INSTADAPP_ORIGIN = "0x03d70891b8994feB6ccA7022B25c32be92ee3725"
 
 type instadappEvent struct {
 	origin    common.Address
@@ -34,6 +33,9 @@ type instadappSubEvent struct {
 }
 
 type instadappTargetHandlerArgs struct {
+	totalSubEvents       int
+	subEventNumber       int
+	events               []instadappEvent
 	event                instadappEvent
 	subEvent             instadappSubEvent
 	netTransfers         evm_util.NetTransfers
@@ -51,35 +53,37 @@ func (args instadappTargetHandlerArgs) Print() {
 		args.bundle.Info.Network,
 	)
 
-	fmt.Println("Event: ")
-	fmt.Printf("  Origin: %s\n", args.event.origin)
-	fmt.Printf("  Sender: %s\n", args.event.sender)
-	fmt.Println("  Sub-events:")
-	for _, subEvent := range args.event.subEvents {
-		fmt.Printf("    - Target: %s (%s)\n", subEvent.targetName, subEvent.target)
-		fmt.Printf("      Selector: %s\n", subEvent.selector)
-		fmt.Println("      Args:")
-		for _, arg := range subEvent.args {
-			switch arg := arg.(type) {
-			case common.Address:
-				fmt.Printf("        - address %s\n", arg)
-			case []common.Address:
-				fmt.Println("        - addresses:")
-				for _, addr := range arg {
-					fmt.Printf("          - %s\n", addr)
+	for _, event := range args.events {
+		fmt.Println("- Event: ")
+		fmt.Printf("    Origin: %s\n", event.origin)
+		fmt.Printf("    Sender: %s\n", event.sender)
+		fmt.Println("    Sub-events:")
+		for _, subEvent := range event.subEvents {
+			fmt.Printf("      - Target: %s (%s)\n", subEvent.targetName, subEvent.target)
+			fmt.Printf("        Selector: %s\n", subEvent.selector)
+			fmt.Println("        Args:")
+			for _, arg := range subEvent.args {
+				switch arg := arg.(type) {
+				case common.Address:
+					fmt.Printf("          - address %s\n", arg)
+				case []common.Address:
+					fmt.Println("          - addresses:")
+					for _, addr := range arg {
+						fmt.Printf("            - %s\n", addr)
+					}
+				case *big.Int:
+					fmt.Printf("          - numeric %s\n", arg)
+				case []*big.Int:
+					fmt.Println("          - numerics:")
+					for _, num := range arg {
+						fmt.Printf("            - %s\n", num)
+					}
+				case bool:
+					fmt.Printf("          - bool %t\n", arg)
+				default:
+					pp.Println(arg)
+					panic("Unknown instadapp sub-event arg type")
 				}
-			case *big.Int:
-				fmt.Printf("        - numeric %s\n", arg)
-			case []*big.Int:
-				fmt.Println("        - numerics:")
-				for _, num := range arg {
-					fmt.Printf("          - %s\n", num)
-				}
-			case bool:
-				fmt.Printf("        - bool %t\n", arg)
-			default:
-				pp.Println(arg)
-				panic("Unknown instadapp sub-event arg type")
 			}
 		}
 	}
@@ -152,29 +156,21 @@ func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, expo
 		panic("No instadapp events in instadapp transaction")
 	}
 
-	if len(instadappEvents) == 1 {
-		return handleSingleInstadappEvent(instadappEvents[0], bundle, client, export)
-	}
-
-	// TODO handle transactions with multiple instadapp events
-
-	return NOT_HANDLED
+	return handleInstadappEvents(instadappEvents, bundle, client, export)
 }
 
-func handleSingleInstadappEvent(
-	event instadappEvent,
+// TODO
+// - Figure out if I need to re-order txs containing flash loans, such as
+//   0x3ea65f97fe4aa224ce0561e81c18a65cf41bb65452b7892b18aa726ea180097d on avalanche
+// - Figure out event sender not matching signer
+// - Figure out what the origin means, if anything
+
+func handleInstadappEvents(
+	events []instadappEvent,
 	bundle handlers.TransactionBundle,
 	client *evm.Client,
 	export handlers.CTCWriter,
 ) error {
-	if event.origin.Hex() != INSTADAPP_ORIGIN {
-		panic("Unknown origin for instadapp event")
-	}
-
-	if bundle.Info.From != event.sender.Hex() {
-		panic("Instadapp sender does not match transaction signer")
-	}
-
 	netTransfers, err := evm_util.NetTokenTransfers(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
@@ -185,42 +181,79 @@ func handleSingleInstadappEvent(
 		return err
 	}
 
-	err = nil
+	totalSubEvents := 0
+	for _, event := range events {
+		totalSubEvents += len(event.subEvents)
+	}
 
-	for _, subEvent := range event.subEvents {
-		args := instadappTargetHandlerArgs{
-			event,
-			subEvent,
-			netTransfers,
-			netTransfersOnlyMine,
-			bundle,
-			client,
-			export,
-		}
+	subEventNumber := 0
 
-		switch subEvent.targetName {
-		case "BASIC-A":
-			err = combineErrs(err, handleInstadappTargetBasicA(args))
-		case "AUTHORITY-A":
-			err = combineErrs(err, handleInstadappTargetAuthorityA(args))
-		case "AAVE-V2-A":
-			err = combineErrs(err, handleInstadappTargetAaveV2A(args))
-		case "AAVE-CLAIM-A":
-			err = combineErrs(err, handleInstadappTargetAaveClaimA(args))
-		case "AAVE-CLAIM-B":
-			err = combineErrs(err, handleInstadappTargetAaveClaimB(args))
-		case "AAVE-V2-IMPORT-A":
-			err = combineErrs(err, handleInstadappTargetAaveV2ImportA(args))
-		case "1INCH-A":
-			err = combineErrs(err, handleInstadappTarget1inchA(args))
-		case "1INCH-V4-A":
-			err = combineErrs(err, handleInstadappTarget1inchV4A(args))
-		case "PARASWAP-A":
-			err = combineErrs(err, handleInstadappTargetParaswapA(args))
-		case "PARASWAP-V5-A":
-			err = combineErrs(err, handleInstadappTargetParaswapV5A(args))
-		default:
-			panic("Unknown instadapp target: " + subEvent.targetName)
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:   time.Unix(int64(bundle.Block.Time), 0),
+		Blockchain:  bundle.Info.Network,
+		ID:          fmt.Sprintf("%s-%d", bundle.Info.Hash, subEventNumber),
+		From:        bundle.Info.From,
+		Type:        ctc_util.CTCFee,
+		Description: "instadapp: record network fee separately from individual events",
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+	err = combineErrs(err, export(ctcTx.ToCSV()))
+
+	if len(events) > 1 {
+		return NOT_HANDLED
+	}
+
+	for _, event := range events {
+		for _, subEvent := range event.subEvents {
+			subEventNumber++
+
+			args := instadappTargetHandlerArgs{
+				totalSubEvents,
+				subEventNumber,
+				events,
+				event,
+				subEvent,
+				netTransfers,
+				netTransfersOnlyMine,
+				bundle,
+				client,
+				export,
+			}
+
+			if bundle.Info.Hash == TX_2 {
+				return handleTx2(args)
+			}
+
+			switch subEvent.targetName {
+			case "BASIC-A":
+				err = combineErrs(err, handleInstadappTargetBasicA(args))
+			case "AUTHORITY-A":
+				err = combineErrs(err, handleInstadappTargetAuthorityA(args))
+			case "AAVE-V2-A":
+				err = combineErrs(err, handleInstadappTargetAaveV2A(args))
+			case "AAVE-CLAIM-A":
+				err = combineErrs(err, handleInstadappTargetAaveClaimA(args))
+			case "AAVE-CLAIM-B":
+				err = combineErrs(err, handleInstadappTargetAaveClaimB(args))
+			case "AAVE-V2-IMPORT-A":
+				err = combineErrs(err, handleInstadappTargetAaveV2ImportA(args))
+			case "INSTAPOOL-A":
+				err = combineErrs(err, handleInstadappTargetInstapoolA(args))
+			case "INSTAPOOL-B":
+				err = combineErrs(err, handleInstadappTargetInstapoolB(args))
+			case "INSTAPOOL-C":
+				err = combineErrs(err, handleInstadappTargetInstapoolC(args))
+			case "1INCH-A":
+				err = combineErrs(err, handleInstadappTarget1inchA(args))
+			case "1INCH-V4-A":
+				err = combineErrs(err, handleInstadappTarget1inchV4A(args))
+			case "PARASWAP-A":
+				err = combineErrs(err, handleInstadappTargetParaswapA(args))
+			case "PARASWAP-V5-A":
+				err = combineErrs(err, handleInstadappTargetParaswapV5A(args))
+			default:
+				panic("Unknown instadapp target: " + subEvent.targetName)
+			}
 		}
 	}
 
@@ -235,104 +268,149 @@ func combineErrs(a, b error) error {
 	return errors.Join(a, b)
 }
 
+func instadappTxID(args instadappTargetHandlerArgs) string {
+	if args.totalSubEvents == 1 {
+		return args.bundle.Info.Hash
+	}
+
+	return fmt.Sprintf("%s-%d", args.bundle.Info.Hash, args.subEventNumber)
+}
+
 func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
-	if len(args.event.subEvents) > 1 {
-		panic("Unexpected multiple instadapp events")
+	if args.totalSubEvents > 1 {
+		args.Print()
 	}
 	if args.subEvent.selector != "LogWithdraw(address,uint256,address,uint256,uint256)" {
 		panic("Unknown BASIC-A selector: " + args.subEvent.selector)
 	}
-	if len(args.netTransfers) == 0 {
-		panic("No transfers in instadapp withdrawal")
-	}
-	if len(args.netTransfers) > 1 {
-		panic("Multiple transfers in instadapp withdrawal")
-	}
 
-	for asset, transfers := range args.netTransfers {
-		if len(transfers) != 2 {
-			panic("Extra net transfer in instadapp withdrawal")
-		}
+	token := args.subEvent.args[0].(common.Address)
+	value := args.subEvent.args[1].(*big.Int)
+	dest := args.subEvent.args[2].(common.Address)
+	dsa := args.bundle.Info.To
 
-		dsaOutflow, ok := transfers[common.HexToAddress(args.bundle.Info.To)]
-		if !ok {
-			panic("No DSA outflow in instadapp withdrawal")
-		}
-
-		myInflow, ok := transfers[common.HexToAddress(args.bundle.Info.From)]
-		if !ok {
-			panic("No self-inflow in instadapp withdrawal")
-		}
-
-		if dsaOutflow.Value.Abs().Cmp(myInflow.Value.Abs()) != 0 {
-			panic("Unbalanced instadapp withdrawal flows")
-		}
-
-		ctcTx := ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
-			Blockchain:   args.bundle.Info.Network,
-			ID:           args.bundle.Info.Hash,
-			Type:         ctc_util.CTCSend,
-			BaseCurrency: asset.Symbol,
-			BaseAmount:   myInflow.Value,
-			From:         args.bundle.Info.To,
-			To:           args.bundle.Info.From,
-			Description: fmt.Sprintf("instadapp: withdraw %s to %s from dsa %s on %s",
-				myInflow,
-				args.bundle.Info.From,
-				args.bundle.Info.To,
-				args.bundle.Info.Network,
-			),
-		}
-
-		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
-
-		return args.export(ctcTx.ToCSV())
+	asset, err := args.client.TokenAsset(token, true)
+	if err != nil {
+		return err
 	}
 
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetAuthorityA(args instadappTargetHandlerArgs) error {
-	if len(args.event.subEvents) > 1 {
-		panic("Unexpected multiple instadapp events")
-	}
-	if args.subEvent.selector != "LogAddAuth(address,address)" {
-		panic("Unknown AUTHORITY-A selector: " + args.subEvent.selector)
-	}
-
-	authorized := args.subEvent.args[1].(common.Address).Hex()
-	authorizor := args.subEvent.args[0].(common.Address).Hex()
-	if authorizor != args.bundle.Info.From {
-		panic("Unexpected instadapp authorizor")
+	amount, err := asset.WithAtomicStringValue(value.String())
+	if err != nil {
+		return err
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
-		Blockchain: args.bundle.Info.Network,
-		ID:         args.bundle.Info.Hash,
-		From:       authorizor,
-		To:         authorized,
-		Type:       ctc_util.CTCApproval,
-		Description: fmt.Sprintf("instadapp: authorize %s for dsa %s on %s",
-			authorized,
-			args.bundle.Info.To,
+		Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+		Blockchain:   args.bundle.Info.Network,
+		ID:           instadappTxID(args),
+		Type:         ctc_util.CTCSend,
+		BaseCurrency: asset.Symbol,
+		BaseAmount:   amount.Value,
+		From:         dsa,
+		To:           dest.Hex(),
+		Description: fmt.Sprintf("instadapp: withdraw %s to %s from dsa %s on %s",
+			amount,
+			dsa,
+			dest,
 			args.bundle.Info.Network,
 		),
 	}
 
-	ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
+	return args.export(ctcTx.ToCSV())
+}
+
+func handleInstadappTargetAuthorityA(args instadappTargetHandlerArgs) error {
+	if args.subEvent.selector != "LogAddAuth(address,address)" {
+		panic("Unknown AUTHORITY-A selector: " + args.subEvent.selector)
+	}
+
+	// Nothing to do here tax-wise, and transaction fee is already handled
+	return nil
+}
+
+func handleInstadappTargetAaveV2A(args instadappTargetHandlerArgs) error {
+	var ctcType ctc_util.CTCTransactionType
+	var description string
+	var from string
+	var to string
+
+	// This doesn't impact anything tax-wise, and the transaction fee is already handled
+	if args.subEvent.selector == "LogEnableCollateral(address[])" {
+		return nil
+	}
+
+	if !slices.Contains(
+		[]string{
+			"LogDeposit(address,uint256,uint256,uint256)",
+			"LogBorrow(address,uint256,uint256,uint256,uint256)",
+			"LogPayback(address,uint256,uint256,uint256,uint256)",
+			"LogWithdraw(address,uint256,uint256,uint256)",
+		},
+		args.subEvent.selector,
+	) {
+		panic("Unknown AAVE-V2-A selector: " + args.subEvent.selector)
+	}
+
+	// All four of the above sub-events have the token as the first argument, and
+	// the value as the second argument
+	token := args.subEvent.args[0].(common.Address)
+	value := args.subEvent.args[1].(*big.Int)
+	dsa := args.bundle.Info.To
+	aaveConnector := args.subEvent.target.Hex()
+
+	asset, err := args.client.TokenAsset(token, true)
+	if err != nil {
+		return err
+	}
+
+	amount, err := asset.WithAtomicStringValue(value.String())
+	if err != nil {
+		return err
+	}
+
+	switch args.subEvent.selector {
+	case "LogDeposit(address,uint256,uint256,uint256)":
+		ctcType = ctc_util.CTCCollateralDeposit
+		description = fmt.Sprintf("instadapp: deposit %s as collateral from %s to aave", amount, dsa)
+		from = dsa
+		to = aaveConnector
+	case "LogBorrow(address,uint256,uint256,uint256,uint256)":
+		ctcType = ctc_util.CTCBorrow
+		description = fmt.Sprintf("instadapp: borrow %s from aave to %s", amount, dsa)
+		from = aaveConnector
+		to = dsa
+	case "LogPayback(address,uint256,uint256,uint256,uint256)":
+		ctcType = ctc_util.CTCLoanRepayment
+		description = fmt.Sprintf("instadapp: pay back %s to aave from %s", amount, dsa)
+		from = dsa
+		to = aaveConnector
+	case "LogWithdraw(address,uint256,uint256,uint256)":
+		ctcType = ctc_util.CTCCollateralWithdrawal
+		description = fmt.Sprintf("instadapp: withdraw %s as collateral from aave to %s", amount, dsa)
+		from = aaveConnector
+		to = dsa
+	default:
+		panic("Unknown AAVE-V2-A selector: " + args.subEvent.selector)
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+		Blockchain:   args.bundle.Info.Network,
+		ID:           instadappTxID(args),
+		Type:         ctcType,
+		BaseCurrency: asset.Symbol,
+		BaseAmount:   amount.Value,
+		From:         from,
+		To:           to,
+		Description:  description,
+	}
 
 	return args.export(ctcTx.ToCSV())
 }
 
-func handleInstadappTargetAaveV2A(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
 func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
-	if len(args.event.subEvents) > 1 {
-		panic("Unexpected multiple instadapp events")
+	if args.totalSubEvents > 1 {
+		panic("Unexpected multiple instadapp events for AAVE-CLAIM-A")
 	}
 	if args.subEvent.selector != "LogClaimed(address[],uint256,uint256,uint256)" {
 		panic("Unknown AAVE-CLAIM-A selector: " + args.subEvent.selector)
@@ -344,7 +422,7 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 		ctcTx := ctc_util.CTCTransaction{
 			Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
 			Blockchain: args.bundle.Info.Network,
-			ID:         args.bundle.Info.Hash,
+			ID:         instadappTxID(args),
 			From:       args.bundle.Info.From,
 			Type:       ctc_util.CTCFee,
 			Description: fmt.Sprintf("instadapp: claim aave rewards for dsa %s on %s, but nothing claimed",
@@ -352,8 +430,6 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 				args.bundle.Info.Network,
 			),
 		}
-
-		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
 
 		return args.export(ctcTx.ToCSV())
 	}
@@ -371,7 +447,7 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 		ctcTx := ctc_util.CTCTransaction{
 			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
 			Blockchain:   args.bundle.Info.Network,
-			ID:           args.bundle.Info.Hash,
+			ID:           instadappTxID(args),
 			Type:         ctc_util.CTCIncome,
 			BaseCurrency: asset.Symbol,
 			BaseAmount:   dsaInflow.Value,
@@ -384,8 +460,6 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 			),
 		}
 
-		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
-
 		return args.export(ctcTx.ToCSV())
 	}
 
@@ -393,8 +467,8 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
-	if len(args.event.subEvents) > 1 {
-		panic("Unexpected multiple instadapp events")
+	if args.totalSubEvents > 1 {
+		panic("Unexpected multiple instadapp events for AAVE-CLAIM-B")
 	}
 	if args.subEvent.selector != "LogAaveV2Claim(address,address[],address[],uint256[],uint256[])" {
 		panic("Unknown AAVE-CLAIM-B selector: " + args.subEvent.selector)
@@ -416,7 +490,7 @@ func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
 		ctcTx := ctc_util.CTCTransaction{
 			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
 			Blockchain:   args.bundle.Info.Network,
-			ID:           args.bundle.Info.Hash,
+			ID:           instadappTxID(args),
 			Type:         ctc_util.CTCIncome,
 			BaseCurrency: asset.Symbol,
 			BaseAmount:   dsaInflow.Value,
@@ -429,8 +503,6 @@ func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
 			),
 		}
 
-		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
-
 		return args.export(ctcTx.ToCSV())
 	}
 
@@ -438,58 +510,75 @@ func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
 }
 
 func handleInstadappTargetAaveV2ImportA(args instadappTargetHandlerArgs) error {
-	if len(args.event.subEvents) > 1 {
-		panic("Unexpected multiple instadapp events")
-	}
 	if args.subEvent.selector != "LogAaveV2Import(address,bool,address[],address[],uint256[],uint256[],uint256[])" {
 		panic("Unknown AAVE-V2-IMPORT-A selector: " + args.subEvent.selector)
 	}
-	if len(args.netTransfersOnlyMine) != 1 {
-		panic("Imported multiple assets to instadapp")
-	}
 
-	for _, transfers := range args.netTransfers {
-		if len(transfers) != 2 {
-			panic("Extra net transfer in instadapp aave import")
-		}
+	// Nothing to do here from a tax perspective, just moving a position around
+	return nil
+}
 
-		dsaInflow, ok := transfers[common.HexToAddress(args.bundle.Info.To)]
-		if !ok {
-			panic("No DSA inflow in instadapp aave import")
-		}
+func handleInstadappTargetInstapoolA(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
 
-		myOutflow, ok := transfers[common.HexToAddress(args.bundle.Info.From)]
-		if !ok {
-			panic("No self-outflow in instadapp aave import")
-		}
+func handleInstadappTargetInstapoolB(args instadappTargetHandlerArgs) error {
+	return NOT_HANDLED
+}
 
-		if dsaInflow.Value.Abs().Cmp(myOutflow.Value.Abs()) != 0 {
-			panic("Unbalanced instadapp aave import flows")
-		}
-
-		ctcTx := ctc_util.CTCTransaction{
-			Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
-			Blockchain: args.bundle.Info.Network,
-			ID:         args.bundle.Info.Hash,
-			Type:       ctc_util.CTCFee,
-			From:       args.bundle.Info.From,
-			Description: fmt.Sprintf("instadapp: import %s aave position to dsa %s on %s",
-				dsaInflow,
-				args.bundle.Info.To,
-				args.bundle.Info.Network,
-			),
-		}
-
-		ctcTx.AddTransactionFeeIfMine(args.bundle.Info.From, args.bundle.Info.Network, args.bundle.Receipt)
-
-		return args.export(ctcTx.ToCSV())
-	}
-
+func handleInstadappTargetInstapoolC(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
 
 func handleInstadappTarget1inchA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
+	args.Print()
+	if args.subEvent.selector != "LogSell(address,address,uint256,uint256,uint256,uint256)" {
+		panic("Unknown 1INCH-A selector: " + args.subEvent.selector)
+	}
+
+	boughtToken := args.subEvent.args[0].(common.Address)
+	soldToken := args.subEvent.args[1].(common.Address)
+	boughtValue := args.subEvent.args[2].(*big.Int)
+	soldValue := args.subEvent.args[3].(*big.Int)
+	connector := args.subEvent.target
+	dsa := args.bundle.Info.To
+
+	boughtAsset, err := args.client.TokenAsset(boughtToken, true)
+	if err != nil {
+		return err
+	}
+
+	soldAsset, err := args.client.TokenAsset(soldToken, true)
+	if err != nil {
+		return err
+	}
+
+	boughtAmount, err := boughtAsset.WithAtomicStringValue(boughtValue.String())
+	if err != nil {
+		return err
+	}
+
+	soldAmount, err := soldAsset.WithAtomicStringValue(soldValue.String())
+	if err != nil {
+		return err
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+		Blockchain:    args.bundle.Info.Network,
+		ID:            instadappTxID(args),
+		Type:          ctc_util.CTCSell,
+		BaseCurrency:  soldAsset.Symbol,
+		BaseAmount:    soldAmount.Value,
+		QuoteCurrency: boughtAsset.Symbol,
+		QuoteAmount:   boughtAmount.Value,
+		From:          dsa,
+		To:            connector.Hex(),
+		Description:   fmt.Sprintf("instadapp: sell %s for %s", soldAmount, boughtAmount),
+	}
+	ctcTx.Print()
+
+	return args.export(ctcTx.ToCSV())
 }
 
 func handleInstadappTarget1inchV4A(args instadappTargetHandlerArgs) error {

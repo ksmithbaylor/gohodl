@@ -149,6 +149,7 @@ const (
 	CTCBridgeOut            CTCTransactionType = "bridge-out"
 	CTCMint                 CTCTransactionType = "mint"
 	CTCCollateralWithdrawal CTCTransactionType = "collateral-withdrawal"
+	CTCCollateralDeposit    CTCTransactionType = "collateral-deposit"
 	CTCAddLiquidity         CTCTransactionType = "add-liquidity"
 	CTCReceiveLPToken       CTCTransactionType = "receive-lp-token"
 	CTCRemoveLiquidity      CTCTransactionType = "remove-liquidity"
