@@ -244,12 +244,8 @@ func handleInstadappEvents(
 				err = combineErrs(err, handleInstadappTargetInstapoolB(args))
 			case "INSTAPOOL-C":
 				err = combineErrs(err, handleInstadappTargetInstapoolC(args))
-			case "1INCH-A", "1INCH-V4-A":
-				err = combineErrs(err, handleInstadappTarget1inchA(args))
-			case "PARASWAP-A":
-				err = combineErrs(err, handleInstadappTargetParaswapA(args))
-			case "PARASWAP-V5-A":
-				err = combineErrs(err, handleInstadappTargetParaswapV5A(args))
+			case "1INCH-A", "1INCH-V4-A", "PARASWAP-A", "PARASWAP-V5-A":
+				err = combineErrs(err, handleInstadappTarget1inchOrParaswap(args))
 			default:
 				panic("Unknown instadapp target: " + subEvent.targetName)
 			}
@@ -526,9 +522,15 @@ func handleInstadappTargetInstapoolC(args instadappTargetHandlerArgs) error {
 	return NOT_HANDLED
 }
 
-func handleInstadappTarget1inchA(args instadappTargetHandlerArgs) error {
-	if args.subEvent.selector != "LogSell(address,address,uint256,uint256,uint256,uint256)" {
-		panic("Unknown 1INCH-A selector: " + args.subEvent.selector)
+func handleInstadappTarget1inchOrParaswap(args instadappTargetHandlerArgs) error {
+	if !slices.Contains(
+		[]string{
+			"LogSell(address,address,uint256,uint256,uint256,uint256)",
+			"LogSwap(address,address,uint256,uint256,uint256)",
+		},
+		args.subEvent.selector,
+	) {
+		panic("Unknown 1INCH-*/PARASWAP-* selector: " + args.subEvent.selector)
 	}
 
 	boughtToken := args.subEvent.args[0].(common.Address)
@@ -573,12 +575,4 @@ func handleInstadappTarget1inchA(args instadappTargetHandlerArgs) error {
 	}
 
 	return args.export(ctcTx.ToCSV())
-}
-
-func handleInstadappTargetParaswapA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetParaswapV5A(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
 }
