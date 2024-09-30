@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"math/big"
 	"slices"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/k0kubun/pp/v3"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
+	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/evm_util"
@@ -46,7 +49,8 @@ type instadappTargetHandlerArgs struct {
 }
 
 func (args instadappTargetHandlerArgs) Print() {
-	fmt.Printf("--------- %s: %s -> %s on %s\n",
+	fmt.Printf("--------- %s, %s: %s -> %s on %s\n",
+		time.Unix(int64(args.bundle.Block.Time), 0).Format("2006-01-02 15:04:05"),
 		args.bundle.Info.Hash,
 		args.bundle.Info.From,
 		args.bundle.Info.To,
@@ -159,12 +163,6 @@ func handleInstadapp(bundle handlers.TransactionBundle, client *evm.Client, expo
 	return handleInstadappEvents(instadappEvents, bundle, client, export)
 }
 
-// TODO
-// - Figure out if I need to re-order txs containing flash loans, such as
-//   0x3ea65f97fe4aa224ce0561e81c18a65cf41bb65452b7892b18aa726ea180097d on avalanche
-// - Figure out event sender not matching signer
-// - Figure out what the origin means, if anything
-
 func handleInstadappEvents(
 	events []instadappEvent,
 	bundle handlers.TransactionBundle,
@@ -199,9 +197,25 @@ func handleInstadappEvents(
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 	err = combineErrs(err, export(ctcTx.ToCSV()))
 
-	// TODO: remove and handle the rest of the more complicated ones
 	if len(events) > 1 {
-		return NOT_HANDLED
+		args := instadappTargetHandlerArgs{
+			totalSubEvents,
+			subEventNumber,
+			events,
+			instadappEvent{},
+			instadappSubEvent{},
+			netTransfers,
+			netTransfersOnlyMine,
+			bundle,
+			client,
+			export,
+		}
+
+		if bundle.Info.Hash == TX_2 {
+			return handleTx2(args)
+		}
+
+		return handleInstadappMultiEvents(args)
 	}
 
 	for _, event := range events {
@@ -221,10 +235,6 @@ func handleInstadappEvents(
 				export,
 			}
 
-			if bundle.Info.Hash == TX_2 {
-				return handleTx2(args)
-			}
-
 			switch subEvent.targetName {
 			case "BASIC-A":
 				err = combineErrs(err, handleInstadappTargetBasicA(args))
@@ -238,12 +248,6 @@ func handleInstadappEvents(
 				err = combineErrs(err, handleInstadappTargetAaveClaimB(args))
 			case "AAVE-V2-IMPORT-A":
 				err = combineErrs(err, handleInstadappTargetAaveV2ImportA(args))
-			case "INSTAPOOL-A":
-				err = combineErrs(err, handleInstadappTargetInstapoolA(args))
-			case "INSTAPOOL-B":
-				err = combineErrs(err, handleInstadappTargetInstapoolB(args))
-			case "INSTAPOOL-C":
-				err = combineErrs(err, handleInstadappTargetInstapoolC(args))
 			case "1INCH-A", "1INCH-V4-A", "PARASWAP-A", "PARASWAP-V5-A":
 				err = combineErrs(err, handleInstadappTarget1inchOrParaswap(args))
 			default:
@@ -510,18 +514,6 @@ func handleInstadappTargetAaveV2ImportA(args instadappTargetHandlerArgs) error {
 	return nil
 }
 
-func handleInstadappTargetInstapoolA(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetInstapoolB(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
-func handleInstadappTargetInstapoolC(args instadappTargetHandlerArgs) error {
-	return NOT_HANDLED
-}
-
 func handleInstadappTarget1inchOrParaswap(args instadappTargetHandlerArgs) error {
 	if !slices.Contains(
 		[]string{
@@ -575,4 +567,365 @@ func handleInstadappTarget1inchOrParaswap(args instadappTargetHandlerArgs) error
 	}
 
 	return args.export(ctcTx.ToCSV())
+}
+
+func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
+	// I only did this once, so very specifically look for this one
+	if len(args.events[0].subEvents) >= 2 && args.events[0].subEvents[1].targetName == "AAVE-V2-IMPORT-A" {
+		// Nothing to do here from a tax perspective, just moving positions around
+		return nil
+	}
+
+	type assetDescriptor struct {
+		kind     string // "aToken" | "debtToken" | "asset"
+		asset    string
+		positive bool
+		rawAsset string
+		amount   core.Amount
+	}
+
+	dsa := args.bundle.Info.To
+	descriptors := make([]assetDescriptor, 0)
+
+	for _, transfers := range args.netTransfersOnlyMine {
+		for addr, amount := range transfers {
+			if addr.Hex() != dsa {
+				panic("Net flows for an address other than the dsa")
+			}
+
+			symbol := amount.Asset.Symbol
+			descriptor := assetDescriptor{
+				positive: amount.Value.IsPositive(),
+				rawAsset: amount.Asset.Symbol,
+				amount:   *amount,
+			}
+
+			switch {
+			case strings.HasPrefix(symbol, "am"):
+				descriptor.kind = "aToken"
+				descriptor.asset = strings.TrimPrefix(symbol, "am")
+			case strings.HasPrefix(symbol, "av"):
+				descriptor.kind = "aToken"
+				descriptor.asset = strings.TrimPrefix(symbol, "av")
+			case strings.HasPrefix(symbol, "variableDebtm"):
+				descriptor.kind = "debtToken"
+				descriptor.asset = strings.TrimPrefix(symbol, "variableDebtm")
+			case strings.HasPrefix(symbol, "variableDebtv"):
+				descriptor.kind = "debtToken"
+				descriptor.asset = strings.TrimPrefix(symbol, "variableDebtv")
+			default:
+				descriptor.kind = "asset"
+				descriptor.asset = symbol
+			}
+
+			descriptors = append(descriptors, descriptor)
+		}
+	}
+
+	if len(descriptors) < 2 || len(descriptors) > 3 {
+		panic("Unexpected net flows for complex instadapp operation")
+	}
+
+	// For consistency in the next step, sort by kind, then asset name
+	sort.Slice(descriptors, func(i, j int) bool {
+		switch {
+		case descriptors[i].kind < descriptors[j].kind:
+			return true
+		case descriptors[i].kind > descriptors[j].kind:
+			return false
+		case descriptors[i].positive:
+			return true
+		case descriptors[j].positive:
+			return false
+		case descriptors[i].asset < descriptors[j].asset:
+			return true
+		case descriptors[i].asset > descriptors[j].asset:
+			return false
+		default:
+			return false
+		}
+	})
+
+	// For brevity below
+	summary := ""
+	for i, descriptor := range descriptors {
+		if descriptor.positive {
+			summary += "+"
+		} else {
+			summary += "-"
+		}
+		summary += descriptor.kind
+		if i < len(descriptors)-1 {
+			summary += ", "
+		}
+	}
+
+	var ctcTxs []ctc_util.CTCTransaction
+
+	switch summary {
+	case "+aToken, -aToken": // Collateral swap
+		if descriptors[0].asset == descriptors[1].asset {
+			panic("Collateral swap but no change in assets")
+		}
+		ctcTxs = []ctc_util.CTCTransaction{
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-1",
+				Type:         ctc_util.CTCCollateralWithdrawal,
+				BaseCurrency: descriptors[1].asset,
+				BaseAmount:   descriptors[1].amount.Value.Neg(),
+				Description: fmt.Sprintf("instadapp: collateral swap, first withdraw %s",
+					descriptors[1].amount.Neg(),
+				),
+			},
+			{
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:    args.bundle.Info.Network,
+				ID:            args.bundle.Info.Hash + "-2",
+				Type:          ctc_util.CTCSell,
+				BaseCurrency:  descriptors[1].asset,
+				BaseAmount:    descriptors[1].amount.Value.Neg(),
+				QuoteCurrency: descriptors[0].asset,
+				QuoteAmount:   descriptors[0].amount.Value,
+				Description: fmt.Sprintf("instadapp: collateral swap, swap %s for %s",
+					descriptors[1].amount.Neg(),
+					descriptors[0].amount,
+				),
+			},
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-3",
+				Type:         ctc_util.CTCCollateralDeposit,
+				BaseCurrency: descriptors[0].asset,
+				BaseAmount:   descriptors[0].amount.Value,
+				To:           "instadapp",
+				Description: fmt.Sprintf("instadapp: collateral swap, re-deposit %s",
+					descriptors[0].amount,
+				),
+			},
+		}
+	case "+aToken, +debtToken": // Lever up
+		op := 1
+		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain:   args.bundle.Info.Network,
+			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
+			Type:         ctc_util.CTCBorrow,
+			BaseCurrency: descriptors[1].asset,
+			BaseAmount:   descriptors[1].amount.Value,
+			Description: fmt.Sprintf("instadapp: lever up, first borrow %s",
+				descriptors[1].amount,
+			),
+		})
+		op++
+		if descriptors[0].asset != descriptors[1].asset {
+			ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:    args.bundle.Info.Network,
+				ID:            fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
+				Type:          ctc_util.CTCSell,
+				BaseCurrency:  descriptors[1].asset,
+				BaseAmount:    descriptors[1].amount.Value,
+				QuoteCurrency: descriptors[0].asset,
+				QuoteAmount:   descriptors[0].amount.Value,
+				Description: fmt.Sprintf("instadapp: swap %s for %s before depositing for lever up",
+					descriptors[1].amount,
+					descriptors[0].amount,
+				),
+			})
+			op++
+		}
+		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain:   args.bundle.Info.Network,
+			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
+			Type:         ctc_util.CTCCollateralDeposit,
+			BaseCurrency: descriptors[0].asset,
+			BaseAmount:   descriptors[0].amount.Value,
+			Description: fmt.Sprintf("instadapp: lever up, deposit %s",
+				descriptors[0].amount,
+			),
+		})
+	case "-aToken, -debtToken": // Lever down
+		op := 1
+		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain:   args.bundle.Info.Network,
+			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
+			Type:         ctc_util.CTCCollateralWithdrawal,
+			BaseCurrency: descriptors[0].asset,
+			BaseAmount:   descriptors[0].amount.Value.Neg(),
+			Description: fmt.Sprintf("instadapp: lever down, first withdraw %s collateral",
+				descriptors[0].amount.Neg(),
+			),
+		})
+		op++
+		if descriptors[0].asset != descriptors[1].asset {
+			ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:    args.bundle.Info.Network,
+				ID:            fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
+				Type:          ctc_util.CTCSell,
+				BaseCurrency:  descriptors[0].asset,
+				BaseAmount:    descriptors[0].amount.Value.Neg(),
+				QuoteCurrency: descriptors[1].asset,
+				QuoteAmount:   descriptors[1].amount.Value.Neg(),
+				Description: fmt.Sprintf("instadapp: swap %s for %s before repaying for lever down",
+					descriptors[0].amount.Neg(),
+					descriptors[1].amount.Neg(),
+				),
+			})
+			op++
+		}
+		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Blockchain:   args.bundle.Info.Network,
+			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
+			Type:         ctc_util.CTCLoanRepayment,
+			BaseCurrency: descriptors[1].asset,
+			BaseAmount:   descriptors[1].amount.Value.Neg(),
+			Description: fmt.Sprintf("instadapp: lever down, repay %s",
+				descriptors[1].amount.Neg(),
+			),
+		})
+	case "+debtToken, -debtToken": // Debt swap
+		if descriptors[0].asset == descriptors[1].asset {
+			panic("Debt swap but no change in assets")
+		}
+		ctcTxs = []ctc_util.CTCTransaction{
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-1",
+				Type:         ctc_util.CTCBorrow,
+				BaseCurrency: descriptors[0].asset,
+				BaseAmount:   descriptors[0].amount.Value,
+				Description: fmt.Sprintf("instadapp: debt swap, first borrow %s",
+					descriptors[0].amount,
+				),
+			},
+			{
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:    args.bundle.Info.Network,
+				ID:            args.bundle.Info.Hash + "-2",
+				Type:          ctc_util.CTCSell,
+				BaseCurrency:  descriptors[0].asset,
+				BaseAmount:    descriptors[0].amount.Value,
+				QuoteCurrency: descriptors[1].asset,
+				QuoteAmount:   descriptors[1].amount.Value.Neg(),
+				Description: fmt.Sprintf("instadapp: debt swap, swap %s for %s",
+					descriptors[0].amount,
+					descriptors[1].amount.Neg(),
+				),
+			},
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-3",
+				Type:         ctc_util.CTCLoanRepayment,
+				BaseCurrency: descriptors[1].asset,
+				BaseAmount:   descriptors[1].amount.Value.Neg(),
+				To:           "instadapp",
+				Description: fmt.Sprintf("instadapp: debt swap, repay %s",
+					descriptors[1].amount.Neg(),
+				),
+			},
+		}
+	case "-aToken, +asset, -debtToken": // Lever down with leftover
+		if descriptors[0].asset != descriptors[2].asset {
+			panic("Lever down but assets don't match")
+		}
+		ctcTxs = []ctc_util.CTCTransaction{
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-1",
+				Type:         ctc_util.CTCCollateralWithdrawal,
+				BaseCurrency: descriptors[0].asset,
+				BaseAmount:   descriptors[0].amount.Value.Neg(),
+				Description: fmt.Sprintf("instadapp: lever down to zero, first withdraw %s",
+					descriptors[0].amount.Neg(),
+				),
+			},
+			// Not positive whether this is needed, I think not
+			// {
+			//   Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			//   Blockchain:   args.bundle.Info.Network,
+			//   ID:           args.bundle.Info.Hash + "-2",
+			//   Type:         ctc_util.CTCInterest,
+			//   BaseCurrency: descriptors[1].asset,
+			//   BaseAmount:   descriptors[1].amount.Value,
+			//   Description: fmt.Sprintf("instadapp: lever down to zero, interest income of %s",
+			//     descriptors[1].amount,
+			//   ),
+			// },
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-3",
+				Type:         ctc_util.CTCLoanRepayment,
+				BaseCurrency: descriptors[2].asset,
+				BaseAmount:   descriptors[2].amount.Value.Neg(),
+				To:           "instadapp",
+				Description: fmt.Sprintf("instadapp: lever down to zero, repay remaining %s",
+					descriptors[2].amount.Neg(),
+				),
+			},
+		}
+	case "+asset, +debtToken, -debtToken": // Debt swap with leftover
+		ctcTxs = []ctc_util.CTCTransaction{
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-1",
+				Type:         ctc_util.CTCBorrow,
+				BaseCurrency: descriptors[1].asset,
+				BaseAmount:   descriptors[1].amount.Value,
+				Description: fmt.Sprintf("instadapp: debt swap, first borrow %s",
+					descriptors[1].amount,
+				),
+			},
+			{
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:    args.bundle.Info.Network,
+				ID:            args.bundle.Info.Hash + "-2",
+				Type:          ctc_util.CTCSell,
+				BaseCurrency:  descriptors[1].asset,
+				BaseAmount:    descriptors[1].amount.Value,
+				QuoteCurrency: descriptors[2].asset,
+				QuoteAmount:   descriptors[2].amount.Value.Neg(),
+				Description: fmt.Sprintf("instadapp: debt swap, swap %s for %s",
+					descriptors[1].amount,
+					descriptors[2].amount.Neg(),
+				),
+			},
+			{
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Blockchain:   args.bundle.Info.Network,
+				ID:           args.bundle.Info.Hash + "-3",
+				Type:         ctc_util.CTCLoanRepayment,
+				BaseCurrency: descriptors[2].asset,
+				BaseAmount:   descriptors[2].amount.Value.Neg(),
+				To:           "instadapp",
+				Description: fmt.Sprintf("instadapp: debt swap, repay %s",
+					descriptors[2].amount.Neg(),
+				),
+			},
+		}
+	default:
+		panic("Unexpected descriptor combination")
+	}
+
+	if len(ctcTxs) == 0 {
+		return NOT_HANDLED
+	}
+
+	var err error
+	for _, ctcTx := range ctcTxs {
+		err = combineErrs(err, args.export(ctcTx.ToCSV()))
+	}
+
+	return err
 }
