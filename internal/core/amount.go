@@ -98,3 +98,10 @@ func (a Amount) Sub(other Amount) (Amount, error) {
 		Asset: a.Asset,
 	}, nil
 }
+
+func (a Amount) Neg() Amount {
+	return Amount{
+		Value: a.Value.Neg(),
+		Asset: a.Asset,
+	}
+}
