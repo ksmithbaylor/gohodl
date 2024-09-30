@@ -119,7 +119,9 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		}
 	}
 
-	sort.Sort(byFirstField(rowsToWrite))
+	sort.Slice(rowsToWrite, func(i, j int) bool {
+		return rowsToWrite[i][0] < rowsToWrite[j][0]
+	})
 
 	err = ctcCsvWriter.WriteAll(rowsToWrite)
 	if err != nil {
@@ -131,20 +133,6 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		fmt.Printf("%d transactions temporarily not handled (will be %.2f%% when done)\n", unhandled, 100.0*float32(handledTxs+unhandled)/float32(totalTxs))
 	}
 	fmt.Println("Finished exporting transactions!")
-}
-
-type byFirstField [][]string
-
-func (data byFirstField) Len() int {
-	return len(data)
-}
-
-func (data byFirstField) Swap(i, j int) {
-	data[i], data[j] = data[j], data[i]
-}
-
-func (data byFirstField) Less(i, j int) bool {
-	return data[i][0] < data[j][0]
 }
 
 func getCtcCsvPath(db *util.FileDB) string {
