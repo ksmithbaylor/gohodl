@@ -15,7 +15,7 @@ import (
 // used as an example. Private constants and other values are in private.go,
 // which is protected by git-crypt for my own personal implementation.
 
-type CTCWriter func([]string) error
+type CTCWriter func(...[]string) error
 type TransactionReader func(network, hash string) (
 	*types.Transaction,
 	*types.Receipt,

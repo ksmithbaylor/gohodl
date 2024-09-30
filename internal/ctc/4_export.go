@@ -49,8 +49,10 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	rowsToWrite := make([][]string, 0)
 
 	privateImplementation := handlers.Implementation
-	ctcWriter := func(row []string) error {
-		rowsToWrite = append(rowsToWrite, row)
+	ctcWriter := func(rows ...[]string) error {
+		for _, row := range rows {
+			rowsToWrite = append(rowsToWrite, row)
+		}
 		return nil
 	}
 	txReader := func(network, hash string) (
