@@ -186,15 +186,14 @@ func handleInstadappEvents(
 
 	subEventNumber := 0
 
-	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:   time.Unix(int64(bundle.Block.Time), 0),
-		Blockchain:  bundle.Info.Network,
-		ID:          fmt.Sprintf("%s-%d", bundle.Info.Hash, subEventNumber),
-		From:        bundle.Info.From,
-		Type:        ctc_util.CTCFee,
-		Description: "instadapp: record network fee separately from individual events",
-	}
-	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+	ctcTx := ctc_util.NewFeeTransaction(
+		bundle.Block.Time,
+		bundle.Info.Network,
+		fmt.Sprintf("%s-%d", bundle.Info.Hash, subEventNumber),
+		bundle.Info.From,
+		"instadapp: record network fee separately from individual events",
+		bundle.Receipt,
+	)
 	err = combineErrs(err, export(ctcTx.ToCSV()))
 
 	if len(events) > 1 {

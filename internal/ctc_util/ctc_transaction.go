@@ -27,6 +27,32 @@ type CTCTransaction struct {
 	ReferencePriceCurrency string
 }
 
+func NewFeeTransaction(
+	blockTime uint64,
+	network, id, from, description string,
+	receipt *types.Receipt,
+) *CTCTransaction {
+	ctcTx := CTCTransaction{
+		Timestamp:   time.Unix(int64(blockTime), 0),
+		Blockchain:  network,
+		ID:          id,
+		From:        from,
+		Type:        CTCFee,
+		Description: description,
+	}
+
+	ctcTx.AddTransactionFeeIfMine(from, network, receipt)
+	if ctcTx.FeeAmount.IsZero() {
+		panic("fee tx but did not pay a fee")
+	}
+
+	// Since this is a transaction recording only the fee, put the fee as the base
+	ctcTx.BaseCurrency, ctcTx.FeeCurrency = ctcTx.FeeCurrency, ctcTx.BaseCurrency
+	ctcTx.BaseAmount, ctcTx.FeeAmount = ctcTx.FeeAmount, ctcTx.BaseAmount
+
+	return &ctcTx
+}
+
 var CTC_HEADERS = []string{
 	"Timestamp (UTC)",
 	"Type",
