@@ -49,19 +49,19 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == abis.INSTADAPP_CAST:
 		handle = handleInstadapp
 	case info.Method == abis.AAVE_SUPPLY:
-		return true, NOT_HANDLED
+		handle = handleAaveSupply
 	case info.Method == abis.AAVE_BORROW:
-		return true, NOT_HANDLED
+		handle = handleAaveBorrow
 	case info.Method == abis.AAVE_REPAY:
-		return true, NOT_HANDLED
+		handle = handleAaveRepay
 	case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
-		return true, NOT_HANDLED
+		handle = handleAaveRepayWithATokens
 	case info.Method == abis.AAVE_DEPOSIT:
-		return true, NOT_HANDLED
+		handle = handleAaveDeposit
 	case info.Method == abis.AAVE_WITHDRAW:
-		return true, NOT_HANDLED
+		handle = handleAaveWithdraw
 	case info.Method == abis.AAVE_SET_USER_E_MODE:
-		return true, NOT_HANDLED
+		handle = handleAaveSetUserEMode
 	}
 
 	if handle != nil {
