@@ -48,6 +48,20 @@ func (h personalHandler) HandleTransaction(
 		handle = handleErc20Approve
 	case info.Method == abis.INSTADAPP_CAST:
 		handle = handleInstadapp
+	case info.Method == abis.AAVE_SUPPLY:
+		return true, NOT_HANDLED
+	case info.Method == abis.AAVE_BORROW:
+		return true, NOT_HANDLED
+	case info.Method == abis.AAVE_REPAY:
+		return true, NOT_HANDLED
+	case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
+		return true, NOT_HANDLED
+	case info.Method == abis.AAVE_DEPOSIT:
+		return true, NOT_HANDLED
+	case info.Method == abis.AAVE_WITHDRAW:
+		return true, NOT_HANDLED
+	case info.Method == abis.AAVE_SET_USER_E_MODE:
+		return true, NOT_HANDLED
 	}
 
 	if handle != nil {
