@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/k0kubun/pp/v3"
+
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
@@ -56,6 +56,10 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 		if event.Name == "Supply" {
 			supplyEvent = event
 		}
+	}
+
+	if supplyEvent.Name == "" {
+		panic("No supply event for aave supply")
 	}
 
 	if supplyEvent.Data["reserve"].(common.Address).Hex() != deposited.Asset.Identifier {
@@ -216,14 +220,10 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 }
 
 func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
-	fmt.Println("aave repay with atokens")
 	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
 
 	if len(netTransfersOnlyMine) != 2 {
 		panic("More than 2 net transfers for aave repay with atokens")
@@ -245,8 +245,6 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 		panic("No repay event for aave repay with atokens")
 	}
 
-	pp.Println(repayEvent)
-
 	repaidTokenAddress := repayEvent.Data["reserve"].(common.Address)
 	repaidAmount := repayEvent.Data["amount"].(*big.Int).String()
 
@@ -260,8 +258,6 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 		return err
 	}
 
-	fmt.Println("repaid:", repaid)
-
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
 		Blockchain:   bundle.Info.Network,
@@ -274,8 +270,6 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 		Description:  fmt.Sprintf("aave: repay %s", repaid),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
-
-	ctcTx.Print()
 
 	return export(ctcTx.ToCSV())
 }
@@ -327,6 +321,10 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 		}
 	}
 
+	if depositEvent.Name == "" {
+		panic("No deposit event for aave deposit")
+	}
+
 	if depositEvent.Data["reserve"].(common.Address).Hex() != deposited.Asset.Identifier {
 		panic("Different asset deposited than token movements would suggest for aave deposit")
 	}
@@ -355,7 +353,69 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 }
 
 func handleAaveWithdraw(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
+	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	if len(netTransfersOnlyMine) != 2 {
+		panic("More than 2 net transfers for aave withdrawal")
+	}
+
+	var withdrawn core.Amount
+
+	for _, transfers := range netTransfersOnlyMine {
+		if len(transfers) != 1 {
+			panic("More than 1 transfer for an asset for aave withdrawal")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Transfer to/from the wrong address for aave withdrawal")
+			}
+			if amount.Value.IsPositive() {
+				withdrawn = *amount
+			}
+		}
+	}
+
+	events, err := evm.ParseKnownEvents(bundle.Info.Network, bundle.Receipt.Logs, abis.AaveAbi)
+	if err != nil {
+		return err
+	}
+
+	var withdrawEvent evm.ParsedEvent
+	for _, event := range events {
+		if event.Name == "Withdraw" {
+			withdrawEvent = event
+		}
+	}
+
+	if withdrawEvent.Name == "" {
+		panic("No withdraw event for aave withdrawal")
+	}
+
+	if withdrawEvent.Data["reserve"].(common.Address).Hex() != withdrawn.Asset.Identifier {
+		panic("Different asset withdrawn than token movements would suggest for aave withdrawal")
+	}
+
+	if withdrawEvent.Data["amount"].(*big.Int).String() != withdrawn.Value.Shift(int32(withdrawn.Asset.Decimals)).String() {
+		panic("Different amount withdrawn than token movements would suggest for aave withdrawal")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCCollateralWithdrawal,
+		BaseCurrency: withdrawn.Asset.Symbol,
+		BaseAmount:   withdrawn.Value,
+		From:         "aave",
+		To:           bundle.Info.From,
+		Description:  fmt.Sprintf("aave: withdraw %s", withdrawn),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
 }
 
 func handleAaveSetUserEMode(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
