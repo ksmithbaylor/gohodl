@@ -46,7 +46,11 @@ func handleMoonwellClaimReward(bundle handlers.TransactionBundle, client *evm.Cl
 			if addr.Hex() != bundle.Info.From {
 				panic("Wrong address received rewards for moonwell rewards claim")
 			}
-			rewardAmount = amount
+			if amount.Value.IsPositive() {
+				rewardAmount = amount
+			} else {
+				panic("Outflow for moonwell rewards claim")
+			}
 		}
 	}
 
@@ -147,7 +151,9 @@ func handleMoonwellBorrow(bundle handlers.TransactionBundle, client *evm.Client,
 			if addr.Hex() != bundle.Info.From {
 				panic("Unexpected net transfers for moonwell borrow")
 			}
-			borrowed = *amount
+			if amount.Value.IsPositive() {
+				borrowed = *amount
+			}
 		}
 	}
 
@@ -191,12 +197,14 @@ func handleMoonwellRepayBorrow(bundle handlers.TransactionBundle, client *evm.Cl
 			if addr.Hex() != bundle.Info.From {
 				panic("Unexpected net transfers for moonwell repay")
 			}
-			repaid = amount.Neg()
+			if amount.Value.IsNegative() {
+				repaid = amount.Neg()
+			}
 		}
 	}
 
 	if repaid.Asset.Symbol == "" {
-		panic("No asset deposited for moonwell mint")
+		panic("No asset sent for moonwell repay")
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
