@@ -17,7 +17,6 @@ var MOONWELL_MINT string
 var MOONWELL_BORROW string
 var MOONWELL_REPAY_BORROW string
 var MOONWELL_REDEEM string
-var MOONWELL_REDEEM_UNDERLYING string
 
 func init() {
 	abi, err := abi.JSON(strings.NewReader(moonwellTokenAbiJson))
@@ -37,8 +36,6 @@ func init() {
 			MOONWELL_REPAY_BORROW = selector
 		case "redeem":
 			MOONWELL_REDEEM = selector
-		case "redeemUnderlying":
-			MOONWELL_REDEEM_UNDERLYING = selector
 		}
 	}
 }

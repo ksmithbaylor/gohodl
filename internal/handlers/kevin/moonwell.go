@@ -268,7 +268,3 @@ func handleMoonwellRedeem(bundle handlers.TransactionBundle, client *evm.Client,
 
 	return export(ctcTx.ToCSV())
 }
-
-func handleMoonwellRedeemUnderlying(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
-}
