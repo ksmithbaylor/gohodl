@@ -9,20 +9,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var MoonwellAbi abi.ABI
+var MoonwellComptrollerAbi abi.ABI
 
-//go:embed moonwell.json
-var moonwellAbiJson string
+//go:embed moonwell_comptroller.json
+var moonwellComptrollerAbiJson string
 var MOONWELL_ENTER_MARKETS string
 var MOONWELL_CLAIM_REWARD string
 var MOONWELL_CLAIM_REWARD_0 string
 
 func init() {
-	abi, err := abi.JSON(strings.NewReader(moonwellAbiJson))
+	abi, err := abi.JSON(strings.NewReader(moonwellComptrollerAbiJson))
 	if err != nil {
 		log.Fatalf("Could not parse Moonwell ABI: %s\n", err.Error())
 	}
-	MoonwellAbi = abi
+	MoonwellComptrollerAbi = abi
 	for _, method := range abi.Methods {
 		selector := "0x" + common.Bytes2Hex(method.ID)
 
