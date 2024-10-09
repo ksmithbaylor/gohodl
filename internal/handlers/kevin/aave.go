@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/k0kubun/pp/v3"
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
@@ -150,14 +151,10 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 }
 
 func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
-	fmt.Println("aave repay")
 	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
 
 	if len(netTransfersOnlyMine) != 2 {
 		panic("More than 2 net transfers for aave repay")
@@ -199,8 +196,71 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 	}
 
 	if repaidAmount != repaid.Value.Shift(int32(repaid.Asset.Decimals)).String() {
-		panic("Different amount repaid vs sent for aave borrow")
+		panic("Different amount repaid vs sent for aave repay")
 	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCLoanRepayment,
+		BaseCurrency: repaid.Asset.Symbol,
+		BaseAmount:   repaid.Value,
+		From:         bundle.Info.From,
+		To:           "aave",
+		Description:  fmt.Sprintf("aave: repay %s", repaid),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
+}
+
+func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
+	fmt.Println("aave repay with atokens")
+	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
+
+	if len(netTransfersOnlyMine) != 2 {
+		panic("More than 2 net transfers for aave repay with atokens")
+	}
+
+	events, err := evm.ParseKnownEvents(bundle.Info.Network, bundle.Receipt.Logs, abis.AaveAbi)
+	if err != nil {
+		return err
+	}
+
+	var repayEvent evm.ParsedEvent
+	for _, event := range events {
+		if event.Name == "Repay" || event.Name == "Repay0" {
+			repayEvent = event
+		}
+	}
+
+	if repayEvent.Name == "" {
+		panic("No repay event for aave repay with atokens")
+	}
+
+	pp.Println(repayEvent)
+
+	repaidTokenAddress := repayEvent.Data["reserve"].(common.Address)
+	repaidAmount := repayEvent.Data["amount"].(*big.Int).String()
+
+	repaidAsset, err := client.TokenAsset(repaidTokenAddress)
+	if err != nil {
+		return err
+	}
+
+	repaid, err := repaidAsset.WithAtomicStringValue(repaidAmount)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("repaid:", repaid)
 
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
@@ -218,10 +278,6 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 	ctcTx.Print()
 
 	return export(ctcTx.ToCSV())
-}
-
-func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
 }
 
 func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
