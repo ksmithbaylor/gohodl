@@ -164,7 +164,7 @@ func handleMoonwellBorrow(bundle handlers.TransactionBundle, client *evm.Client,
 		BaseAmount:   borrowed.Value,
 		From:         "moonewell",
 		To:           bundle.Info.From,
-		Description:  fmt.Sprintf("moonewell: borrow %s", borrowed),
+		Description:  fmt.Sprintf("moonwell: borrow %s", borrowed),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
@@ -172,7 +172,47 @@ func handleMoonwellBorrow(bundle handlers.TransactionBundle, client *evm.Client,
 }
 
 func handleMoonwellRepayBorrow(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	if len(netTransfers) != 1 {
+		panic("Unexpected net transfers for moonwell borrow")
+	}
+
+	var repaid core.Amount
+
+	for _, transfers := range netTransfers {
+		if len(transfers) != 1 {
+			panic("Unexpected net transfers for moonwell repay")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Unexpected net transfers for moonwell repay")
+			}
+			repaid = amount.Neg()
+		}
+	}
+
+	if repaid.Asset.Symbol == "" {
+		panic("No asset deposited for moonwell mint")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCLoanRepayment,
+		BaseCurrency: repaid.Asset.Symbol,
+		BaseAmount:   repaid.Value,
+		From:         bundle.Info.From,
+		To:           "moonewell",
+		Description:  fmt.Sprintf("moonwell: repay %s", repaid),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
 }
 
 func handleMoonwellRedeem(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
