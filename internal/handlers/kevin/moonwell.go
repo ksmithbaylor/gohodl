@@ -268,3 +268,109 @@ func handleMoonwellRedeem(bundle handlers.TransactionBundle, client *evm.Client,
 
 	return export(ctcTx.ToCSV())
 }
+
+func handleMoonwellStake(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	if len(netTransfers) != 2 {
+		panic("Unexpected net transfers for moonwell stake")
+	}
+
+	var staked core.Amount
+
+	for _, transfers := range netTransfers {
+		if len(transfers) != 1 {
+			panic("Unexpected net transfers for moonwell stake")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Unexpected net transfers for moonwell stake")
+			}
+			if amount.Value.IsNegative() {
+				staked = amount.Neg()
+			}
+		}
+	}
+
+	if staked.Asset.Symbol == "" {
+		panic("No asset sent for moonwell stake")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCStakingDeposit,
+		BaseCurrency: staked.Asset.Symbol,
+		BaseAmount:   staked.Value,
+		From:         bundle.Info.From,
+		To:           "moonwell",
+		Description:  fmt.Sprintf("moonwell: stake %s", staked),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
+}
+
+func handleMoonwellStakingCooldown(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	// This just starts a timer for unstaking, so the fee is the only thing that needs to be handled
+	ctcTx := ctc_util.NewFeeTransaction(
+		bundle.Block.Time,
+		bundle.Info.Network,
+		bundle.Info.Hash,
+		bundle.Info.From,
+		"moonwell: start unstaking cooldown",
+		bundle.Receipt,
+	)
+
+	return export(ctcTx.ToCSV())
+}
+
+func handleMoonwellStakingRedeem(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	if len(netTransfers) != 2 {
+		panic("Unexpected net transfers for moonwell staking redeem")
+	}
+
+	var withdrawn core.Amount
+
+	for _, transfers := range netTransfers {
+		if len(transfers) != 1 {
+			panic("Unexpected net transfers for moonwell staking redeem")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Unexpected net transfers for moonwell staking redeem")
+			}
+			if amount.Value.IsPositive() {
+				withdrawn = *amount
+			}
+		}
+	}
+
+	if withdrawn.Asset.Symbol == "" {
+		panic("No asset withdrawn for moonwell staking redeem")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCStakingWithdrawal,
+		BaseCurrency: withdrawn.Asset.Symbol,
+		BaseAmount:   withdrawn.Value,
+		From:         "moonwell",
+		To:           bundle.Info.From,
+		Description:  fmt.Sprintf("moonwell: withdraw stake of %s", withdrawn),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
+}

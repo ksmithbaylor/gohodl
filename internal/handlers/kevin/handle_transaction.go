@@ -65,7 +65,10 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveSetUserEMode
 	case info.Method == abis.MOONWELL_ENTER_MARKETS:
 		handle = handleMoonwellEnterMarkets
-	case info.Method == abis.MOONWELL_CLAIM_REWARD, info.Method == abis.MOONWELL_CLAIM_REWARD_0:
+	case
+		info.Method == abis.MOONWELL_CLAIM_REWARD,
+		info.Method == abis.MOONWELL_CLAIM_REWARD_0,
+		info.Method == abis.MOONWELL_STAKING_CLAIM:
 		handle = handleMoonwellClaimReward
 	case info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellMint
@@ -75,6 +78,12 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellRepayBorrow
 	case info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellRedeem
+	case info.Method == abis.MOONWELL_STAKING_STAKE:
+		handle = handleMoonwellStake
+	case info.Method == abis.MOONWELL_STAKING_COOLDOWN:
+		handle = handleMoonwellStakingCooldown
+	case info.Method == abis.MOONWELL_STAKING_REDEEM:
+		handle = handleMoonwellStakingRedeem
 	}
 
 	if handle != nil {
