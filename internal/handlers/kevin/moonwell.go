@@ -80,3 +80,23 @@ func handleMoonwellClaimReward(bundle handlers.TransactionBundle, client *evm.Cl
 
 	return export(ctcTx.ToCSV())
 }
+
+func handleMoonwellMint(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	return NOT_HANDLED
+}
+
+func handleMoonwellBorrow(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	return NOT_HANDLED
+}
+
+func handleMoonwellRepayBorrow(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	return NOT_HANDLED
+}
+
+func handleMoonwellRedeem(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	return NOT_HANDLED
+}
+
+func handleMoonwellRedeemUnderlying(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	return NOT_HANDLED
+}

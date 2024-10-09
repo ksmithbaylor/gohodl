@@ -2,6 +2,7 @@ package kevin
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
@@ -66,6 +67,16 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellEnterMarkets
 	case info.Method == abis.MOONWELL_CLAIM_REWARD, info.Method == abis.MOONWELL_CLAIM_REWARD_0:
 		handle = handleMoonwellClaimReward
+	case info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"):
+		handle = handleMoonwellMint
+	case info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"):
+		handle = handleMoonwellBorrow
+	case info.Method == abis.MOONWELL_REPAY_BORROW && strings.HasPrefix(info.Network, "moon"):
+		handle = handleMoonwellRepayBorrow
+	case info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"):
+		handle = handleMoonwellRedeem
+	case info.Method == abis.MOONWELL_REDEEM_UNDERLYING && strings.HasPrefix(info.Network, "moon"):
+		handle = handleMoonwellRedeemUnderlying
 	}
 
 	if handle != nil {
