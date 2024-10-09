@@ -33,8 +33,8 @@ func (nt NetTransfers) String() string {
 	return s[:len(s)-1]
 }
 
-func (nt NetTransfers) Print(label string) {
-	fmt.Printf("%s:\n%s\n", label, nt.String())
+func (nt NetTransfers) Print() {
+	fmt.Printf("net transfers:\n%s\n", nt.String())
 }
 
 type transfer struct {
