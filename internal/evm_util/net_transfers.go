@@ -33,6 +33,10 @@ func (nt NetTransfers) String() string {
 	return s[:len(s)-1]
 }
 
+func (nt NetTransfers) Print(label string) {
+	fmt.Printf("%s:\n%s\n", label, nt.String())
+}
+
 type transfer struct {
 	from   common.Address
 	to     common.Address

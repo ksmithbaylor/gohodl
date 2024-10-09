@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/k0kubun/pp/v3"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
@@ -15,6 +16,10 @@ type ParsedEvent struct {
 	Contract common.Address
 	Name     string
 	Data     map[string]any
+}
+
+func (pe ParsedEvent) Print() {
+	pp.Println(pe)
 }
 
 var KNOWN_STRANGE_CONTRACTS = []string{
