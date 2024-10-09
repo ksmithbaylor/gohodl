@@ -224,7 +224,51 @@ func handleMoonwellRepayBorrow(bundle handlers.TransactionBundle, client *evm.Cl
 }
 
 func handleMoonwellRedeem(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
+	printHeader(bundle)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+	netTransfers.Print()
+
+	if len(netTransfers) != 2 {
+		panic("Unexpected net transfers for moonwell redeem")
+	}
+
+	var withdrawn core.Amount
+
+	for _, transfers := range netTransfers {
+		if len(transfers) != 1 {
+			panic("Unexpected net transfers for moonwell redeem")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Unexpected net transfers for moonwell redeem")
+			}
+			if amount.Value.IsPositive() {
+				withdrawn = *amount
+			}
+		}
+	}
+
+	if withdrawn.Asset.Symbol == "" {
+		panic("No asset withdrawn for moonwell redeem")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCCollateralWithdrawal,
+		BaseCurrency: withdrawn.Asset.Symbol,
+		BaseAmount:   withdrawn.Value,
+		From:         "moonwell",
+		To:           bundle.Info.From,
+		Description:  fmt.Sprintf("moonwell: withdraw %s", withdrawn),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
 }
 
 func handleMoonwellRedeemUnderlying(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
