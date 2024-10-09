@@ -20,7 +20,7 @@ var MOONWELL_CLAIM_REWARD_0 string
 func init() {
 	abi, err := abi.JSON(strings.NewReader(moonwellComptrollerAbiJson))
 	if err != nil {
-		log.Fatalf("Could not parse Moonwell ABI: %s\n", err.Error())
+		log.Fatalf("Could not parse Moonwell comptroller ABI: %s\n", err.Error())
 	}
 	MoonwellComptrollerAbi = abi
 	for _, method := range abi.Methods {
