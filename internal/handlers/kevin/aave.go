@@ -71,7 +71,7 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCCollateralDeposit,
@@ -139,7 +139,7 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCBorrow,
@@ -204,7 +204,7 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCLoanRepayment,
@@ -259,7 +259,7 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCLoanRepayment,
@@ -334,7 +334,7 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCCollateralDeposit,
@@ -403,7 +403,7 @@ func handleAaveWithdraw(bundle handlers.TransactionBundle, client *evm.Client, e
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCCollateralWithdrawal,

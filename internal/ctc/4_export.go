@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/core/types"
 
@@ -15,6 +16,8 @@ import (
 	handlers "github.com/ksmithbaylor/gohodl/internal/handlers/kevin"
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
+
+var END_OF_2023 = 1704067199
 
 func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	if os.Getenv("SKIP_EXPORT") != "" {
@@ -50,9 +53,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	privateImplementation := handlers.Implementation
 	ctcWriter := func(rows ...[]string) error {
-		for _, row := range rows {
-			rowsToWrite = append(rowsToWrite, row)
-		}
+		rowsToWrite = append(rowsToWrite, rows...)
 		return nil
 	}
 	txReader := func(network, hash string) (
@@ -78,20 +79,30 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		}
 
 		// Skip header row
-		if row[0] == "network" {
+		if row[0] == "timestamp" {
+			continue
+		}
+
+		timestamp, err := strconv.Atoi(row[0])
+		if err != nil {
+			panic("Invalid timestamp: " + row[0])
+		}
+
+		if timestamp > END_OF_2023 {
 			continue
 		}
 
 		totalTxs++
 		info := evm.TxInfo{
-			Network:   row[0],
-			Hash:      row[1],
-			BlockHash: row[2],
-			From:      row[3],
-			To:        row[4],
-			Method:    row[5],
-			Value:     row[6],
-			Success:   row[7] == "success",
+			Time:      timestamp,
+			Network:   row[1],
+			Hash:      row[2],
+			BlockHash: row[3],
+			From:      row[4],
+			To:        row[5],
+			Method:    row[6],
+			Value:     row[7],
+			Success:   row[8] == "success",
 		}
 
 		client, ok := clients[info.Network]

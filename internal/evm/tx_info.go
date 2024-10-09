@@ -1,6 +1,7 @@
 package evm
 
 type TxInfo struct {
+	Time      int
 	Network   string
 	Hash      string
 	BlockHash string

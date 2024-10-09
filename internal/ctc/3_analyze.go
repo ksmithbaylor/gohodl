@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -23,35 +24,6 @@ func AnalyzeTransactions(db *util.FileDB, txHashes map[string][]string) {
 		return
 	}
 
-	// network => tx/block hash => tx/receipt/block
-	txs := make(map[string]map[string]*types.Transaction)
-	receipts := make(map[string]map[string]*types.Receipt)
-	blocks := make(map[string]map[string]*types.Header)
-
-	for network, networkTxHashes := range txHashes {
-		for _, txHash := range networkTxHashes {
-			tx, receipt, block, err := readTransactionBundle(db, network, txHash)
-			if err != nil {
-				fmt.Printf("Could not read %s transaction %s: %s\n", network, txHash, err.Error())
-				continue
-			}
-
-			if txs[network] == nil {
-				txs[network] = make(map[string]*types.Transaction)
-			}
-			if receipts[network] == nil {
-				receipts[network] = make(map[string]*types.Receipt)
-			}
-			if blocks[network] == nil {
-				blocks[network] = make(map[string]*types.Header)
-			}
-
-			txs[network][txHash] = tx
-			receipts[network][txHash] = receipt
-			blocks[network][block.Hash().Hex()] = block
-		}
-	}
-
 	txCsvFile, err := os.Create(getTxsCsvPath(db))
 	if err != nil {
 		fmt.Printf("Error creating csv file: %s\n", err.Error())
@@ -63,6 +35,7 @@ func AnalyzeTransactions(db *util.FileDB, txHashes map[string][]string) {
 	defer txCsvWriter.Flush()
 
 	err = txCsvWriter.Write([]string{
+		"timestamp",
 		"network",
 		"hash",
 		"blockhash",
@@ -77,12 +50,17 @@ func AnalyzeTransactions(db *util.FileDB, txHashes map[string][]string) {
 		return
 	}
 
-	for network, networkTxs := range txs {
-		fmt.Printf("%s: %d txs\n", network, len(networkTxs))
+	for network, networkTxHashes := range txHashes {
+		for _, txHash := range networkTxHashes {
+			tx, receipt, block, err := readTransactionBundle(db, network, txHash)
+			if err != nil {
+				fmt.Printf("Could not read %s transaction %s: %s\n", network, txHash, err.Error())
+				continue
+			}
 
-		for txHash, tx := range networkTxs {
-			receipt := receipts[network][txHash]
-			block := blocks[network][receipt.BlockHash.Hex()]
+			if block == nil {
+				panic("nil block for " + network + " / " + receipt.BlockHash.Hex())
+			}
 
 			from, err := types.Sender(types.LatestSignerForChainID(tx.ChainId()), tx)
 			if err != nil {
@@ -100,6 +78,7 @@ func AnalyzeTransactions(db *util.FileDB, txHashes map[string][]string) {
 			}
 
 			err = txCsvWriter.Write([]string{
+				strconv.Itoa(int(block.Time)),
 				network,
 				txHash,
 				block.Hash().Hex(),

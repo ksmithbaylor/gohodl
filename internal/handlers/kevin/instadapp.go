@@ -50,7 +50,7 @@ type instadappTargetHandlerArgs struct {
 
 func (args instadappTargetHandlerArgs) Print() {
 	fmt.Printf("--------- %s, %s: %s -> %s on %s\n",
-		time.Unix(int64(args.bundle.Block.Time), 0).Format("2006-01-02 15:04:05"),
+		time.Unix(int64(args.bundle.Block.Time), 0).UTC().Format("2006-01-02 15:04:05"),
 		args.bundle.Info.Hash,
 		args.bundle.Info.From,
 		args.bundle.Info.To,
@@ -295,7 +295,7 @@ func handleInstadappTargetBasicA(args instadappTargetHandlerArgs) error {
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 		Blockchain:   args.bundle.Info.Network,
 		ID:           instadappTxID(args),
 		Type:         ctc_util.CTCSend,
@@ -389,7 +389,7 @@ func handleInstadappTargetAaveV2A(args instadappTargetHandlerArgs) error {
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 		Blockchain:   args.bundle.Info.Network,
 		ID:           instadappTxID(args),
 		Type:         ctcType,
@@ -415,7 +415,7 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 	}
 	if len(args.netTransfersOnlyMine) == 0 {
 		ctcTx := ctc_util.CTCTransaction{
-			Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:  time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain: args.bundle.Info.Network,
 			ID:         instadappTxID(args),
 			From:       args.bundle.Info.From,
@@ -440,7 +440,7 @@ func handleInstadappTargetAaveClaimA(args instadappTargetHandlerArgs) error {
 		}
 
 		ctcTx := ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain:   args.bundle.Info.Network,
 			ID:           instadappTxID(args),
 			Type:         ctc_util.CTCIncome,
@@ -483,7 +483,7 @@ func handleInstadappTargetAaveClaimB(args instadappTargetHandlerArgs) error {
 		}
 
 		ctcTx := ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain:   args.bundle.Info.Network,
 			ID:           instadappTxID(args),
 			Type:         ctc_util.CTCIncome,
@@ -552,7 +552,7 @@ func handleInstadappTarget1inchOrParaswap(args instadappTargetHandlerArgs) error
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+		Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 		Blockchain:    args.bundle.Info.Network,
 		ID:            instadappTxID(args),
 		Type:          ctc_util.CTCSell,
@@ -668,7 +668,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 		}
 		ctcTxs = []ctc_util.CTCTransaction{
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-1",
 				Type:         ctc_util.CTCCollateralWithdrawal,
@@ -679,7 +679,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 				),
 			},
 			{
-				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:    args.bundle.Info.Network,
 				ID:            args.bundle.Info.Hash + "-2",
 				Type:          ctc_util.CTCSell,
@@ -693,7 +693,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 				),
 			},
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-3",
 				Type:         ctc_util.CTCCollateralDeposit,
@@ -708,7 +708,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 	case "+aToken, +debtToken": // Lever up
 		op := 1
 		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain:   args.bundle.Info.Network,
 			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
 			Type:         ctc_util.CTCBorrow,
@@ -721,7 +721,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 		op++
 		if descriptors[0].asset != descriptors[1].asset {
 			ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
-				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:    args.bundle.Info.Network,
 				ID:            fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
 				Type:          ctc_util.CTCSell,
@@ -737,7 +737,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 			op++
 		}
 		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain:   args.bundle.Info.Network,
 			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
 			Type:         ctc_util.CTCCollateralDeposit,
@@ -750,7 +750,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 	case "-aToken, -debtToken": // Lever down
 		op := 1
 		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain:   args.bundle.Info.Network,
 			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
 			Type:         ctc_util.CTCCollateralWithdrawal,
@@ -763,7 +763,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 		op++
 		if descriptors[0].asset != descriptors[1].asset {
 			ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
-				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:    args.bundle.Info.Network,
 				ID:            fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
 				Type:          ctc_util.CTCSell,
@@ -779,7 +779,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 			op++
 		}
 		ctcTxs = append(ctcTxs, ctc_util.CTCTransaction{
-			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			Blockchain:   args.bundle.Info.Network,
 			ID:           fmt.Sprintf("%s-%d", args.bundle.Info.Hash, op),
 			Type:         ctc_util.CTCLoanRepayment,
@@ -795,7 +795,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 		}
 		ctcTxs = []ctc_util.CTCTransaction{
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-1",
 				Type:         ctc_util.CTCBorrow,
@@ -806,7 +806,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 				),
 			},
 			{
-				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:    args.bundle.Info.Network,
 				ID:            args.bundle.Info.Hash + "-2",
 				Type:          ctc_util.CTCSell,
@@ -820,7 +820,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 				),
 			},
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-3",
 				Type:         ctc_util.CTCLoanRepayment,
@@ -838,7 +838,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 		}
 		ctcTxs = []ctc_util.CTCTransaction{
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-1",
 				Type:         ctc_util.CTCCollateralWithdrawal,
@@ -850,7 +850,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 			},
 			// Not positive whether this is needed, I think not
 			// {
-			//   Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+			//   Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 			//   Blockchain:   args.bundle.Info.Network,
 			//   ID:           args.bundle.Info.Hash + "-2",
 			//   Type:         ctc_util.CTCInterest,
@@ -861,7 +861,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 			//   ),
 			// },
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-3",
 				Type:         ctc_util.CTCLoanRepayment,
@@ -876,7 +876,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 	case "+asset, +debtToken, -debtToken": // Debt swap with leftover
 		ctcTxs = []ctc_util.CTCTransaction{
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-1",
 				Type:         ctc_util.CTCBorrow,
@@ -887,7 +887,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 				),
 			},
 			{
-				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:     time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:    args.bundle.Info.Network,
 				ID:            args.bundle.Info.Hash + "-2",
 				Type:          ctc_util.CTCSell,
@@ -901,7 +901,7 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 				),
 			},
 			{
-				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0),
+				Timestamp:    time.Unix(int64(args.bundle.Block.Time), 0).UTC(),
 				Blockchain:   args.bundle.Info.Network,
 				ID:           args.bundle.Info.Hash + "-3",
 				Type:         ctc_util.CTCLoanRepayment,

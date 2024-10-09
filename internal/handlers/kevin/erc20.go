@@ -54,7 +54,7 @@ func handleErc20Transfer(bundle handlers.TransactionBundle, client *evm.Client, 
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctcType,
@@ -133,7 +133,7 @@ func handleErc20Approve(bundle handlers.TransactionBundle, client *evm.Client, e
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
 		Type:         ctc_util.CTCApproval,

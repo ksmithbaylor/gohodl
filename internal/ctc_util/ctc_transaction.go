@@ -33,7 +33,7 @@ func NewFeeTransaction(
 	receipt *types.Receipt,
 ) *CTCTransaction {
 	ctcTx := CTCTransaction{
-		Timestamp:   time.Unix(int64(blockTime), 0),
+		Timestamp:   time.Unix(int64(blockTime), 0).UTC(),
 		Blockchain:  network,
 		ID:          id,
 		From:        from,

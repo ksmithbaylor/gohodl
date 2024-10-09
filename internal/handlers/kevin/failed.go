@@ -10,7 +10,7 @@ import (
 
 func handleFailed(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:   time.Unix(int64(bundle.Block.Time), 0),
+		Timestamp:   time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:  bundle.Info.Network,
 		ID:          bundle.Info.Hash,
 		Type:        ctc_util.CTCFailedOut,
