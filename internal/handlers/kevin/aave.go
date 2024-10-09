@@ -85,14 +85,10 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 }
 
 func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	// fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
-	// fmt.Println("aave borrow")
 	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
-
-	// fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
 
 	if len(netTransfersOnlyMine) != 2 {
 		panic("More than 2 net transfers for aave borrow")
@@ -154,7 +150,74 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 }
 
 func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
+	fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
+	fmt.Println("aave repay")
+	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
+
+	if len(netTransfersOnlyMine) != 2 {
+		panic("More than 2 net transfers for aave repay")
+	}
+
+	events, err := evm.ParseKnownEvents(bundle.Info.Network, bundle.Receipt.Logs, abis.AaveAbi)
+	if err != nil {
+		return err
+	}
+
+	var repayEvent evm.ParsedEvent
+	for _, event := range events {
+		if event.Name == "Repay" || event.Name == "Repay0" {
+			repayEvent = event
+		}
+	}
+
+	if repayEvent.Name == "" {
+		panic("No repay event for aave repay")
+	}
+
+	repaidTokenAddress := repayEvent.Data["reserve"].(common.Address).Hex()
+	repaidAmount := repayEvent.Data["amount"].(*big.Int).String()
+
+	var repaid core.Amount
+
+	for _, transfers := range netTransfersOnlyMine {
+		if len(transfers) != 1 {
+			panic("More than 1 transfer for an asset for aave repay")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Transfer to/from the wrong address for aave repay")
+			}
+			if amount.Asset.Identifier == repaidTokenAddress {
+				repaid = amount.Neg()
+			}
+		}
+	}
+
+	if repaidAmount != repaid.Value.Shift(int32(repaid.Asset.Decimals)).String() {
+		panic("Different amount repaid vs sent for aave borrow")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCLoanRepayment,
+		BaseCurrency: repaid.Asset.Symbol,
+		BaseAmount:   repaid.Value,
+		From:         bundle.Info.From,
+		To:           "aave",
+		Description:  fmt.Sprintf("aave: repay %s", repaid),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	ctcTx.Print()
+
+	return export(ctcTx.ToCSV())
 }
 
 func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
