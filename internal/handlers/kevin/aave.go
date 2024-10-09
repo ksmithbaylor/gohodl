@@ -85,7 +85,72 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 }
 
 func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return NOT_HANDLED
+	// fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
+	// fmt.Println("aave borrow")
+	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	// fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
+
+	if len(netTransfersOnlyMine) != 2 {
+		panic("More than 2 net transfers for aave borrow")
+	}
+
+	events, err := evm.ParseKnownEvents(bundle.Info.Network, bundle.Receipt.Logs, abis.AaveAbi)
+	if err != nil {
+		return err
+	}
+
+	var borrowEvent evm.ParsedEvent
+	for _, event := range events {
+		if event.Name == "Borrow" || event.Name == "Borrow0" {
+			borrowEvent = event
+		}
+	}
+
+	if borrowEvent.Name == "" {
+		panic("No borrow event for aave borrow")
+	}
+
+	borrowedTokenAddress := borrowEvent.Data["reserve"].(common.Address).Hex()
+	borrowedAmount := borrowEvent.Data["amount"].(*big.Int).String()
+
+	var borrowed core.Amount
+
+	for _, transfers := range netTransfersOnlyMine {
+		if len(transfers) != 1 {
+			panic("More than 1 transfer for an asset for aave borrow")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Transfer to/from the wrong address for aave borrow")
+			}
+			if amount.Asset.Identifier == borrowedTokenAddress {
+				borrowed = *amount
+			}
+		}
+	}
+
+	if borrowedAmount != borrowed.Value.Shift(int32(borrowed.Asset.Decimals)).String() {
+		panic("Different amount borrowed vs received for aave borrow")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCBorrow,
+		BaseCurrency: borrowed.Asset.Symbol,
+		BaseAmount:   borrowed.Value,
+		From:         "aave",
+		To:           bundle.Info.From,
+		Description:  fmt.Sprintf("aave: borrow %s", borrowed),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
 }
 
 func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
@@ -97,14 +162,10 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 }
 
 func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	// fmt.Printf("--------------------------- %s - %s\n", bundle.Info.Hash, bundle.Info.Network)
-	// fmt.Println("aave deposit")
 	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
-
-	// fmt.Printf("netTransfersOnlyMine: \n%v\n", netTransfersOnlyMine)
 
 	if len(netTransfersOnlyMine) != 2 {
 		panic("More than 2 net transfers for aave deposit")
@@ -135,8 +196,25 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 		panic("Different amount deposited vs received for aave deposit")
 	}
 
-	// fmt.Println("deposited:", deposited)
-	// fmt.Println("received: ", received)
+	events, err := evm.ParseKnownEvents(bundle.Info.Network, bundle.Receipt.Logs, abis.AaveAbi)
+	if err != nil {
+		return err
+	}
+
+	var depositEvent evm.ParsedEvent
+	for _, event := range events {
+		if event.Name == "Deposit" {
+			depositEvent = event
+		}
+	}
+
+	if depositEvent.Data["reserve"].(common.Address).Hex() != deposited.Asset.Identifier {
+		panic("Different asset deposited than token movements would suggest for aave deposit")
+	}
+
+	if depositEvent.Data["amount"].(*big.Int).String() != deposited.Value.Shift(int32(deposited.Asset.Decimals)).String() {
+		panic("Different amount deposited than token movements would suggest for aave deposit")
+	}
 
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0),
