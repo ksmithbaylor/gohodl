@@ -62,6 +62,10 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveWithdraw
 	case info.Method == abis.AAVE_SET_USER_E_MODE:
 		handle = handleAaveSetUserEMode
+	case info.Method == abis.MOONWELL_ENTER_MARKETS:
+		handle = handleMoonwellEnterMarkets
+	case info.Method == abis.MOONWELL_CLAIM_REWARD, info.Method == abis.MOONWELL_CLAIM_REWARD_0:
+		handle = handleMoonwellClaimReward
 	}
 
 	if handle != nil {
