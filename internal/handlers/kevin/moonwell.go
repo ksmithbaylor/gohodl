@@ -224,12 +224,10 @@ func handleMoonwellRepayBorrow(bundle handlers.TransactionBundle, client *evm.Cl
 }
 
 func handleMoonwellRedeem(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	printHeader(bundle)
 	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
-	netTransfers.Print()
 
 	if len(netTransfers) != 2 {
 		panic("Unexpected net transfers for moonwell redeem")
