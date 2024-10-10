@@ -107,6 +107,10 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_V3_MULTICALL_0,
 		info.Method == abis.UNISWAP_V3_MULTICALL_1:
 		handle = handleUniswapMulticall
+	case info.Method == abis.X_SQUARED_BUY_ITEM:
+		handle = handleXSquaredBuyItem
+	case info.Method == abis.X_SQUARED_SELL_ITEM:
+		handle = handleXSquaredSellItem
 	}
 
 	if handle != nil {
