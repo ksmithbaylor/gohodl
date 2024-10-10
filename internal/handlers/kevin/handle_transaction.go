@@ -84,6 +84,24 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellStakingCooldown
 	case info.Method == abis.MOONWELL_STAKING_REDEEM:
 		handle = handleMoonwellStakingRedeem
+	case
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_ETH,
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
+		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS:
+		handle = handleTokenSwap
+	case
+		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
+		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
+		handle = handleUniswapAddLiquidity
+	case
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_PERMIT,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
+		handle = handleUniswapRemoveLiquidity
 	}
 
 	if handle != nil {
