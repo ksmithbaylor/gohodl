@@ -69,7 +69,7 @@ func handleTokenSwap(bundle handlers.TransactionBundle, client *evm.Client, expo
 		QuoteAmount:   bought.Value,
 		From:          bundle.Info.From,
 		To:            bundle.Info.To,
-		Description:   fmt.Sprintf("uniswap (or fork): sell %s for %s", sold, bought),
+		Description:   fmt.Sprintf("dex: sell %s for %s", sold, bought),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
