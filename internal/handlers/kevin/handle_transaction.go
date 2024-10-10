@@ -90,7 +90,8 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
 		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_ETH,
 		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
-		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS:
+		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE:
 		handle = handleTokenSwap
 	case
 		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
