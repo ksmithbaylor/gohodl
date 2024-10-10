@@ -16,19 +16,19 @@ import (
 )
 
 func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
 
-	if len(netTransfersOnlyMine) != 2 {
+	if len(netTransfers) != 2 {
 		panic("More than 2 net transfers for aave supply")
 	}
 
 	var deposited core.Amount
 	var received core.Amount
 
-	for _, transfers := range netTransfersOnlyMine {
+	for _, transfers := range netTransfers {
 		if len(transfers) != 1 {
 			panic("More than 1 transfer for an asset for aave supply")
 		}
@@ -90,12 +90,12 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 }
 
 func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
 
-	if len(netTransfersOnlyMine) != 2 {
+	if len(netTransfers) != 2 {
 		panic("More than 2 net transfers for aave borrow")
 	}
 
@@ -120,7 +120,7 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 
 	var borrowed core.Amount
 
-	for _, transfers := range netTransfersOnlyMine {
+	for _, transfers := range netTransfers {
 		if len(transfers) != 1 {
 			panic("More than 1 transfer for an asset for aave borrow")
 		}
@@ -155,12 +155,12 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 }
 
 func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
 
-	if len(netTransfersOnlyMine) != 2 {
+	if len(netTransfers) != 2 {
 		panic("More than 2 net transfers for aave repay")
 	}
 
@@ -185,7 +185,7 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 
 	var repaid core.Amount
 
-	for _, transfers := range netTransfersOnlyMine {
+	for _, transfers := range netTransfers {
 		if len(transfers) != 1 {
 			panic("More than 1 transfer for an asset for aave repay")
 		}
@@ -220,12 +220,12 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 }
 
 func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
 
-	if len(netTransfersOnlyMine) != 2 {
+	if len(netTransfers) != 2 {
 		panic("More than 2 net transfers for aave repay with atokens")
 	}
 
@@ -275,19 +275,19 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 }
 
 func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
 
-	if len(netTransfersOnlyMine) != 2 {
+	if len(netTransfers) != 2 {
 		panic("More than 2 net transfers for aave deposit")
 	}
 
 	var deposited core.Amount
 	var received core.Amount
 
-	for _, transfers := range netTransfersOnlyMine {
+	for _, transfers := range netTransfers {
 		if len(transfers) != 1 {
 			panic("More than 1 transfer for an asset for aave deposit")
 		}
@@ -353,18 +353,18 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 }
 
 func handleAaveWithdraw(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	netTransfersOnlyMine, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
 	}
 
-	if len(netTransfersOnlyMine) != 2 {
+	if len(netTransfers) != 2 {
 		panic("More than 2 net transfers for aave withdrawal")
 	}
 
 	var withdrawn core.Amount
 
-	for _, transfers := range netTransfersOnlyMine {
+	for _, transfers := range netTransfers {
 		if len(transfers) != 1 {
 			panic("More than 1 transfer for an asset for aave withdrawal")
 		}
@@ -427,5 +427,52 @@ func handleAaveSetUserEMode(bundle handlers.TransactionBundle, client *evm.Clien
 		"aave: set user e-mode",
 		bundle.Receipt,
 	)
+	return export(ctcTx.ToCSV())
+}
+
+func handleAaveClaimRewards(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	if len(netTransfers) != 1 {
+		panic("Unexpected net transfers for aave claim rewards")
+	}
+
+	var claimed core.Amount
+
+	for _, transfers := range netTransfers {
+		if len(transfers) != 1 {
+			panic("Unexpected net transfers for aave claim rewards")
+		}
+		for addr, amount := range transfers {
+			if addr.Hex() != bundle.Info.From {
+				panic("Unexpected net transfers for aave claim rewards")
+			}
+			if !amount.Value.IsPositive() {
+				panic("Outflow for aave claim rewards")
+			}
+			claimed = *amount
+		}
+	}
+
+	if claimed.Asset.Symbol == "" {
+		panic("Nothing claimed for aave claim rewards")
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCIncome,
+		BaseCurrency: claimed.Asset.Symbol,
+		BaseAmount:   claimed.Value,
+		From:         "aave",
+		To:           bundle.Info.From,
+		Description:  fmt.Sprintf("aave: claim %s in rewards", claimed),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
 	return export(ctcTx.ToCSV())
 }

@@ -63,6 +63,10 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveWithdraw
 	case info.Method == abis.AAVE_SET_USER_E_MODE:
 		handle = handleAaveSetUserEMode
+	case
+		info.Method == abis.AAVE_CLAIM_REWARDS,
+		info.Method == abis.AAVE_CLAIM_ALL_REWARDS:
+		handle = handleAaveClaimRewards
 	case info.Method == abis.MOONWELL_ENTER_MARKETS:
 		handle = handleMoonwellEnterMarkets
 	case
