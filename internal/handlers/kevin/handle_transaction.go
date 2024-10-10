@@ -70,7 +70,9 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.MOONWELL_CLAIM_REWARD_0,
 		info.Method == abis.MOONWELL_STAKING_CLAIM:
 		handle = handleMoonwellClaimReward
-	case info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"):
+	case
+		info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"),
+		info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellMint
 	case info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellBorrow
