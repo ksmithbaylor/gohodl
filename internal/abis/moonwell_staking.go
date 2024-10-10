@@ -26,7 +26,6 @@ func init() {
 	MoonwellStakingAbi = abi
 	for _, method := range abi.Methods {
 		selector := "0x" + common.Bytes2Hex(method.ID)
-		printIfUsed("moonwell staking", method.Sig, selector)
 
 		switch method.Name {
 		case "stake":
