@@ -14,6 +14,7 @@ var UniswapUniversalAbi abi.ABI
 //go:embed uniswap_universal.json
 var uniswapUniversalAbiJson string
 var UNISWAP_UNIVERSAL_EXECUTE string
+var UNISWAP_UNIVERSAL_EXECUTE_0 string
 
 func init() {
 	abi, err := abi.JSON(strings.NewReader(uniswapUniversalAbiJson))
@@ -27,6 +28,8 @@ func init() {
 		switch method.Name {
 		case "execute":
 			UNISWAP_UNIVERSAL_EXECUTE = selector
+		case "execute0":
+			UNISWAP_UNIVERSAL_EXECUTE_0 = selector
 		}
 	}
 }

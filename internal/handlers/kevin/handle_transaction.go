@@ -94,6 +94,7 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
 		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0,
 		info.Method == abis.ONE_INCH_SWAP,
 		info.Method == abis.PARASWAP_SIMPLE_BUY,
 		info.Method == abis.PARASWAP_SIMPLE_SWAP,
