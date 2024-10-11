@@ -125,11 +125,9 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == abis.X_SQUARED_SELL_ITEM:
 		handle = handleXSquaredSellItem
 	case info.Method == abis.FRIEND_TECH_BUY_SHARES:
-		// handle = handleFriendTechBuyShares
-		return true, NOT_HANDLED
+		handle = handleFriendTechBuy
 	case info.Method == abis.FRIEND_TECH_SELL_SHARES:
-		// handle = handleFriendTechSellShares
-		return true, NOT_HANDLED
+		handle = handleFriendTechSell
 	}
 
 	if handle != nil {
