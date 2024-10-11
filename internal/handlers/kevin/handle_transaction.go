@@ -158,6 +158,12 @@ func (h personalHandler) HandleTransaction(
 
 var spamMethods = []string{
 	"0x927f59ba", // mintBatch(address[])
+	"0x512d7cfd", // batchTransferToken(address[],uint256)
+	"0xc73a2d60", // disperseToken(address,address[],uint256[])
+	"0x729ad39e", // airdrop(address[])
+	"0xc204642c", // airdrop(address[],uint256)
+	"0xeeb9052f", // AirDrop(address[],uint256)
+	"0x12d94235", // batchTransferToken_10001(address[],uint256)
 }
 
 var wrappedNativeContracts = []string{
