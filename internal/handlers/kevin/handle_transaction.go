@@ -11,9 +11,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var END_OF_2023 = 1704067199
-
 var NOT_HANDLED = errors.New("transaction not handled")
+var END_OF_2023 = 1704067199
+var YOYO_CONTRACT = "0x4c4cE2C17593e9EE6DF6B159cfb45865bEf3d82F"
 
 var Implementation = personalHandler(struct{}{})
 
@@ -113,7 +113,8 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.PARASWAP_SIMPLE_SWAP,
 		info.Method == abis.PARASWAP_MEGA_SWAP,
 		info.Method == abis.PARASWAP_SWAP_ON_UNISWAP,
-		info.Method == abis.PARASWAP_SWAP_ON_UNISWAP_V2_FORK:
+		info.Method == abis.PARASWAP_SWAP_ON_UNISWAP_V2_FORK,
+		info.Method == "0xec1d21dd": // megaSwap(...)
 		handle = handleTokenSwapLabeled("paraswap")
 	case slices.Contains(
 		wrappedNativeContracts,
@@ -142,11 +143,18 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFriendTechBuy
 	case info.Method == abis.FRIEND_TECH_SELL_SHARES:
 		handle = handleFriendTechSell
+	case info.To == YOYO_CONTRACT:
+		handle = handleTokenSwapLabeled("yoyo")
+	case info.Network == "avalanche" && slices.Contains(BENQI_CONTRACTS, info.To):
+		handle = handleBenqi
 	case info.Time <= END_OF_2023 && slices.Contains(spamMethods, info.Method):
 		// I verified each of these that happened before 2024, so they should just be ignored.
 		return true, nil
-	case info.Method == "":
-		client.OpenTransactionInExplorer(info.Hash)
+		// case !config.Config.IsMyEvmAddressString(info.From):
+		//   client.OpenTransactionInExplorer(info.Hash)
+		//   return true, NOT_HANDLED
+		// case info.Method == "0xa0712d68":
+		//   client.OpenTransactionInExplorer(info.Hash)
 	}
 
 	if handle != nil {
@@ -164,6 +172,21 @@ var spamMethods = []string{
 	"0xc204642c", // airdrop(address[],uint256)
 	"0xeeb9052f", // AirDrop(address[],uint256)
 	"0x12d94235", // batchTransferToken_10001(address[],uint256)
+	"0x4ee51a27", // airdropTokens(address[])
+	"0xb8ae5a2c", // adminMintAirdrop(address[])
+	"0xa8c6551f", // doAirDrop(address[],uint256)
+	"0x82947abe", // airdropERC20(address,address[],uint256[],uint256)
+	"0x67243482", // airdrop(address[],uint256[])
+	"0x327ca788", // airDropBulk(address[],uint256)
+	"0x163e1e61", // gift(address[])
+	"0x7c8255db", // sendGifts(address[])
+	"0xc01ae5d3", // drop(address[],uint256[])
+	"0x5c45079a", // dropToken(address,address[],uint256[])
+	"0x6c6c9c84", // multisendTokenWithSignature(address,address[],uint256[],uint256,address,bytes,uint256)
+	"0x15270ace", // distribute(address,address[],uint256[])
+	"0xbd075b84", // mint(address[])
+	"0xd57498ea", // test(address[])
+	"0x7f4d683a", // unknown
 }
 
 var wrappedNativeContracts = []string{
@@ -172,4 +195,11 @@ var wrappedNativeContracts = []string{
 	"polygon-0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
 	"avalanche-0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
 	"fantom-0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
+}
+
+var BENQI_CONTRACTS = []string{
+	"0xe194c4c5aC32a3C9ffDb358d9Bfd523a0B6d1568",
+	"0xc9e5999b8e75C3fEB117F6f73E664b9f3C8ca65C",
+	"0x35Bd6aedA81a7E5FC7A7832490e71F757b0cD9Ce",
+	"0xBEb5d47A3f720Ec0a390d04b4d41ED7d9688bC7F",
 }
