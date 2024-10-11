@@ -15,6 +15,7 @@ import (
 var NOT_HANDLED = errors.New("transaction not handled")
 var END_OF_2023 = 1704067199
 var YOYO_CONTRACT = "0x4c4cE2C17593e9EE6DF6B159cfb45865bEf3d82F"
+var WONDERLAND_CONTRACT = "0x694738E0A438d90487b4a549b201142c1a97B556"
 
 var Implementation = personalHandler(struct{}{})
 
@@ -146,6 +147,10 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFriendTechSell
 	case info.To == YOYO_CONTRACT:
 		handle = handleTokenSwapLabeled("yoyo")
+	case info.To == WONDERLAND_CONTRACT && info.Network == "avalanche" && info.Method == abis.WONDERLAND_DEPOSIT:
+		handle = handleWonderlandDeposit
+	case info.To == WONDERLAND_CONTRACT && info.Network == "avalanche" && info.Method == abis.WONDERLAND_REDEEM:
+		handle = handleWonderlandRedeem
 	case info.Network == "avalanche" && slices.Contains(BENQI_CONTRACTS, info.To):
 		handle = handleBenqi
 	case
