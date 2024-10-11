@@ -1,19 +1,175 @@
 ownership:
-  # bitcoin:
-  #   xpubs:
-  #     hot-wallet:
-  #       type: segwit
-  #       key: xpub123
-  #     cold-wallet:
-  #       type: nested-segwit
-  #       key: ypub456
   ethereum:
+    # Give each wallet address a label
     addresses:
+      cold: 0xabc123
       defi: 0xabc123
       nfts: 0xabc123
-  # solana:
-  #   addresses:
-  #     main: abc123
-  # cosmos:
-  #   cosmos-hub:
-  #     main: cosmos123
+evm_networks:
+  - name: ethereum
+    chain_id: 1
+    native_asset: ETH
+    explorer_urls:
+      tx: https://etherscan.io/tx/TX
+      addr: https://etherscan.io/address/ADDR
+    etherscan:
+      url: https://api.etherscan.io/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://eth.llamarpc.com
+      - https://rpc.flashbots.net
+      - https://eth.drpc.org
+      - https://ethereum.publicnode.com
+      - https://eth-rpc.gateway.pokt.network
+  - name: base
+    chain_id: 8453
+    native_asset: ETH
+    settles_to: ethereum
+    explorer_urls:
+      tx: https://basescan.org/tx/TX
+      addr: https://basescan.org/address/ADDR
+    etherscan:
+      url: https://api.basescan.org/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://mainnet.base.org
+      - https://base.meowrpc.com
+      - https://1rpc.io/base
+      - https://base.publicnode.com
+      - https://base.drpc.org
+  - name: polygon
+    chain_id: 137
+    native_asset: MATIC
+    explorer_urls:
+      tx: https://polygonscan.com/tx/TX
+      addr: https://polygonscan.com/address/ADDR
+    etherscan:
+      url: https://api.polygonscan.com/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://polygon.llamarpc.com
+      - https://polygon-bor.publicnode.com
+      - https://polygon.meowrpc.com
+      - https://endpoints.omniatech.io/v1/polygon/mainnet/public
+      - https://polygon.drpc.org
+  - name: optimism
+    chain_id: 10
+    native_asset: ETH
+    settles_to: ethereum
+    explorer_urls:
+      tx: https://optimistic.etherscan.io/tx/TX
+      addr: https://optimistic.etherscan.io/address/ADDR
+    etherscan:
+      url: https://api-optimistic.etherscan.io/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://optimism.llamarpc.com
+      - https://optimism.publicnode.com
+      - https://optimism.meowrpc.com
+      - https://1rpc.io/op
+      - https://mainnet.optimism.io
+  - name: avalanche
+    chain_id: 43114
+    native_asset: AVAX
+    explorer_urls:
+      tx: https://snowtrace.dev/tx/TX?chainid=43114
+      addr: https://snowtrace.dev/address/ADDR
+    etherscan:
+      url: https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api
+      key: NoApiKeyNeeded
+      rps: 1
+    rpcs:
+      - https://avalanche.drpc.org
+      - https://avalanche-c-chain.publicnode.com
+      - https://avax.meowrpc.com
+      - https://1rpc.io/avax/c
+      - https://api.avax.network/ext/bc/C/rpc
+  - name: arbitrumone
+    chain_id: 42161
+    native_asset: ETH
+    settles_to: ethereum
+    explorer_urls:
+      tx: https://arbiscan.io/tx/TX
+      addr: https://arbiscan.io/address/ADDR
+    etherscan:
+      url: https://api.arbiscan.io/api
+      key: REDACTED
+      rps: 1
+    rpcs:
+      - https://arbitrum.llamarpc.com
+      - https://arbitrum-one.publicnode.com
+      - https://arbitrum.meowrpc.com
+      - https://arbitrum-one.public.blastapi.io
+      - https://1rpc.io/arb
+  - name: arbitrumnova
+    chain_id: 42170
+    native_asset: ETH
+    settles_to: ethereum
+    explorer_urls:
+      tx: https://nova.arbiscan.io/tx/TX
+      addr: https://nova.arbiscan.io/address/ADDR
+    etherscan:
+      url: https://api-nova.arbiscan.io/api
+      key: REDACTED
+      rps: 1
+    rpcs:
+      - https://nova.arbitrum.io/rpc
+      - https://arbitrum-nova.publicnode.com
+      - https://arbitrum-nova.drpc.org
+      - https://arbitrum-nova.public.blastapi.io
+      - https://arbitrum-nova.blockpi.network/v1/rpc/public
+  - name: moonbeam
+    chain_id: 1284
+    native_asset: GLMR
+    explorer_urls:
+      tx: https://moonbeam.moonscan.io/tx/TX
+      addr: https://moonbeam.moonscan.io/address/ADDR
+    etherscan:
+      url: https://api-moonbeam.moonscan.io/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://moonbeam.publicnode.com
+      - https://endpoints.omniatech.io/v1/moonbeam/mainnet/public
+      - https://1rpc.io/glmr
+      - https://moonbeam.public.blastapi.io
+      - https://rpc.api.moonbeam.network
+      - https://moonbeam-rpc.dwellir.com
+  - name: moonriver
+    chain_id: 1285
+    native_asset: MOVR
+    explorer_urls:
+      tx: https://moonriver.moonscan.io/tx/TX
+      addr: https://moonriver.moonscan.io/address/ADDR
+    etherscan:
+      url: https://api-moonriver.moonscan.io/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://moonriver.publicnode.com
+      - https://rpc.api.moonriver.moonbeam.network
+      - https://moonriver.public.blastapi.io
+      - https://moonriver-rpc.dwellir.com
+      - https://moonriver.api.onfinality.io/public
+  - name: fantom
+    chain_id: 250
+    native_asset: FTM
+    explorer_urls:
+      tx: https://ftmscan.com/tx/TX
+      addr: https://ftmscan.com/address/ADDR
+    etherscan:
+      url: https://api.ftmscan.com/api
+      key: REDACTED
+      rps: 3
+    rpcs:
+      - https://fantom.publicnode.com
+      - https://fantom.drpc.org
+      - https://1rpc.io/ftm
+      - https://rpc.fantom.network
+      - https://rpc2.fantom.network
+      - https://rpc3.fantom.network
+      - https://fantom-mainnet.public.blastapi.io
