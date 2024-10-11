@@ -102,14 +102,22 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
 		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
-		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0,
-		info.Method == abis.ONE_INCH_SWAP,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
+		handle = handleTokenSwapLabeled("uniswap")
+	case info.Method == abis.ONE_INCH_SWAP:
+		handle = handleTokenSwapLabeled("1inch")
+	case
 		info.Method == abis.PARASWAP_SIMPLE_BUY,
 		info.Method == abis.PARASWAP_SIMPLE_SWAP,
 		info.Method == abis.PARASWAP_MEGA_SWAP,
 		info.Method == abis.PARASWAP_SWAP_ON_UNISWAP,
 		info.Method == abis.PARASWAP_SWAP_ON_UNISWAP_V2_FORK:
-		handle = handleTokenSwap
+		handle = handleTokenSwapLabeled("paraswap")
+	case slices.Contains(
+		wrappedNativeContracts,
+		fmt.Sprintf("%s-%s", info.Network, info.To),
+	) && (info.Method == abis.WRAPPED_NATIVE_DEPOSIT || info.Method == abis.WRAPPED_NATIVE_WITHDRAW):
+		handle = handleTokenSwapLabeled("wrapped native")
 	case
 		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
 		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
@@ -135,16 +143,6 @@ func (h personalHandler) HandleTransaction(
 	case info.Time <= END_OF_2023 && slices.Contains(spamMethods, info.Method):
 		// I verified each of these that happened before 2024, so they should just be ignored.
 		return true, nil
-	case info.Method == abis.WRAPPED_NATIVE_DEPOSIT && slices.Contains(
-		wrappedNativeContracts,
-		fmt.Sprintf("%s-%s", info.Network, info.To),
-	):
-		handle = handleWrappedNativeDeposit
-	case info.Method == abis.WRAPPED_NATIVE_WITHDRAW && slices.Contains(
-		wrappedNativeContracts,
-		fmt.Sprintf("%s-%s", info.Network, info.To),
-	):
-		handle = handleWrappedNativeWithdraw
 	case info.Method == "":
 		client.OpenTransactionInExplorer(info.Hash)
 	}

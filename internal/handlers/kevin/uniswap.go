@@ -207,7 +207,7 @@ func handleUniswapMulticall(bundle handlers.TransactionBundle, client *evm.Clien
 	}
 
 	if len(netTransfers) == 2 {
-		return handleTokenSwap(bundle, client, export)
+		return handleTokenSwap("uniswap", bundle, client, export)
 	}
 
 	if len(netTransfers) == 0 {

@@ -11,7 +11,18 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 )
 
-func handleTokenSwap(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+func handleTokenSwapLabeled(label string) handlers.TransactionHandlerFunc {
+	return func(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+		return handleTokenSwap(label, bundle, client, export)
+	}
+}
+
+func handleTokenSwap(
+	label string,
+	bundle handlers.TransactionBundle,
+	client *evm.Client,
+	export handlers.CTCWriter,
+) error {
 	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
@@ -68,7 +79,7 @@ func handleTokenSwap(bundle handlers.TransactionBundle, client *evm.Client, expo
 		QuoteAmount:   bought.Value,
 		From:          bundle.Info.From,
 		To:            bundle.Info.To,
-		Description:   fmt.Sprintf("dex: sell %s for %s", sold, bought),
+		Description:   fmt.Sprintf("%s: sell %s for %s", label, sold, bought),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
