@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
+	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 	"golang.org/x/exp/slices"
@@ -147,9 +148,11 @@ func (h personalHandler) HandleTransaction(
 		handle = handleTokenSwapLabeled("yoyo")
 	case info.Network == "avalanche" && slices.Contains(BENQI_CONTRACTS, info.To):
 		handle = handleBenqi
-	case info.Time <= END_OF_2023 && slices.Contains(spamMethods, info.Method):
-		// I verified each of these that happened before 2024, so they should just be ignored.
-		return true, nil
+	case
+		info.Time <= END_OF_2023 &&
+			slices.Contains(spamMethods, info.Method) &&
+			!config.Config.IsMyEvmAddressString(info.From):
+		handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
 		// case !config.Config.IsMyEvmAddressString(info.From):
 		//   client.OpenTransactionInExplorer(info.Hash)
 		//   return true, NOT_HANDLED
@@ -162,31 +165,6 @@ func (h personalHandler) HandleTransaction(
 	}
 
 	return false, nil
-}
-
-var spamMethods = []string{
-	"0x927f59ba", // mintBatch(address[])
-	"0x512d7cfd", // batchTransferToken(address[],uint256)
-	"0xc73a2d60", // disperseToken(address,address[],uint256[])
-	"0x729ad39e", // airdrop(address[])
-	"0xc204642c", // airdrop(address[],uint256)
-	"0xeeb9052f", // AirDrop(address[],uint256)
-	"0x12d94235", // batchTransferToken_10001(address[],uint256)
-	"0x4ee51a27", // airdropTokens(address[])
-	"0xb8ae5a2c", // adminMintAirdrop(address[])
-	"0xa8c6551f", // doAirDrop(address[],uint256)
-	"0x82947abe", // airdropERC20(address,address[],uint256[],uint256)
-	"0x67243482", // airdrop(address[],uint256[])
-	"0x327ca788", // airDropBulk(address[],uint256)
-	"0x163e1e61", // gift(address[])
-	"0x7c8255db", // sendGifts(address[])
-	"0xc01ae5d3", // drop(address[],uint256[])
-	"0x5c45079a", // dropToken(address,address[],uint256[])
-	"0x6c6c9c84", // multisendTokenWithSignature(address,address[],uint256[],uint256,address,bytes,uint256)
-	"0x15270ace", // distribute(address,address[],uint256[])
-	"0xbd075b84", // mint(address[])
-	"0xd57498ea", // test(address[])
-	"0x7f4d683a", // unknown
 }
 
 var wrappedNativeContracts = []string{
