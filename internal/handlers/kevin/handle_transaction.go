@@ -2,12 +2,16 @@ package kevin
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
+	"golang.org/x/exp/slices"
 )
+
+var END_OF_2023 = 1704067199
 
 var NOT_HANDLED = errors.New("transaction not handled")
 
@@ -128,6 +132,21 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFriendTechBuy
 	case info.Method == abis.FRIEND_TECH_SELL_SHARES:
 		handle = handleFriendTechSell
+	case info.Time <= END_OF_2023 && slices.Contains(spamMethods, info.Method):
+		// I verified each of these that happened before 2024, so they should just be ignored.
+		return true, nil
+	case info.Method == abis.WRAPPED_NATIVE_DEPOSIT && slices.Contains(
+		wrappedNativeContracts,
+		fmt.Sprintf("%s-%s", info.Network, info.To),
+	):
+		handle = handleWrappedNativeDeposit
+	case info.Method == abis.WRAPPED_NATIVE_WITHDRAW && slices.Contains(
+		wrappedNativeContracts,
+		fmt.Sprintf("%s-%s", info.Network, info.To),
+	):
+		handle = handleWrappedNativeWithdraw
+	case info.Method == "":
+		client.OpenTransactionInExplorer(info.Hash)
 	}
 
 	if handle != nil {
@@ -135,4 +154,14 @@ func (h personalHandler) HandleTransaction(
 	}
 
 	return false, nil
+}
+
+var spamMethods = []string{
+	"0x927f59ba", // mintBatch(address[])
+}
+
+var wrappedNativeContracts = []string{
+	"ethereum-0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+	"polygon-0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+	"avalanche-0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
 }
