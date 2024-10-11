@@ -80,6 +80,7 @@ func handleMoonwellClaimReward(bundle handlers.TransactionBundle, client *evm.Cl
 				*rewardAmount,
 			),
 		}
+		ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 	}
 
 	return export(ctcTx.ToCSV())
