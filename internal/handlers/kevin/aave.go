@@ -3,6 +3,7 @@ package kevin
 import (
 	"fmt"
 	"math/big"
+	"slices"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -52,8 +53,8 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 	}
 
 	var supplyEvent evm.ParsedEvent
-	for _, event := range events {
-		if event.Name == "Supply" {
+	for i, event := range events {
+		if event.Name == "Supply" || (event.Name == "Deposit" && i == len(events)-1) {
 			supplyEvent = event
 		}
 	}
@@ -62,7 +63,10 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 		panic("No supply event for aave supply")
 	}
 
-	if supplyEvent.Data["reserve"].(common.Address).Hex() != deposited.Asset.Identifier {
+	suppliedTokenAddress := supplyEvent.Data["reserve"].(common.Address).Hex()
+	isWrappedNative := slices.Contains(wrappedNativeContracts, fmt.Sprintf("%s-%s", bundle.Info.Network, suppliedTokenAddress))
+
+	if suppliedTokenAddress != deposited.Asset.Identifier && !isWrappedNative {
 		panic("Different asset supplied than token movements would suggest for aave supply")
 	}
 

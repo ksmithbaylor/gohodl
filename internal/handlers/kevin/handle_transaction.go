@@ -53,7 +53,9 @@ func (h personalHandler) HandleTransaction(
 		handle = handleErc20Approve
 	case info.Method == abis.INSTADAPP_CAST:
 		handle = handleInstadapp
-	case info.Method == abis.AAVE_SUPPLY:
+	case
+		info.Method == abis.AAVE_SUPPLY,
+		info.Method == "0x474cf53d": // depositETH(address,address,uint16)
 		handle = handleAaveSupply
 	case info.Method == abis.AAVE_BORROW:
 		handle = handleAaveBorrow
@@ -160,6 +162,8 @@ var spamMethods = []string{
 
 var wrappedNativeContracts = []string{
 	"ethereum-0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+	"base-0x4200000000000000000000000000000000000006",
 	"polygon-0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
 	"avalanche-0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+	"fantom-0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
 }
