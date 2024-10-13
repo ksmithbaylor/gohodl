@@ -13,6 +13,7 @@ import (
 )
 
 var YOYO_CONTRACT = "0x4c4cE2C17593e9EE6DF6B159cfb45865bEf3d82F"
+var SOLARFLARE_GAS_SWAP_CONTRACT = "0xbF9e211C744F618408Aee698B211f40838bc670A"
 var WRAPPED_NATIVE_CONTRACTS = []string{
 	"ethereum-0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
 	"base-0x4200000000000000000000000000000000000006",
@@ -160,6 +161,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleWonderlandRedeem
 	case info.Network == "avalanche" && slices.Contains(BENQI_CONTRACTS, info.To):
 		handle = handleBenqi
+	case info.To == SOLARFLARE_GAS_SWAP_CONTRACT:
+		handle = handleTokenSwapLabeled("solarflare gas swap")
 	case
 		info.Time <= END_OF_2023 &&
 			slices.Contains(spamMethods, info.Method) &&
