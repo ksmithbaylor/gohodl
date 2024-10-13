@@ -168,8 +168,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleBenqi
 	case info.To == SOLARFLARE_GAS_SWAP_CONTRACT:
 		handle = handleTokenSwapLabeled("solarflare gas swap")
-	// case info.Method == "0x3fe561cf":
-	//   client.OpenTransactionInExplorer(info.Hash)
+	case info.Method == "0x656f3d64":
+		handle = handleOneOff
 	case
 		info.Time <= END_OF_2023 &&
 			slices.Contains(spamMethods, info.Method) &&
