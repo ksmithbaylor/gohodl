@@ -172,6 +172,9 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0x656f3d64",
 		info.Method == "0x2e1a7d4d":
 		handle = handleOneOff
+	case info.Method == "":
+		// For evaluating the next method in order of most common
+		client.OpenTransactionInExplorer(info.Hash)
 	case
 		info.Time <= END_OF_2023 &&
 			slices.Contains(spamMethods, info.Method) &&
