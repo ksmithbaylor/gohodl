@@ -11,6 +11,13 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 )
 
+var BENQI_CONTRACTS = []string{
+	"0xe194c4c5aC32a3C9ffDb358d9Bfd523a0B6d1568",
+	"0xc9e5999b8e75C3fEB117F6f73E664b9f3C8ca65C",
+	"0x35Bd6aedA81a7E5FC7A7832490e71F757b0cD9Ce",
+	"0xBEb5d47A3f720Ec0a390d04b4d41ED7d9688bC7F",
+}
+
 func handleBenqi(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {

@@ -11,6 +11,10 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 )
 
+var WONDERLAND_CONTRACT = "0x694738E0A438d90487b4a549b201142c1a97B556"
+
+// Mostly copied from moonwell
+
 func handleWonderlandDeposit(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {

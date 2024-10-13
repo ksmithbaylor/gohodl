@@ -64,7 +64,7 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 	}
 
 	suppliedTokenAddress := supplyEvent.Data["reserve"].(common.Address).Hex()
-	isWrappedNative := slices.Contains(wrappedNativeContracts, fmt.Sprintf("%s-%s", bundle.Info.Network, suppliedTokenAddress))
+	isWrappedNative := slices.Contains(WRAPPED_NATIVE_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, suppliedTokenAddress))
 
 	if suppliedTokenAddress != deposited.Asset.Identifier && !isWrappedNative {
 		panic("Different asset supplied than token movements would suggest for aave supply")

@@ -12,10 +12,17 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+var YOYO_CONTRACT = "0x4c4cE2C17593e9EE6DF6B159cfb45865bEf3d82F"
+var WRAPPED_NATIVE_CONTRACTS = []string{
+	"ethereum-0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+	"base-0x4200000000000000000000000000000000000006",
+	"polygon-0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+	"avalanche-0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+	"fantom-0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
+}
+
 var NOT_HANDLED = errors.New("transaction not handled")
 var END_OF_2023 = 1704067199
-var YOYO_CONTRACT = "0x4c4cE2C17593e9EE6DF6B159cfb45865bEf3d82F"
-var WONDERLAND_CONTRACT = "0x694738E0A438d90487b4a549b201142c1a97B556"
 
 var Implementation = personalHandler(struct{}{})
 
@@ -119,7 +126,7 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0xec1d21dd": // megaSwap(...)
 		handle = handleTokenSwapLabeled("paraswap")
 	case slices.Contains(
-		wrappedNativeContracts,
+		WRAPPED_NATIVE_CONTRACTS,
 		fmt.Sprintf("%s-%s", info.Network, info.To),
 	) && (info.Method == abis.WRAPPED_NATIVE_DEPOSIT || info.Method == abis.WRAPPED_NATIVE_WITHDRAW):
 		handle = handleTokenSwapLabeled("wrapped native")
@@ -170,19 +177,4 @@ func (h personalHandler) HandleTransaction(
 	}
 
 	return false, nil
-}
-
-var wrappedNativeContracts = []string{
-	"ethereum-0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-	"base-0x4200000000000000000000000000000000000006",
-	"polygon-0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
-	"avalanche-0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-	"fantom-0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83",
-}
-
-var BENQI_CONTRACTS = []string{
-	"0xe194c4c5aC32a3C9ffDb358d9Bfd523a0B6d1568",
-	"0xc9e5999b8e75C3fEB117F6f73E664b9f3C8ca65C",
-	"0x35Bd6aedA81a7E5FC7A7832490e71F757b0cD9Ce",
-	"0xBEb5d47A3f720Ec0a390d04b4d41ED7d9688bC7F",
 }
