@@ -31,8 +31,10 @@ var spamMethods = []string{
 	"0xbd075b84", // mint(address[])
 	"0xd57498ea", // test(address[])
 	"0x3fe561cf", // transfer(address[],address)
+	"0x74a72e41", // registerAddressesValue(address[],uint256)
 	"0x7f4d683a", // unknown
 	"0x2c10c112", // unknown
+	"0x520f3e69", // unknown
 }
 
 func handleSpam(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
