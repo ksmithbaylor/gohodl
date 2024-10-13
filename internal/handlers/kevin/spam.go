@@ -32,6 +32,7 @@ var spamMethods = []string{
 	"0xd57498ea", // test(address[])
 	"0x3fe561cf", // transfer(address[],address)
 	"0x7f4d683a", // unknown
+	"0x2c10c112", // unknown
 }
 
 func handleSpam(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
