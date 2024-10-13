@@ -174,6 +174,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleTokenSwapLabeled("solarflare gas swap")
 	case info.Method == "0xd9459372": // prepare(((address,address,address,address,address,address,address,address,address,uint256,uint256,bytes32,bytes32),uint256,uint256,bytes,bytes,bytes,bytes))
 		handle = handleXpollinateBridge
+	case info.Method == "0xca350aa6":
+		handle = handleBulkWithdrawFrom("coinbase")
 	case
 		info.Method == "0xa0712d68",
 		info.Method == "0x9dbb844d",
