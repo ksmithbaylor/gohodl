@@ -30,6 +30,7 @@ var spamMethods = []string{
 	"0x15270ace", // distribute(address,address[],uint256[])
 	"0xbd075b84", // mint(address[])
 	"0xd57498ea", // test(address[])
+	"0x3fe561cf", // transfer(address[],address)
 	"0x7f4d683a", // unknown
 }
 

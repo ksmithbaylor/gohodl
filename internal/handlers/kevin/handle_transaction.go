@@ -163,16 +163,15 @@ func (h personalHandler) HandleTransaction(
 		handle = handleBenqi
 	case info.To == SOLARFLARE_GAS_SWAP_CONTRACT:
 		handle = handleTokenSwapLabeled("solarflare gas swap")
+	// case info.Method == "0x3fe561cf":
+	//   client.OpenTransactionInExplorer(info.Hash)
 	case
 		info.Time <= END_OF_2023 &&
 			slices.Contains(spamMethods, info.Method) &&
 			!config.Config.IsMyEvmAddressString(info.From):
 		handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
 		// case !config.Config.IsMyEvmAddressString(info.From):
-		//   client.OpenTransactionInExplorer(info.Hash)
-		//   return true, NOT_HANDLED
-		// case info.Method == "0xa0712d68":
-		//   client.OpenTransactionInExplorer(info.Hash)
+		//   handle = handleOneOff
 	}
 
 	if handle != nil {
