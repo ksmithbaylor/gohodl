@@ -121,6 +121,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 			if err == nil {
 				handledTxs++
 			} else if err == handlers.NOT_HANDLED {
+				fmt.Println("NOT_HANDLED:", info.Network, info.Hash)
 				unhandled++
 			}
 		}
