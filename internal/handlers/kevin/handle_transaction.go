@@ -166,6 +166,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleWonderlandDeposit
 	case info.To == WONDERLAND_CONTRACT && info.Network == "avalanche" && info.Method == abis.WONDERLAND_REDEEM:
 		handle = handleWonderlandRedeem
+	case info.To == WMEMO_CONTRACT && info.Network == "avalanche" && info.Method == "0xea598cb0": // wrap(uint256)
+		handle = handleTokenSwapLabeled("wonderland")
 	case info.Network == "avalanche" && slices.Contains(BENQI_CONTRACTS, info.To):
 		handle = handleBenqi
 	case info.To == SOLARFLARE_GAS_SWAP_CONTRACT:
