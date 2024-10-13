@@ -81,7 +81,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveSetUserEMode
 	case
 		info.Method == abis.AAVE_CLAIM_REWARDS,
-		info.Method == abis.AAVE_CLAIM_ALL_REWARDS:
+		info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
+		info.Method == "0x3111e7b3": // claimRewards(address[],uint256,address)
 		handle = handleAaveClaimRewards
 	case info.Method == abis.MOONWELL_ENTER_MARKETS:
 		handle = handleMoonwellEnterMarkets
