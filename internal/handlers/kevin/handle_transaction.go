@@ -103,7 +103,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellBorrow
 	case
 		info.Method == abis.MOONWELL_REPAY_BORROW && strings.HasPrefix(info.Network, "moon"),
-		info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"): // repayBorrow()
+		info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"), // repayBorrow()
+		info.Method == "0x0e752702" && strings.HasPrefix(info.Network, "base"): // repayBorrow(uint256)
 		handle = handleMoonwellRepayBorrow
 	case info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellRedeem
@@ -174,7 +175,9 @@ func (h personalHandler) HandleTransaction(
 		handle = handleTokenSwapLabeled("solarflare gas swap")
 	case info.Method == "0xd9459372": // prepare(((address,address,address,address,address,address,address,address,address,uint256,uint256,bytes32,bytes32),uint256,uint256,bytes,bytes,bytes,bytes))
 		handle = handleXpollinateBridge
-	case info.Method == "0xca350aa6":
+	case
+		info.Method == "0x1a1da075",
+		info.Method == "0xca350aa6":
 		handle = handleBulkWithdrawFrom("coinbase")
 	case info.Method == "0xde5f6268":
 		handle = handleMiscWithLabel("deposit lp token into beefy or similar")
