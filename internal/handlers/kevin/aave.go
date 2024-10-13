@@ -398,7 +398,10 @@ func handleAaveWithdraw(bundle handlers.TransactionBundle, client *evm.Client, e
 		panic("No withdraw event for aave withdrawal")
 	}
 
-	if withdrawEvent.Data["reserve"].(common.Address).Hex() != withdrawn.Asset.Identifier {
+	withdrawnTokenAddress := withdrawEvent.Data["reserve"].(common.Address).Hex()
+	isWrappedNative := slices.Contains(WRAPPED_NATIVE_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, withdrawnTokenAddress))
+
+	if withdrawnTokenAddress != withdrawn.Asset.Identifier && !isWrappedNative {
 		panic("Different asset withdrawn than token movements would suggest for aave withdrawal")
 	}
 

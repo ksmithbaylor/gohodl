@@ -75,7 +75,9 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveRepayWithATokens
 	case info.Method == abis.AAVE_DEPOSIT:
 		handle = handleAaveDeposit
-	case info.Method == abis.AAVE_WITHDRAW:
+	case
+		info.Method == abis.AAVE_WITHDRAW,
+		info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
 		handle = handleAaveWithdraw
 	case info.Method == abis.AAVE_SET_USER_E_MODE:
 		handle = handleAaveSetUserEMode
@@ -99,7 +101,7 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellBorrow
 	case
 		info.Method == abis.MOONWELL_REPAY_BORROW && strings.HasPrefix(info.Network, "moon"),
-		info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"):
+		info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"): // repayBorrow()
 		handle = handleMoonwellRepayBorrow
 	case info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellRedeem
