@@ -175,6 +175,9 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == "0xd9459372": // prepare(((address,address,address,address,address,address,address,address,address,uint256,uint256,bytes32,bytes32),uint256,uint256,bytes,bytes,bytes,bytes))
 		handle = handleXpollinateBridge
 	case
+		info.Method == "0xa0712d68",
+		info.Method == "0x9dbb844d",
+		info.Method == "0x45368181",
 		info.Method == "0x84bb1e42",
 		info.Method == "0x656f3d64",
 		info.Method == "0x2e1a7d4d":
