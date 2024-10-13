@@ -169,7 +169,7 @@ func handleMoonwellBorrow(bundle handlers.TransactionBundle, client *evm.Client,
 		Type:         ctc_util.CTCBorrow,
 		BaseCurrency: borrowed.Asset.Symbol,
 		BaseAmount:   borrowed.Value,
-		From:         "moonewell",
+		From:         "moonwell",
 		To:           bundle.Info.From,
 		Description:  fmt.Sprintf("moonwell: borrow %s", borrowed),
 	}
@@ -216,7 +216,7 @@ func handleMoonwellRepayBorrow(bundle handlers.TransactionBundle, client *evm.Cl
 		BaseCurrency: repaid.Asset.Symbol,
 		BaseAmount:   repaid.Value,
 		From:         bundle.Info.From,
-		To:           "moonewell",
+		To:           "moonwell",
 		Description:  fmt.Sprintf("moonwell: repay %s", repaid),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
