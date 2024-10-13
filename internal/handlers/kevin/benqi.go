@@ -157,10 +157,6 @@ func handleBenqiRepay(bundle handlers.TransactionBundle, _ *evm.Client, export h
 }
 
 func handleBenqiRedeem(bundle handlers.TransactionBundle, _ *evm.Client, export handlers.CTCWriter, netTransfers evm_util.NetTransfers) error {
-	printHeader(bundle)
-	fmt.Println(bundle.Info.Method)
-	netTransfers.Print()
-
 	if len(netTransfers) != 2 {
 		panic("Unexpected net transfers for benqi redeem")
 	}
@@ -197,7 +193,6 @@ func handleBenqiRedeem(bundle handlers.TransactionBundle, _ *evm.Client, export 
 		Description:  fmt.Sprintf("benqi: withdraw %s", withdrawn),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
-	ctcTx.Print()
 
 	return export(ctcTx.ToCSV())
 }
