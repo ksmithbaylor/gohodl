@@ -63,6 +63,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleErc20Approve
 	case info.Method == abis.INSTADAPP_CAST:
 		handle = handleInstadapp
+	case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
+		handle = handleInstadappDSACreate
 	case
 		info.Method == abis.AAVE_SUPPLY,
 		info.Method == "0x474cf53d": // depositETH(address,address,uint16)

@@ -928,3 +928,16 @@ func handleInstadappMultiEvents(args instadappTargetHandlerArgs) error {
 
 	return err
 }
+
+func handleInstadappDSACreate(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	ctcTx := ctc_util.NewFeeTransaction(
+		bundle.Block.Time,
+		bundle.Info.Network,
+		bundle.Info.Hash,
+		bundle.Info.From,
+		"instadapp: create DSA",
+		bundle.Receipt,
+	)
+
+	return export(ctcTx.ToCSV())
+}
