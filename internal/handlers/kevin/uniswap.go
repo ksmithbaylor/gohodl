@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
@@ -211,20 +210,7 @@ func handleUniswapMulticall(bundle handlers.TransactionBundle, client *evm.Clien
 	}
 
 	if len(netTransfers) == 0 {
-		if config.Config.IsMyEvmAddressString(bundle.Info.From) {
-			ctcTx := ctc_util.NewFeeTransaction(
-				bundle.Block.Time,
-				bundle.Info.Network,
-				bundle.Info.Hash,
-				bundle.Info.From,
-				"uniswap multicall: no tokens moved, fee only",
-				bundle.Receipt,
-			)
-			return export(ctcTx.ToCSV())
-		}
-
-		// No transfers, and not my contract call. Nothing to do
-		return nil
+		return handleSpam(bundle, client, export)
 	}
 
 	return NOT_HANDLED
