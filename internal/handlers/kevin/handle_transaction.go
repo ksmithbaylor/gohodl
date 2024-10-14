@@ -8,6 +8,7 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
+	"github.com/ksmithbaylor/gohodl/internal/evm_util"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 	"golang.org/x/exp/slices"
 )
@@ -193,6 +194,22 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == "":
 		// For evaluating the next method in order of most common
 		client.OpenTransactionInExplorer(info.Hash)
+		tx, receipt, block, err := readTransactionBundle(info.Network, info.Hash)
+		if err != nil {
+			panic("error reading bundle for temp inspection")
+		}
+		bundle := handlers.TransactionBundle{
+			Info:    info,
+			Tx:      tx,
+			Receipt: receipt,
+			Block:   block,
+		}
+		printHeader(bundle)
+		netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+		if err != nil {
+			panic("error getting net transfers for temp inspection")
+		}
+		netTransfers.Print()
 	case
 		info.Time <= END_OF_2023 &&
 			slices.Contains(spamMethods, info.Method) &&
