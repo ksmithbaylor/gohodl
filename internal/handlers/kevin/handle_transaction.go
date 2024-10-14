@@ -183,6 +183,7 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == "0xde5f6268":
 		handle = handleMiscWithLabel("deposit lp token into beefy or similar")
 	case
+		info.Method == "0x515bc323",
 		info.Method == "0xf3fef3a3",
 		info.Method == "0xa0712d68",
 		info.Method == "0x9dbb844d",
