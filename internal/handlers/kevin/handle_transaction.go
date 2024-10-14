@@ -176,7 +176,9 @@ func (h personalHandler) HandleTransaction(
 	case info.To == SOLARFLARE_GAS_SWAP_CONTRACT:
 		handle = handleTokenSwapLabeled("solarflare gas swap")
 	case info.Method == "0xd9459372": // prepare(((address,address,address,address,address,address,address,address,address,uint256,uint256,bytes32,bytes32),uint256,uint256,bytes,bytes,bytes,bytes))
-		handle = handleXpollinateBridge
+		handle = handleXpollinateBridgeOut
+	case info.Method == "0xb87b0b4c": // exec(address,bytes,address)
+		handle = handleXpollinateBridgeIn
 	case
 		info.Method == "0x1a1da075",
 		info.Method == "0xca350aa6":
