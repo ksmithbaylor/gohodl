@@ -192,6 +192,7 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == "0xe3dec8fb":
 		handle = handlePolygonBridgeOut
 	case
+		info.Method == "0x40c10f19",
 		info.Method == "0x515bc323",
 		info.Method == "0xf3fef3a3",
 		info.Method == "0xa0712d68",
