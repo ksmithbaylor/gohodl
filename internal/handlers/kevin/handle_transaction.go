@@ -191,6 +191,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleRewardWithLabel("mai.finance")
 	case info.Method == "0xe3dec8fb":
 		handle = handlePolygonBridgeOut
+	case info.Method == "0x9ff054df":
+		handle = handleMiscWithLabel("XEN Crypto claim rank")
 	case
 		info.Method == "0x40c10f19",
 		info.Method == "0x515bc323",
