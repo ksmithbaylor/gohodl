@@ -98,7 +98,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellClaimReward
 	case
 		info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"),
-		info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"):
+		info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0x6a627842" && info.Network == "base":
 		handle = handleMoonwellMint
 	case info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"):
 		handle = handleMoonwellBorrow

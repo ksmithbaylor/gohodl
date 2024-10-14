@@ -159,7 +159,7 @@ func handleMoonwellBorrow(bundle handlers.TransactionBundle, client *evm.Client,
 	}
 
 	if borrowed.Asset.Symbol == "" {
-		panic("No asset deposited for moonwell mint")
+		panic("No asset received for moonwell borrow")
 	}
 
 	ctcTx := ctc_util.CTCTransaction{
