@@ -32,6 +32,7 @@ var spamMethods = []string{
 	"0x7f4d683a", // unknown
 	"0x2c10c112", // unknown
 	"0x520f3e69", // unknown
+	"0x4f61d102", // unknown
 }
 
 func handleSpam(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
