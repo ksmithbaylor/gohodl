@@ -94,7 +94,5 @@ func handleXpollinateBridgeIn(bundle handlers.TransactionBundle, client *evm.Cli
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
-	ctcTx.Print()
-
 	return export(ctcTx.ToCSV())
 }

@@ -189,6 +189,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleTokenSwapLabeled("curve")
 	case info.Method == "0x6a761202":
 		handle = handleRewardWithLabel("mai.finance")
+	case info.Method == "0xe3dec8fb":
+		handle = handlePolygonBridgeOut
 	case
 		info.Method == "0x515bc323",
 		info.Method == "0xf3fef3a3",
