@@ -1,6 +1,9 @@
 package kevin
 
 import (
+	"time"
+
+	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 )
@@ -29,12 +32,23 @@ var spamMethods = []string{
 	"0xd57498ea", // test(address[])
 	"0x3fe561cf", // transfer(address[],address)
 	"0x74a72e41", // registerAddressesValue(address[],uint256)
+	"0x110bcd45", // mintItem(address,string)
 	"0x7f4d683a", // unknown
 	"0x2c10c112", // unknown
 	"0x520f3e69", // unknown
 	"0x4f61d102", // unknown
+	"0x62b74da5", // unknown
 }
 
 func handleSpam(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	return handleMisc("spam", bundle, client, export)
+	ctcTx := &ctc_util.CTCTransaction{
+		Timestamp:   time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:  bundle.Info.Network,
+		ID:          bundle.Info.Hash,
+		Type:        ctc_util.CTCSpam,
+		Description: "spam transaction",
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
 }

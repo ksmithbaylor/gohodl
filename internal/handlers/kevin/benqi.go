@@ -17,6 +17,7 @@ var BENQI_CONTRACTS = []string{
 	"0x35Bd6aedA81a7E5FC7A7832490e71F757b0cD9Ce",
 	"0xBEb5d47A3f720Ec0a390d04b4d41ED7d9688bC7F",
 	"0x755c78D3bC25e297e8E010A2D1FCf49Cc43ADa21",
+	"0x5C0401e81Bc07Ca70fAD469b451682c0d747Ef1c",
 }
 
 func handleBenqi(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
@@ -26,7 +27,7 @@ func handleBenqi(bundle handlers.TransactionBundle, client *evm.Client, export h
 	}
 
 	switch bundle.Info.Method {
-	case "0xa0712d68", "0xb6b55f25": // mint(uint256), deposit(uint256)
+	case "0xa0712d68", "0xb6b55f25", "0x1249c58b": // mint(uint256), deposit(uint256), mint()
 		return handleBenqiMint(bundle, client, export, netTransfers)
 	case "0xc5ebeaec": // borrow(uint256)
 		return handleBenqiBorrow(bundle, client, export, netTransfers)

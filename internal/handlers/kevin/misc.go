@@ -20,14 +20,14 @@ func handleMiscWithLabel(label string) handlers.TransactionHandlerFunc {
 }
 
 func handleMisc(label string, bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
-	ctcTx := &ctc_util.CTCTransaction{
-		Timestamp:   time.Unix(int64(bundle.Block.Time), 0).UTC(),
-		Blockchain:  bundle.Info.Network,
-		ID:          bundle.Info.Hash,
-		Type:        ctc_util.CTCSpam,
-		Description: label,
-	}
-	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+	ctcTx := ctc_util.NewFeeTransaction(
+		bundle.Block.Time,
+		bundle.Info.Network,
+		bundle.Info.Hash,
+		bundle.Info.From,
+		label,
+		bundle.Receipt,
+	)
 
 	return export(ctcTx.ToCSV())
 }

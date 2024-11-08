@@ -8,7 +8,6 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
-	"github.com/ksmithbaylor/gohodl/internal/evm_util"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 	"golang.org/x/exp/slices"
 )
@@ -72,7 +71,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveSupply
 	case info.Method == abis.AAVE_BORROW:
 		handle = handleAaveBorrow
-	case info.Method == abis.AAVE_REPAY:
+	case info.Method == abis.AAVE_REPAY,
+		info.Method == "0x02c5fcf8": // repayETH(address,uint256,uint256,address)
 		handle = handleAaveRepay
 	case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
 		handle = handleAaveRepayWithATokens
@@ -101,14 +101,19 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"),
 		info.Method == "0x6a627842" && info.Network == "base":
 		handle = handleMoonwellMint
-	case info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"):
+	case
+		info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0xc5ebeaec" && info.Network == "base":
 		handle = handleMoonwellBorrow
 	case
 		info.Method == abis.MOONWELL_REPAY_BORROW && strings.HasPrefix(info.Network, "moon"),
 		info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"), // repayBorrow()
 		info.Method == "0x0e752702" && strings.HasPrefix(info.Network, "base"): // repayBorrow(uint256)
 		handle = handleMoonwellRepayBorrow
-	case info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"):
+	case
+		info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0xdb006a75" && info.Network == "base",
+		info.Method == "0x7bde82f2" && info.Network == "base":
 		handle = handleMoonwellRedeem
 	case info.Method == abis.MOONWELL_STAKING_STAKE:
 		handle = handleMoonwellStake
@@ -191,45 +196,23 @@ func (h personalHandler) HandleTransaction(
 		handle = handleRewardWithLabel("mai.finance")
 	case info.Method == "0xe3dec8fb":
 		handle = handlePolygonBridgeOut
+	case info.Method == "0x3805550f":
+		handle = handlePolygonBridgeIn
 	case info.Method == "0x9ff054df":
 		handle = handleMiscWithLabel("XEN Crypto claim rank")
-	case
-		info.Method == "0x40c10f19",
-		info.Method == "0x515bc323",
-		info.Method == "0xf3fef3a3",
-		info.Method == "0xa0712d68",
-		info.Method == "0x9dbb844d",
-		info.Method == "0x45368181",
-		info.Method == "0x84bb1e42",
-		info.Method == "0x656f3d64",
-		info.Method == "0x2e1a7d4d":
-		handle = handleOneOff
-	case info.Method == "":
-		// For evaluating the next method in order of most common
-		client.OpenTransactionInExplorer(info.Hash)
-		tx, receipt, block, err := readTransactionBundle(info.Network, info.Hash)
-		if err != nil {
-			panic("error reading bundle for temp inspection")
-		}
-		bundle := handlers.TransactionBundle{
-			Info:    info,
-			Tx:      tx,
-			Receipt: receipt,
-			Block:   block,
-		}
-		printHeader(bundle)
-		netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
-		if err != nil {
-			panic("error getting net transfers for temp inspection")
-		}
-		netTransfers.Print()
+	case info.Method == "0x52c7f8dc":
+		handle = handleRewardWithLabel("XEN Crypto")
+	case info.Method == "0x56781388":
+		handle = handleMiscWithLabel("moonwell governance vote")
+	case info.Method == "0x853828b6":
+		handle = handleMiscWithLabel("beefy LP withdrawal")
 	case
 		info.Time <= END_OF_2023 &&
 			slices.Contains(spamMethods, info.Method) &&
 			!config.Config.IsMyEvmAddressString(info.From):
 		handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
-		// case !config.Config.IsMyEvmAddressString(info.From):
-		//   handle = handleOneOff
+	default:
+		handle = handleOneOff
 	}
 
 	if handle != nil {

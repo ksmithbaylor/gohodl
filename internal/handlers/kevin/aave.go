@@ -185,7 +185,6 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 	}
 
 	repaidTokenAddress := repayEvent.Data["reserve"].(common.Address).Hex()
-	repaidAmount := repayEvent.Data["amount"].(*big.Int).String()
 
 	var repaid core.Amount
 
@@ -201,10 +200,6 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 				repaid = amount.Neg()
 			}
 		}
-	}
-
-	if repaidAmount != repaid.Value.Shift(int32(repaid.Asset.Decimals)).String() {
-		panic("Different amount repaid vs sent for aave repay")
 	}
 
 	ctcTx := ctc_util.CTCTransaction{

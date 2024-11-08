@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ksmithbaylor/gohodl/internal/core"
 	"github.com/ksmithbaylor/gohodl/internal/ctc_util"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
@@ -48,6 +49,48 @@ func handlePolygonBridgeOut(bundle handlers.TransactionBundle, client *evm.Clien
 		From:         bundle.Info.From,
 		To:           bundle.Info.From,
 		Description:  fmt.Sprintf("bridge %s to polygon", bridged),
+	}
+	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	return export(ctcTx.ToCSV())
+}
+
+func handlePolygonBridgeIn(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
+	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
+	if err != nil {
+		return err
+	}
+
+	if len(netTransfers) != 1 {
+		panic("Unexpected net transfers for polygon bridge in")
+	}
+
+	var bridged core.Amount
+	var bridgedTo common.Address
+
+	for _, transfers := range netTransfers {
+		if len(transfers) != 1 {
+			panic("Unexpected net transfers for polygon bridge in")
+		}
+		for addr, amount := range transfers {
+			if !amount.Value.IsPositive() {
+				panic("Unexpected net transfers for polygon bridge in")
+			}
+			bridged = *amount
+			bridgedTo = addr
+		}
+	}
+
+	ctcTx := ctc_util.CTCTransaction{
+		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:   bundle.Info.Network,
+		ID:           bundle.Info.Hash,
+		Type:         ctc_util.CTCBridgeIn,
+		BaseCurrency: bridged.Asset.Symbol,
+		BaseAmount:   bridged.Value,
+		From:         bridgedTo.Hex(),
+		To:           bridgedTo.Hex(),
+		Description:  fmt.Sprintf("bridge %s from polygon", bridged),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 

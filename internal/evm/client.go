@@ -3,6 +3,7 @@ package evm
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -13,6 +14,11 @@ import (
 )
 
 const AAVE_NATIVE_ASSET = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+
+var POLYGON_STAKING_TOKENS = []common.Address{
+	common.HexToAddress("0xa6e768fEf2D1aF36c0cfdb276422E7881a83e951"),
+	common.HexToAddress("0x503B36441618e61135adE1Fa6Aa8e5345DA7Ce75"),
+}
 
 type Client struct {
 	Network   Network          // The network the client is for
@@ -193,6 +199,10 @@ func (c *Client) Balance(address common.Address) (core.Amount, error) {
 }
 
 func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
+	if slices.Contains(POLYGON_STAKING_TOKENS, token) {
+		return 0, nil
+	}
+
 	if dec, ok := c.decimalCache[token]; ok {
 		return dec, nil
 	}
@@ -236,6 +246,10 @@ func (c *Client) Erc20Decimals(token common.Address) (uint8, error) {
 }
 
 func (c *Client) TokenSymbol(token common.Address) (string, error) {
+	if slices.Contains(POLYGON_STAKING_TOKENS, token) {
+		return "PST", nil
+	}
+
 	if sym, ok := c.symbolCache[token]; ok {
 		return sym, nil
 	}
