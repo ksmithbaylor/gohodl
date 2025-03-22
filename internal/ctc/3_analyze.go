@@ -77,13 +77,18 @@ func AnalyzeTransactions(db *util.FileDB, txHashes map[string][]string) {
 				status = "failed"
 			}
 
+			to := evm.ZERO_ADDRESS
+			if tx.To() != nil {
+				to = tx.To().Hex()
+			}
+
 			err = txCsvWriter.Write([]string{
 				strconv.Itoa(int(block.Time)),
 				network,
 				txHash,
 				block.Hash().Hex(),
 				from.Hex(),
-				tx.To().Hex(),
+				to,
 				method,
 				tx.Value().String(),
 				status,
