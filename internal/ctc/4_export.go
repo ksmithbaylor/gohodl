@@ -18,6 +18,7 @@ import (
 )
 
 var END_OF_2023 = 1704067199
+var END_OF_2024 = 1735689599
 
 func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	if os.Getenv("SKIP_EXPORT") != "" {
@@ -88,7 +89,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 			panic("Invalid timestamp: " + row[0])
 		}
 
-		if timestamp > END_OF_2023 {
+		if timestamp <= END_OF_2023 {
 			continue
 		}
 
