@@ -65,10 +65,10 @@ func (h personalHandler) HandleTransaction(
 		handle = handleErc20Transfer
 	case info.Method == abis.ERC20_APPROVE:
 		handle = handleErc20Approve
-	case info.Method == "0x9c96eec5": // Rewards(address _from,address[] _to,uint256 amount)
-		return true, nil // Verified all in 2024, spam
-	case info.Method == "0x26ededb8": // execute(address[],uint256)
-		return true, nil // Verified all in 2024, spam
+	case
+		info.Method == "0x26ededb8", // execute(address[],uint256)
+		info.Method == "0x82947abe": // airdropERC20(address,address[],uint256[],uint256)
+		handle = handleSpamDrop
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
@@ -219,6 +219,8 @@ func (h personalHandler) HandleTransaction(
 		//     slices.Contains(spamMethods, info.Method) &&
 		//     !config.Config.IsMyEvmAddressString(info.From):
 		//   handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
+	case info.Method == "0x9c96eec5": // Rewards(address _from,address[] _to,uint256 amount)
+		return true, nil // Verified all in 2024, spam
 		// default:
 		//   handle = handleOneOff
 	}
