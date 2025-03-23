@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/shopspring/decimal"
 
 	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/core"
@@ -108,12 +109,26 @@ func handleRegularNoDataTx(bundle handlers.TransactionBundle, client *evm.Client
 	case bundle.Info.To == TO_1:
 		ctcTx.Type = TYPE_1
 		ctcTx.Description = DESCRIPTION_1
-	case toMe && !fromMe:
-		ctcTx.Type = ctc_util.CTCReceive
 	case fromMe:
 		ctcTx.Type = ctc_util.CTCSend
+	case toMe:
+		ctcTx.Type = ctc_util.CTCReceive
 	default:
 		panic("Found irrelevant transaction, not from/to any of my addresses")
+	}
+
+	// Make sure sends have the other side as well
+	if toMe && fromMe {
+		if ctcTx.Type != ctc_util.CTCSend {
+			panic("to me and from me but not send")
+		}
+		err = export(ctcTx.ToCSV())
+		if err != nil {
+			return err
+		}
+		ctcTx.Type = ctc_util.CTCReceive
+		ctcTx.FeeAmount = decimal.Zero
+		ctcTx.FeeCurrency = ""
 	}
 
 	return export(ctcTx.ToCSV())
