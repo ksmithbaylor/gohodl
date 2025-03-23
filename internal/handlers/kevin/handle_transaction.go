@@ -67,6 +67,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleErc20Approve
 	case info.Method == "0x9c96eec5": // Rewards(address _from,address[] _to,uint256 amount)
 		return true, nil // Verified all in 2024, spam
+	case info.Method == "0x26ededb8": // execute(address[],uint256)
+		return true, nil // Verified all in 2024, spam
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
