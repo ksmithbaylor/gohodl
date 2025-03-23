@@ -1,5 +1,4 @@
 node_modules
 data/*
 !data/evm_tx_hashes
-todo
 scripts/ctc-helpers/_tx-timestamp-updates
