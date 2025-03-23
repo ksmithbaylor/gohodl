@@ -89,7 +89,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 			panic("Invalid timestamp: " + row[0])
 		}
 
-		if timestamp <= END_OF_2023 {
+		if timestamp <= END_OF_2023 || timestamp > END_OF_2024 {
 			continue
 		}
 
