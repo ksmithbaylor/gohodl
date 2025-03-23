@@ -63,8 +63,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleNoData
 	case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
 		handle = handleErc20Transfer
-		// case info.Method == abis.ERC20_APPROVE:
-		//   handle = handleErc20Approve
+	case info.Method == abis.ERC20_APPROVE:
+		handle = handleErc20Approve
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)

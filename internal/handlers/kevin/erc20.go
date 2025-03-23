@@ -146,19 +146,14 @@ func handleErc20Approve(bundle handlers.TransactionBundle, client *evm.Client, e
 		return err
 	}
 
-	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
-		Blockchain:   bundle.Info.Network,
-		ID:           bundle.Info.Hash,
-		Type:         ctc_util.CTCApproval,
-		BaseCurrency: tokenAsset.Symbol,
-		// BaseAmount:   amount.Value, // Don't include, messes up CTC
-		From:        owner,
-		To:          spender,
-		Description: fmt.Sprintf("approve %s for spending by %s from %s", amount.String(), spender, owner),
-	}
-
-	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+	ctcTx := ctc_util.NewFeeTransaction(
+		bundle.Block.Time,
+		bundle.Info.Network,
+		bundle.Info.Hash,
+		bundle.Info.From,
+		fmt.Sprintf("approve %s for spending by %s from %s", amount.String(), spender, owner),
+		bundle.Receipt,
+	)
 
 	return export(ctcTx.ToCSV())
 }
