@@ -129,7 +129,7 @@ func (t *CTCTransaction) AddTransactionFeeIfMine(from, network string, receipt *
 		networkFee := gasPrice.Mul(gasUsed)
 
 		l1Fee, err := decimal.NewFromString(receipt.L1Fee.String())
-		if err != nil {
+		if err == nil {
 			networkFee = networkFee.Add(l1Fee)
 		}
 
