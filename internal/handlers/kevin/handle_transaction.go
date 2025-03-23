@@ -2,8 +2,7 @@ package kevin
 
 import (
 	"errors"
-	// "fmt"
-	// "strings"
+	"fmt"
 
 	// "github.com/ksmithbaylor/gohodl/internal/abis"
 	// "github.com/ksmithbaylor/gohodl/internal/config"
@@ -11,6 +10,8 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 	// "golang.org/x/exp/slices"
 )
+
+var _ fmt.Stringer // Allow commenting and uncommenting printlns
 
 var YOYO_CONTRACT = "0x4c4cE2C17593e9EE6DF6B159cfb45865bEf3d82F"
 var SOLARFLARE_GAS_SWAP_CONTRACT = "0xbF9e211C744F618408Aee698B211f40838bc670A"
@@ -51,6 +52,9 @@ func (h personalHandler) HandleTransaction(
 	}
 
 	var handle handlers.TransactionHandlerFunc
+
+	// fmt.Println("-------------------------------------------------------------")
+	// defer client.OpenTransactionInExplorer(info.Hash)
 
 	switch {
 	case !info.Success:
