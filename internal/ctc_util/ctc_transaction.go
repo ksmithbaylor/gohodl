@@ -76,6 +76,13 @@ func (t *CTCTransaction) ToCSV() []string {
 		panic("Invalid transaction, missing type or timestamp or base currency")
 	}
 
+	blockchain := t.Blockchain
+	if blockchain == "arbitrumone" {
+		blockchain = "arbitrum"
+	} else if blockchain == "ethereum" {
+		blockchain = "eth"
+	}
+
 	return []string{
 		t.Timestamp.Format("2006-01-02 15:04:05"),
 		string(t.Type),
@@ -87,7 +94,7 @@ func (t *CTCTransaction) ToCSV() []string {
 		emptyIfZero(t.FeeAmount.String()),
 		t.From,
 		t.To,
-		t.Blockchain,
+		blockchain,
 		t.ID,
 		t.Description,
 		emptyIfZero(t.ReferencePricePerUnit.String()),
