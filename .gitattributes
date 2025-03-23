@@ -4,3 +4,4 @@ scripts/ctc-helpers/index.js filter=git-crypt diff=git-crypt
 config.yml filter=git-crypt diff=git-crypt
 data/evm_tx_hashes/* filter=git-crypt diff=git-crypt
 data/txs.csv filter=git-crypt diff=git-crypt
+data/ctc.csv filter=git-crypt diff=git-crypt
