@@ -219,7 +219,9 @@ func (h personalHandler) HandleTransaction(
 		//     slices.Contains(spamMethods, info.Method) &&
 		//     !config.Config.IsMyEvmAddressString(info.From):
 		//   handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
-	case info.Method == "0x9c96eec5": // Rewards(address _from,address[] _to,uint256 amount)
+	case
+		info.Method == "0x9c96eec5", // Rewards(address _from,address[] _to,uint256 amount)
+		info.Method == "0x441ff998": // unknown
 		return true, nil // Verified all in 2024, spam
 		// default:
 		//   handle = handleOneOff
