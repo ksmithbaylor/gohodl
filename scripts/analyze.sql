@@ -10,7 +10,8 @@ create temp view unique_networks as
     count(*) as how_many
   from txs
   where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
-    and txs.timestamp <= 1704067199
+    and txs.timestamp > 1704067199
+    and txs.timestamp <= 1735689599
   group by network
   order by how_many desc;
 
@@ -23,7 +24,8 @@ create temp view unique_methods as
     count(distinct "to") as destinations
   from txs
   where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
-    and txs.timestamp <= 1704067199
+    and txs.timestamp > 1704067199
+    and txs.timestamp <= 1735689599
   group by method
   order by how_many desc;
 
@@ -44,7 +46,8 @@ select count(*) as 'unique methods' from unique_methods;
 --     count(distinct method) as methods
 --   from txs
 --   where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
---     and txs.timestamp <= 1704067199
+--     and txs.timestamp > 1704067199
+--     and txs.timestamp <= 1735689599
 --   group by network, "to"
 --   order by how_many desc;
 --
@@ -66,7 +69,8 @@ select count(*) as 'unique methods' from unique_methods;
 --     count(*) as how_many
 --   from txs
 --   where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
---     and txs.timestamp <= 1704067199
+--     and txs.timestamp > 1704067199
+--     and txs.timestamp <= 1735689599
 --   group by network, "to", method
 --   order by how_many desc;
 --
