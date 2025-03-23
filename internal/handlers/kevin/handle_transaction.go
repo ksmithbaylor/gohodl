@@ -69,6 +69,16 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0x26ededb8", // execute(address[],uint256)
 		info.Method == "0x82947abe": // airdropERC20(address,address[],uint256[],uint256)
 		handle = handleSpamDrop
+	case
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_ETH,
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
+		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
+		handle = handleTokenSwapLabeled("uniswap")
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
@@ -129,16 +139,6 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleMoonwellStakingCooldown
 		// case info.Method == abis.MOONWELL_STAKING_REDEEM:
 		//   handle = handleMoonwellStakingRedeem
-		// case
-		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
-		//   info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
-		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
-		//   info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_ETH,
-		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
-		//   info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
-		//   info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
-		//   info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
-		//   handle = handleTokenSwapLabeled("uniswap")
 		// case info.Method == abis.ONE_INCH_SWAP:
 		//   handle = handleTokenSwapLabeled("1inch")
 		// case
