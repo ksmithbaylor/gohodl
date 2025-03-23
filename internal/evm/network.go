@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ksmithbaylor/gohodl/internal/core"
@@ -71,6 +72,7 @@ func (n Network) Erc721NftAsset(contractAddress, symbol string, tokenID uint64) 
 
 func (n Network) OpenTransactionInExplorer(hash string, wait ...bool) {
 	url := strings.Replace(n.ExplorerURLs.Tx, "TX", hash, 1)
+	time.Sleep(time.Millisecond * 100)
 	cmd := exec.Command("/usr/bin/open", "-u", url, "-a", "Google Chrome")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
