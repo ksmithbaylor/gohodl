@@ -79,6 +79,7 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
 		handle = handleTokenSwapLabeled("uniswap")
+		// defer client.OpenTransactionInExplorer(info.Hash)
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
@@ -221,7 +222,8 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
 	case
 		info.Method == "0x9c96eec5", // Rewards(address _from,address[] _to,uint256 amount)
-		info.Method == "0x441ff998": // unknown
+		info.Method == "0x441ff998", // unknown
+		info.Method == "0x729ad39e": // airdrop(address[])
 		return true, nil // Verified all in 2024, spam
 		// default:
 		//   handle = handleOneOff
