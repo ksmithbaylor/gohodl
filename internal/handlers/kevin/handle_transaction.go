@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	// "github.com/ksmithbaylor/gohodl/internal/abis"
+	"github.com/ksmithbaylor/gohodl/internal/abis"
 	// "github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
@@ -61,8 +61,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFailed
 	case info.Method == "":
 		handle = handleNoData
-		// case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
-		//   handle = handleErc20Transfer
+	case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
+		handle = handleErc20Transfer
 		// case info.Method == abis.ERC20_APPROVE:
 		//   handle = handleErc20Approve
 		// case info.Method == abis.INSTADAPP_CAST:

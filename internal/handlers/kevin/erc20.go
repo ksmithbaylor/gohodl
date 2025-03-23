@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/shopspring/decimal"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/config"
@@ -32,7 +33,9 @@ func handleErc20Transfer(bundle handlers.TransactionBundle, client *evm.Client, 
 	}
 
 	from := transfer.Data["from"].(common.Address).Hex()
+	fromMe := config.Config.IsMyEvmAddressString(from)
 	to := transfer.Data["to"].(common.Address).Hex()
+	toMe := config.Config.IsMyEvmAddressString(to)
 	value := transfer.Data["value"].(*big.Int).String()
 	tokenAsset, err := client.TokenAsset(transfer.Contract)
 	if err != nil {
@@ -45,8 +48,8 @@ func handleErc20Transfer(bundle handlers.TransactionBundle, client *evm.Client, 
 	}
 
 	ctcType := ctc_util.CTCSend
-	if !config.Config.IsMyEvmAddressString(from) {
-		if config.Config.IsMyEvmAddressString(to) {
+	if !fromMe {
+		if toMe {
 			ctcType = ctc_util.CTCReceive
 		} else {
 			panic("Found irrelevant transaction, not from/to any of my addresses")
@@ -99,6 +102,17 @@ func handleErc20Transfer(bundle handlers.TransactionBundle, client *evm.Client, 
 	}
 
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
+
+	// Add the other side of self-transfers
+	if fromMe && toMe {
+		err = export(ctcTx.ToCSV())
+		if err != nil {
+			return err
+		}
+		ctcTx.Type = ctc_util.CTCReceive
+		ctcTx.FeeAmount = decimal.Zero
+		ctcTx.FeeCurrency = ""
+	}
 
 	return export(ctcTx.ToCSV())
 }
