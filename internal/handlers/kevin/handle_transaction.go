@@ -79,7 +79,8 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
 		handle = handleTokenSwapLabeled("uniswap")
-		// defer client.OpenTransactionInExplorer(info.Hash)
+		// case info.Method == "0x588d826a":
+		//   defer client.OpenTransactionInExplorer(info.Hash)
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
@@ -226,7 +227,8 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0x729ad39e", // airdrop(address[])
 		info.Method == "0x12514bba", // transfer_iABlJaxlyCyqFbft((uint8,address,address,address,uint256)[])
 		info.Method == "0x2c10c112", // unknown
-		info.Method == "0xc204642c": // unknown
+		info.Method == "0xc204642c", // unknown
+		info.Method == "0x588d826a": // unknown
 		return true, nil // Verified all in 2024, spam
 		// default:
 		//   handle = handleOneOff

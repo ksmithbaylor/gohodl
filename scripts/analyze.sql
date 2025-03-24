@@ -26,7 +26,10 @@ create temp view unique_methods as
   where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
     and txs.timestamp > 1704067199
     and txs.timestamp <= 1735689599
-    and txs.method not in ("0x9c96eec5", "0x26ededb8", "0x441ff998", "0x729ad39e", "0x12514bba", "0x2c10c112", "0xc204642c")
+    and txs.method not in (
+      "0x9c96eec5", "0x26ededb8", "0x441ff998", "0x729ad39e", "0x12514bba",
+      "0x2c10c112", "0xc204642c", "0x588d826a"
+    )
   group by method
   order by how_many desc;
 
