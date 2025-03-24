@@ -223,7 +223,8 @@ func (h personalHandler) HandleTransaction(
 	case
 		info.Method == "0x9c96eec5", // Rewards(address _from,address[] _to,uint256 amount)
 		info.Method == "0x441ff998", // unknown
-		info.Method == "0x729ad39e": // airdrop(address[])
+		info.Method == "0x729ad39e", // airdrop(address[])
+		info.Method == "0x12514bba": // 	transfer_iABlJaxlyCyqFbft((uint8,address,address,address,uint256)[])
 		return true, nil // Verified all in 2024, spam
 		// default:
 		//   handle = handleOneOff
