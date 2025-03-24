@@ -27,6 +27,7 @@ var spamMethods = []string{
 	"0x62b74da5", // unknown
 	"0x67243482", // airdrop(address[],uint256[])
 	"0x6c6c9c84", // multisendTokenWithSignature(address,address[],uint256[],uint256,address,bytes,uint256)
+	"0x6e56cd92", // unknown
 	"0x729ad39e", // airdrop(address[])
 	"0x74a72e41", // registerAddressesValue(address[],uint256)
 	"0x7c8255db", // sendGifts(address[])
@@ -40,9 +41,10 @@ var spamMethods = []string{
 	"0xc01ae5d3", // drop(address[],uint256[])
 	"0xc204642c", // airdrop(address[],uint256)
 	"0xc73a2d60", // disperseToken(address,address[],uint256[])
+	"0xd43a632f", // reward(address[])
 	"0xd57498ea", // test(address[])
 	"0xeeb9052f", // AirDrop(address[],uint256)
-	"0x927f59ba", // mintBatch(address[])
+	"0xfaf67b43", // unknown
 }
 
 func handleSpam(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
