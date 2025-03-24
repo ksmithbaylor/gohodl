@@ -57,7 +57,7 @@ func handleBulkWithdraw(label string, bundle handlers.TransactionBundle, client 
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
 		ID:           bundle.Info.Hash,
-		Type:         ctc_util.CTCSend,
+		Type:         ctc_util.CTCReceive,
 		BaseCurrency: received.Asset.Symbol,
 		BaseAmount:   received.Value,
 		From:         label,

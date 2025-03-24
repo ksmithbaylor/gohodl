@@ -80,6 +80,13 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
 		handle = handleTokenSwapLabeled("uniswap")
+	case
+		info.Method == "0x1a1da075",
+		info.Method == "0xca350aa6":
+		handle = handleBulkWithdrawFrom("coinbase")
+		// case info.Method == "":
+		//   defer client.OpenTransactionInExplorer(info.Hash)
+		//   return true, NOT_HANDLED
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
@@ -193,10 +200,6 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleXpollinateBridgeOut
 		// case info.Method == "0xb87b0b4c": // exec(address,bytes,address)
 		//   handle = handleXpollinateBridgeIn
-		// case
-		//   info.Method == "0x1a1da075",
-		//   info.Method == "0xca350aa6":
-		//   handle = handleBulkWithdrawFrom("coinbase")
 		// case info.Method == "0xde5f6268":
 		//   handle = handleMiscWithLabel("deposit lp token into beefy or similar")
 		// case info.Method == "0x65b2489b":
