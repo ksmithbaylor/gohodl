@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
-	// "github.com/ksmithbaylor/gohodl/internal/config"
+	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
-	// "golang.org/x/exp/slices"
+	"golang.org/x/exp/slices"
 )
 
 var _ fmt.Stringer // Allow commenting and uncommenting printlns
@@ -25,6 +25,7 @@ var WRAPPED_NATIVE_CONTRACTS = []string{
 
 var NOT_HANDLED = errors.New("transaction not handled")
 var END_OF_2023 = 1704067199
+var END_OF_2024 = 1735689599
 
 var Implementation = personalHandler(struct{}{})
 
@@ -79,8 +80,6 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
 		handle = handleTokenSwapLabeled("uniswap")
-		// case info.Method == "0x588d826a":
-		//   defer client.OpenTransactionInExplorer(info.Hash)
 		// case info.Method == abis.INSTADAPP_CAST:
 		//   handle = handleInstadapp
 		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
@@ -216,19 +215,11 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleMiscWithLabel("moonwell governance vote")
 		// case info.Method == "0x853828b6":
 		//   handle = handleMiscWithLabel("beefy LP withdrawal")
-		// case
-		//   info.Time <= END_OF_2023 &&
-		//     slices.Contains(spamMethods, info.Method) &&
-		//     !config.Config.IsMyEvmAddressString(info.From):
-		//   handle = handleSpam // I verified each of these that happened before 2024, so they should just be ignored.
 	case
-		info.Method == "0x9c96eec5", // Rewards(address _from,address[] _to,uint256 amount)
-		info.Method == "0x441ff998", // unknown
-		info.Method == "0x729ad39e", // airdrop(address[])
-		info.Method == "0x12514bba", // transfer_iABlJaxlyCyqFbft((uint8,address,address,address,uint256)[])
-		info.Method == "0x2c10c112", // unknown
-		info.Method == "0xc204642c", // unknown
-		info.Method == "0x588d826a": // unknown
+		info.Time > END_OF_2023 &&
+			info.Time <= END_OF_2024 &&
+			slices.Contains(spamMethods, info.Method) &&
+			!config.Config.IsMyEvmAddressString(info.From):
 		return true, nil // Verified all in 2024, spam
 		// default:
 		//   handle = handleOneOff
