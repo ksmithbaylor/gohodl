@@ -10,6 +10,7 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/evm_util"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
+	"github.com/shopspring/decimal"
 )
 
 func handleSpamDrop(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
@@ -49,16 +50,28 @@ func handleSpamDrop(bundle handlers.TransactionBundle, client *evm.Client, expor
 		panic("Nothing received for spamdrop")
 	}
 
+	tiny, err := decimal.NewFromString("0.005")
+	if err != nil {
+		return err
+	}
+	price := tiny.Div(received.Value)
+
+	if price.String() == "0" {
+		panic("zero price for spamdrop")
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
-		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
-		Blockchain:   bundle.Info.Network,
-		ID:           bundle.Info.Hash,
-		Type:         ctc_util.CTCAirdrop,
-		BaseCurrency: "spam-" + received.Asset.Symbol,
-		BaseAmount:   received.Value,
-		From:         "unknown",
-		To:           to,
-		Description:  fmt.Sprintf("spamdrop: %s received %s", to, received),
+		Timestamp:              time.Unix(int64(bundle.Block.Time), 0).UTC(),
+		Blockchain:             bundle.Info.Network,
+		ID:                     bundle.Info.Hash,
+		Type:                   ctc_util.CTCAirdrop,
+		BaseCurrency:           "spam-" + received.Asset.Symbol,
+		BaseAmount:             received.Value,
+		From:                   "unknown",
+		To:                     to,
+		ReferencePricePerUnit:  price,
+		ReferencePriceCurrency: "USD",
+		Description:            fmt.Sprintf("spamdrop: %s received %s", to, received),
 	}
 
 	return export(ctcTx.ToCSV())
