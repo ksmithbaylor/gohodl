@@ -56,7 +56,7 @@ func handleSpamDrop(bundle handlers.TransactionBundle, client *evm.Client, expor
 		Type:         ctc_util.CTCAirdrop,
 		BaseCurrency: "spam-" + received.Asset.Symbol,
 		BaseAmount:   received.Value,
-		From:         "Unknown",
+		From:         "unknown",
 		To:           to,
 		Description:  fmt.Sprintf("spamdrop: %s received %s", to, received),
 	}
