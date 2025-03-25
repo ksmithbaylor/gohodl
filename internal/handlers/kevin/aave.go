@@ -16,6 +16,12 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 )
 
+var SEAMLESS_CONTRACTS = []string{
+	"base-0xaeeB3898edE6a6e86864688383E211132BAa1Af3",
+	"base-0x8F44Fd754285aa6A2b8B9B97739B79746e0475a7",
+	"base-0x91Ac2FfF8CBeF5859eAA6DdA661feBd533cD3780",
+}
+
 func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
@@ -74,6 +80,11 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 		panic("Different amount supplied than token movements would suggest for aave supply")
 	}
 
+	to := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		to = "Seamless"
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
@@ -82,8 +93,9 @@ func handleAaveSupply(bundle handlers.TransactionBundle, client *evm.Client, exp
 		BaseCurrency: deposited.Asset.Symbol,
 		BaseAmount:   deposited.Value,
 		From:         bundle.Info.From,
-		To:           "aave",
-		Description: fmt.Sprintf("aave: supply %s, receive receipt token (%s)",
+		To:           to,
+		Description: fmt.Sprintf("%s: supply %s, receive receipt token (%s)",
+			to,
 			deposited,
 			received,
 		),
@@ -142,6 +154,11 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 		panic("Different amount borrowed vs received for aave borrow")
 	}
 
+	from := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		from = "Seamless"
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
@@ -149,9 +166,9 @@ func handleAaveBorrow(bundle handlers.TransactionBundle, client *evm.Client, exp
 		Type:         ctc_util.CTCBorrow,
 		BaseCurrency: borrowed.Asset.Symbol,
 		BaseAmount:   borrowed.Value,
-		From:         "aave",
+		From:         from,
 		To:           bundle.Info.From,
-		Description:  fmt.Sprintf("aave: borrow %s", borrowed),
+		Description:  fmt.Sprintf("%s: borrow %s", from, borrowed),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
@@ -202,6 +219,11 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 		}
 	}
 
+	to := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		to = "Seamless"
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
@@ -210,8 +232,8 @@ func handleAaveRepay(bundle handlers.TransactionBundle, client *evm.Client, expo
 		BaseCurrency: repaid.Asset.Symbol,
 		BaseAmount:   repaid.Value,
 		From:         bundle.Info.From,
-		To:           "aave",
-		Description:  fmt.Sprintf("aave: repay %s", repaid),
+		To:           to,
+		Description:  fmt.Sprintf("%s: repay %s", to, repaid),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
@@ -257,6 +279,11 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 		return err
 	}
 
+	to := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		to = "Seamless"
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
@@ -265,8 +292,8 @@ func handleAaveRepayWithATokens(bundle handlers.TransactionBundle, client *evm.C
 		BaseCurrency: repaid.Asset.Symbol,
 		BaseAmount:   repaid.Value,
 		From:         bundle.Info.From,
-		To:           "aave",
-		Description:  fmt.Sprintf("aave: repay %s", repaid),
+		To:           to,
+		Description:  fmt.Sprintf("%s: repay %s", to, repaid),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
@@ -332,6 +359,11 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 		panic("Different amount deposited than token movements would suggest for aave deposit")
 	}
 
+	to := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		to = "Seamless"
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
@@ -340,8 +372,9 @@ func handleAaveDeposit(bundle handlers.TransactionBundle, client *evm.Client, ex
 		BaseCurrency: deposited.Asset.Symbol,
 		BaseAmount:   deposited.Value,
 		From:         bundle.Info.From,
-		To:           "aave",
-		Description: fmt.Sprintf("aave: deposit %s, receive receipt token (%s)",
+		To:           to,
+		Description: fmt.Sprintf("%s: deposit %s, receive receipt token (%s)",
+			to,
 			deposited,
 			received,
 		),
@@ -404,6 +437,11 @@ func handleAaveWithdraw(bundle handlers.TransactionBundle, client *evm.Client, e
 		panic("Different amount withdrawn than token movements would suggest for aave withdrawal")
 	}
 
+	from := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		from = "Seamless"
+	}
+
 	ctcTx := ctc_util.CTCTransaction{
 		Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 		Blockchain:   bundle.Info.Network,
@@ -411,9 +449,9 @@ func handleAaveWithdraw(bundle handlers.TransactionBundle, client *evm.Client, e
 		Type:         ctc_util.CTCCollateralWithdrawal,
 		BaseCurrency: withdrawn.Asset.Symbol,
 		BaseAmount:   withdrawn.Value,
-		From:         "aave",
+		From:         from,
 		To:           bundle.Info.From,
-		Description:  fmt.Sprintf("aave: withdraw %s", withdrawn),
+		Description:  fmt.Sprintf("%s: withdraw %s", from, withdrawn),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 
@@ -436,6 +474,19 @@ func handleAaveClaimRewards(bundle handlers.TransactionBundle, client *evm.Clien
 	netTransfers, err := evm_util.NetTokenTransfersOnlyMine(client, bundle.Info, bundle.Receipt.Logs)
 	if err != nil {
 		return err
+	}
+
+	from := "aave"
+	if slices.Contains(SEAMLESS_CONTRACTS, fmt.Sprintf("%s-%s", bundle.Info.Network, bundle.Info.To)) {
+		from = "Seamless"
+	}
+
+	if from == "Seamless" {
+		for asset := range netTransfers {
+			if asset.Symbol == "esSEAM" {
+				delete(netTransfers, asset)
+			}
+		}
 	}
 
 	if len(netTransfers) != 1 {
@@ -470,9 +521,9 @@ func handleAaveClaimRewards(bundle handlers.TransactionBundle, client *evm.Clien
 		Type:         ctc_util.CTCIncome,
 		BaseCurrency: claimed.Asset.Symbol,
 		BaseAmount:   claimed.Value,
-		From:         "aave",
+		From:         "unknown",
 		To:           bundle.Info.From,
-		Description:  fmt.Sprintf("aave: claim %s in rewards", claimed),
+		Description:  fmt.Sprintf("%s: claim %s in rewards", from, claimed),
 	}
 	ctcTx.AddTransactionFeeIfMine(bundle.Info.From, bundle.Info.Network, bundle.Receipt)
 

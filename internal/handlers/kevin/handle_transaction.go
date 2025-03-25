@@ -84,33 +84,33 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0x1a1da075",
 		info.Method == "0xca350aa6":
 		handle = handleBulkWithdrawFrom("coinbase")
+	case
+		info.Method == abis.AAVE_SUPPLY,
+		info.Method == "0x474cf53d": // depositETH(address,address,uint16)
+		handle = handleAaveSupply
+	case info.Method == abis.AAVE_DEPOSIT:
+		handle = handleAaveDeposit
+	case info.Method == abis.AAVE_BORROW:
+		handle = handleAaveBorrow
+	case info.Method == abis.AAVE_REPAY,
+		info.Method == "0x02c5fcf8": // repayETH(address,uint256,uint256,address)
+		handle = handleAaveRepay
+	case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
+		handle = handleAaveRepayWithATokens
+	case info.Method == abis.AAVE_SET_USER_E_MODE:
+		handle = handleAaveSetUserEMode
+	case
+		info.Method == abis.AAVE_WITHDRAW,
+		info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
+		handle = handleAaveWithdraw
+	case
+		info.Method == abis.AAVE_CLAIM_REWARDS,
+		info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
+		info.Method == "0x3111e7b3": // claimRewards(address[],uint256,address)
+		handle = handleAaveClaimRewards
 		// case info.Method == "":
 		//   defer client.OpenTransactionInExplorer(info.Hash)
 		//   return true, NOT_HANDLED
-		// case
-		//   info.Method == abis.AAVE_SUPPLY,
-		//   info.Method == "0x474cf53d": // depositETH(address,address,uint16)
-		//   handle = handleAaveSupply
-		// case info.Method == abis.AAVE_BORROW:
-		//   handle = handleAaveBorrow
-		// case info.Method == abis.AAVE_REPAY,
-		//   info.Method == "0x02c5fcf8": // repayETH(address,uint256,uint256,address)
-		//   handle = handleAaveRepay
-		// case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
-		//   handle = handleAaveRepayWithATokens
-		// case info.Method == abis.AAVE_DEPOSIT:
-		//   handle = handleAaveDeposit
-		// case
-		//   info.Method == abis.AAVE_WITHDRAW,
-		//   info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
-		//   handle = handleAaveWithdraw
-		// case info.Method == abis.AAVE_SET_USER_E_MODE:
-		//   handle = handleAaveSetUserEMode
-		// case
-		//   info.Method == abis.AAVE_CLAIM_REWARDS,
-		//   info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
-		//   info.Method == "0x3111e7b3": // claimRewards(address[],uint256,address)
-		//   handle = handleAaveClaimRewards
 		// case info.Method == abis.MOONWELL_ENTER_MARKETS:
 		//   handle = handleMoonwellEnterMarkets
 		// case
