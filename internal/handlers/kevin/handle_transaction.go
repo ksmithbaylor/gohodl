@@ -143,16 +143,6 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleMoonwellStakingCooldown
 		// case info.Method == abis.MOONWELL_STAKING_REDEEM:
 		//   handle = handleMoonwellStakingRedeem
-		// case info.Method == abis.ONE_INCH_SWAP:
-		//   handle = handleTokenSwapLabeled("1inch")
-		// case
-		//   info.Method == abis.PARASWAP_SIMPLE_BUY,
-		//   info.Method == abis.PARASWAP_SIMPLE_SWAP,
-		//   info.Method == abis.PARASWAP_MEGA_SWAP,
-		//   info.Method == abis.PARASWAP_SWAP_ON_UNISWAP,
-		//   info.Method == abis.PARASWAP_SWAP_ON_UNISWAP_V2_FORK,
-		//   info.Method == "0xec1d21dd": // megaSwap(...)
-		//   handle = handleTokenSwapLabeled("paraswap")
 		// case slices.Contains(
 		//   WRAPPED_NATIVE_CONTRACTS,
 		//   fmt.Sprintf("%s-%s", info.Network, info.To),
@@ -172,48 +162,18 @@ func (h personalHandler) HandleTransaction(
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_0,
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_1:
 		//   handle = handleUniswapMulticall
-		// case info.Method == abis.X_SQUARED_BUY_ITEM:
-		//   handle = handleXSquaredBuyItem
-		// case info.Method == abis.X_SQUARED_SELL_ITEM:
-		//   handle = handleXSquaredSellItem
 		// case info.Method == abis.FRIEND_TECH_BUY_SHARES:
 		//   handle = handleFriendTechBuy
 		// case info.Method == abis.FRIEND_TECH_SELL_SHARES:
 		//   handle = handleFriendTechSell
-		// case info.To == YOYO_CONTRACT:
-		//   handle = handleTokenSwapLabeled("yoyo")
-		// case info.To == WONDERLAND_CONTRACT && info.Network == "avalanche" && info.Method == abis.WONDERLAND_DEPOSIT:
-		//   handle = handleWonderlandDeposit
-		// case info.To == WONDERLAND_CONTRACT && info.Network == "avalanche" && info.Method == abis.WONDERLAND_REDEEM:
-		//   handle = handleWonderlandRedeem
-		// case info.To == WMEMO_CONTRACT && info.Network == "avalanche" && info.Method == "0xea598cb0": // wrap(uint256)
-		//   handle = handleTokenSwapLabeled("wonderland")
-		// case info.Network == "avalanche" && slices.Contains(BENQI_CONTRACTS, info.To):
-		//   handle = handleBenqi
-		// case info.To == SOLARFLARE_GAS_SWAP_CONTRACT:
-		//   handle = handleTokenSwapLabeled("solarflare gas swap")
-		// case info.Method == "0xd9459372": // prepare(((address,address,address,address,address,address,address,address,address,uint256,uint256,bytes32,bytes32),uint256,uint256,bytes,bytes,bytes,bytes))
-		//   handle = handleXpollinateBridgeOut
-		// case info.Method == "0xb87b0b4c": // exec(address,bytes,address)
-		//   handle = handleXpollinateBridgeIn
-		// case info.Method == "0xde5f6268":
-		//   handle = handleMiscWithLabel("deposit lp token into beefy or similar")
 		// case info.Method == "0x65b2489b":
 		//   handle = handleTokenSwapLabeled("curve")
 		// case info.Method == "0x6a761202":
 		//   handle = handleRewardWithLabel("mai.finance")
-		// case info.Method == "0xe3dec8fb":
-		//   handle = handlePolygonBridgeOut
-		// case info.Method == "0x3805550f":
-		//   handle = handlePolygonBridgeIn
-		// case info.Method == "0x9ff054df":
-		//   handle = handleMiscWithLabel("XEN Crypto claim rank")
 		// case info.Method == "0x52c7f8dc":
 		//   handle = handleRewardWithLabel("XEN Crypto")
 		// case info.Method == "0x56781388":
 		//   handle = handleMiscWithLabel("moonwell governance vote")
-		// case info.Method == "0x853828b6":
-		//   handle = handleMiscWithLabel("beefy LP withdrawal")
 	case
 		info.Time > END_OF_2023 &&
 			info.Time <= END_OF_2024 &&
