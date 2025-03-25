@@ -87,10 +87,6 @@ func (h personalHandler) HandleTransaction(
 		// case info.Method == "":
 		//   defer client.OpenTransactionInExplorer(info.Hash)
 		//   return true, NOT_HANDLED
-		// case info.Method == abis.INSTADAPP_CAST:
-		//   handle = handleInstadapp
-		// case info.Method == "0xbb7e70ef": // build(address _owner, uint256 accountVersion, address _origin)
-		//   handle = handleInstadappDSACreate
 		// case
 		//   info.Method == abis.AAVE_SUPPLY,
 		//   info.Method == "0x474cf53d": // depositETH(address,address,uint16)
