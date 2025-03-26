@@ -108,16 +108,16 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
 		info.Method == "0x3111e7b3": // claimRewards(address[],uint256,address)
 		handle = handleAaveClaimRewards
+	case info.Method == abis.MOONWELL_ENTER_MARKETS:
+		handle = handleMoonwellEnterMarkets
+	case
+		info.Method == abis.MOONWELL_CLAIM_REWARD,
+		info.Method == abis.MOONWELL_CLAIM_REWARD_0,
+		info.Method == abis.MOONWELL_STAKING_CLAIM:
+		handle = handleMoonwellClaimReward
 		// case info.Method == "":
 		//   defer client.OpenTransactionInExplorer(info.Hash)
 		//   return true, NOT_HANDLED
-		// case info.Method == abis.MOONWELL_ENTER_MARKETS:
-		//   handle = handleMoonwellEnterMarkets
-		// case
-		//   info.Method == abis.MOONWELL_CLAIM_REWARD,
-		//   info.Method == abis.MOONWELL_CLAIM_REWARD_0,
-		//   info.Method == abis.MOONWELL_STAKING_CLAIM:
-		//   handle = handleMoonwellClaimReward
 		// case
 		//   info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"),
 		//   info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"),
