@@ -146,19 +146,16 @@ func (h personalHandler) HandleTransaction(
 		fmt.Sprintf("%s-%s", info.Network, info.To),
 	) && (info.Method == abis.WRAPPED_NATIVE_DEPOSIT || info.Method == abis.WRAPPED_NATIVE_WITHDRAW):
 		handle = handleTokenSwapLabeled("wrapped native")
-		// case info.Method == "":
-		//   defer client.OpenTransactionInExplorer(info.Hash)
-		//   return true, NOT_HANDLED
-		// case
-		//   info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
-		//   info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
-		//   handle = handleUniswapAddLiquidity
-		// case
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH,
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_PERMIT,
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
-		//   handle = handleUniswapRemoveLiquidity
+	case
+		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
+		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
+		handle = handleUniswapAddLiquidity
+	case
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_PERMIT,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
+		handle = handleUniswapRemoveLiquidity
 		// case
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_0,
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_1:
@@ -175,6 +172,9 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleRewardWithLabel("XEN Crypto")
 		// case info.Method == "0x56781388":
 		//   handle = handleMiscWithLabel("moonwell governance vote")
+		// case info.Method == "":
+		//   defer client.OpenTransactionInExplorer(info.Hash)
+		//   return true, NOT_HANDLED
 	case
 		info.Time > END_OF_2023 &&
 			info.Time <= END_OF_2024 &&
