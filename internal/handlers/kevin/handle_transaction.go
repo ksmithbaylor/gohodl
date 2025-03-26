@@ -162,16 +162,16 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFriendTechBuy
 	case info.Method == abis.FRIEND_TECH_SELL_SHARES:
 		handle = handleFriendTechSell
+	case info.Method == "0x56781388":
+		handle = handleMiscWithLabel("moonwell governance vote")
+	case info.Method == "0x52c7f8dc":
+		handle = handleRewardWithLabel("XEN Crypto")
 		// case
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_0,
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_1:
 		//   handle = handleUniswapMulticall
 		// case info.Method == "0x6a761202":
 		//   handle = handleRewardWithLabel("mai.finance")
-		// case info.Method == "0x52c7f8dc":
-		//   handle = handleRewardWithLabel("XEN Crypto")
-		// case info.Method == "0x56781388":
-		//   handle = handleMiscWithLabel("moonwell governance vote")
 		// case info.Method == "":
 		//   defer client.OpenTransactionInExplorer(info.Hash)
 		//   return true, NOT_HANDLED
