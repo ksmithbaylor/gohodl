@@ -156,6 +156,8 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
 		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
 		handle = handleUniswapRemoveLiquidity
+	case info.Method == "0x65b2489b":
+		handle = handleTokenSwapLabeled("curve")
 		// case
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_0,
 		//   info.Method == abis.UNISWAP_V3_MULTICALL_1:
@@ -164,8 +166,6 @@ func (h personalHandler) HandleTransaction(
 		//   handle = handleFriendTechBuy
 		// case info.Method == abis.FRIEND_TECH_SELL_SHARES:
 		//   handle = handleFriendTechSell
-		// case info.Method == "0x65b2489b":
-		//   handle = handleTokenSwapLabeled("curve")
 		// case info.Method == "0x6a761202":
 		//   handle = handleRewardWithLabel("mai.finance")
 		// case info.Method == "0x52c7f8dc":
