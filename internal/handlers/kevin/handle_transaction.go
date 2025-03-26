@@ -3,6 +3,7 @@ package kevin
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
 	"github.com/ksmithbaylor/gohodl/internal/config"
@@ -115,34 +116,34 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.MOONWELL_CLAIM_REWARD_0,
 		info.Method == abis.MOONWELL_STAKING_CLAIM:
 		handle = handleMoonwellClaimReward
+	case
+		info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"),
+		info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0x6a627842" && info.Network == "base":
+		handle = handleMoonwellMint
+	case
+		info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0xc5ebeaec" && info.Network == "base":
+		handle = handleMoonwellBorrow
+	case
+		info.Method == abis.MOONWELL_REPAY_BORROW && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"), // repayBorrow()
+		info.Method == "0x0e752702" && strings.HasPrefix(info.Network, "base"): // repayBorrow(uint256)
+		handle = handleMoonwellRepayBorrow
+	case
+		info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"),
+		info.Method == "0xdb006a75" && info.Network == "base",
+		info.Method == "0x7bde82f2" && info.Network == "base":
+		handle = handleMoonwellRedeem
+	case info.Method == abis.MOONWELL_STAKING_STAKE:
+		handle = handleMoonwellStake
+	case info.Method == abis.MOONWELL_STAKING_COOLDOWN:
+		handle = handleMoonwellStakingCooldown
+	case info.Method == abis.MOONWELL_STAKING_REDEEM:
+		handle = handleMoonwellStakingRedeem
 		// case info.Method == "":
 		//   defer client.OpenTransactionInExplorer(info.Hash)
 		//   return true, NOT_HANDLED
-		// case
-		//   info.Method == abis.MOONWELL_MINT && strings.HasPrefix(info.Network, "moon"),
-		//   info.Method == abis.MOONWELL_NATIVE_MINT && strings.HasPrefix(info.Network, "moon"),
-		//   info.Method == "0x6a627842" && info.Network == "base":
-		//   handle = handleMoonwellMint
-		// case
-		//   info.Method == abis.MOONWELL_BORROW && strings.HasPrefix(info.Network, "moon"),
-		//   info.Method == "0xc5ebeaec" && info.Network == "base":
-		//   handle = handleMoonwellBorrow
-		// case
-		//   info.Method == abis.MOONWELL_REPAY_BORROW && strings.HasPrefix(info.Network, "moon"),
-		//   info.Method == "0x4e4d9fea" && strings.HasPrefix(info.Network, "moon"), // repayBorrow()
-		//   info.Method == "0x0e752702" && strings.HasPrefix(info.Network, "base"): // repayBorrow(uint256)
-		//   handle = handleMoonwellRepayBorrow
-		// case
-		//   info.Method == abis.MOONWELL_REDEEM && strings.HasPrefix(info.Network, "moon"),
-		//   info.Method == "0xdb006a75" && info.Network == "base",
-		//   info.Method == "0x7bde82f2" && info.Network == "base":
-		//   handle = handleMoonwellRedeem
-		// case info.Method == abis.MOONWELL_STAKING_STAKE:
-		//   handle = handleMoonwellStake
-		// case info.Method == abis.MOONWELL_STAKING_COOLDOWN:
-		//   handle = handleMoonwellStakingCooldown
-		// case info.Method == abis.MOONWELL_STAKING_REDEEM:
-		//   handle = handleMoonwellStakingRedeem
 		// case slices.Contains(
 		//   WRAPPED_NATIVE_CONTRACTS,
 		//   fmt.Sprintf("%s-%s", info.Network, info.To),
