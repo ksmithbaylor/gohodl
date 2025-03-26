@@ -166,23 +166,14 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMiscWithLabel("moonwell governance vote")
 	case info.Method == "0x52c7f8dc":
 		handle = handleRewardWithLabel("XEN Crypto")
-		// case
-		//   info.Method == abis.UNISWAP_V3_MULTICALL_0,
-		//   info.Method == abis.UNISWAP_V3_MULTICALL_1:
-		//   handle = handleUniswapMulticall
-		// case info.Method == "0x6a761202":
-		//   handle = handleRewardWithLabel("mai.finance")
-		// case info.Method == "":
-		//   defer client.OpenTransactionInExplorer(info.Hash)
-		//   return true, NOT_HANDLED
 	case
 		info.Time > END_OF_2023 &&
 			info.Time <= END_OF_2024 &&
 			slices.Contains(spamMethods, info.Method) &&
 			!config.Config.IsMyEvmAddressString(info.From):
 		return true, nil // Verified all in 2024, spam
-		// default:
-		//   handle = handleOneOff
+	default:
+		handle = handleOneOff
 	}
 
 	if handle != nil {
