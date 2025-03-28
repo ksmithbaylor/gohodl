@@ -17,6 +17,7 @@ var spamMethods = []string{
 	"0x2c10c112", // unknown
 	"0x327ca788", // airDropBulk(address[],uint256)
 	"0x3fe561cf", // transfer(address[],address)
+	"0x41ed24a2", // unknown
 	"0x441ff998", // unknown
 	"0x4ee51a27", // airdropTokens(address[])
 	"0x4f61d102", // unknown
@@ -27,6 +28,8 @@ var spamMethods = []string{
 	"0x62b74da5", // unknown
 	"0x67243482", // airdrop(address[],uint256[])
 	"0x6c6c9c84", // multisendTokenWithSignature(address,address[],uint256[],uint256,address,bytes,uint256)
+	"0x6c9d713d", // unknown
+	"0x6d244f2f", // unknown
 	"0x6e56cd92", // unknown
 	"0x729ad39e", // airdrop(address[])
 	"0x74a72e41", // registerAddressesValue(address[],uint256)

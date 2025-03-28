@@ -45,7 +45,7 @@ func handleTokenSwap(
 			panic("Unexpected net transfers for swap")
 		}
 		for addr, amount := range transfers {
-			if addr.Hex() != bundle.Info.From && !strings.Contains(label, "gas swap") && label != "solarflare" {
+			if addr.Hex() != bundle.Info.From && !strings.Contains(label, "gas swap") && label != "solarflare" && label != "0x" {
 				panic("Swap recipient not the transaction sender")
 			}
 			if amount.Value.IsNegative() {
