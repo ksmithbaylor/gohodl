@@ -174,9 +174,6 @@ func (h personalHandler) HandleTransaction(
 		handle = handleRewardWithLabel("XEN Crypto")
 	case info.Method == "0x2046d075":
 		handle = handleRewardWithLabel("misc reward")
-	// case info.Method == "":
-	//   client.OpenTransactionInExplorer(info.Hash)
-	//   return true, NOT_HANDLED
 	case info.Method == "0xac9650d8": // multicall
 		handle = handleOneOff
 	case

@@ -54,6 +54,7 @@ create temp view unique_methods as
       "0x7c8255db",
       "0x7f4d683a",
       "0x8062f732",
+      "0x8254c809",
       "0x82947abe",
       "0x927f59ba",
       "0x9c96eec5",

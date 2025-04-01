@@ -35,7 +35,8 @@ var spamMethods = []string{
 	"0x74a72e41", // registerAddressesValue(address[],uint256)
 	"0x7c8255db", // sendGifts(address[])
 	"0x7f4d683a", // unknown
-  "0x8062f732", // unknown
+	"0x8062f732", // unknown
+	"0x8254c809", // unknown
 	"0x82947abe", // airdropERC20(address,address[],uint256[],uint256)
 	"0x927f59ba", // mintBatch(address[])
 	"0x9c96eec5", // Rewards(address _from,address[] _to,uint256 amount)
