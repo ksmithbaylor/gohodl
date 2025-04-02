@@ -14,6 +14,7 @@ var spamMethods = []string{
 	"0x12d94235", // batchTransferToken_10001(address[],uint256)
 	"0x15270ace", // distribute(address,address[],uint256[])
 	"0x163e1e61", // gift(address[])
+	"0x26ededb8", // execute(address[],uint256)
 	"0x2c10c112", // unknown
 	"0x327ca788", // airDropBulk(address[],uint256)
 	"0x3fe561cf", // transfer(address[],address)

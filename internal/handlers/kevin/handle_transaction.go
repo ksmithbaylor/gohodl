@@ -68,10 +68,6 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == abis.ERC20_APPROVE:
 		handle = handleErc20Approve
 	case
-		info.Method == "0x26ededb8", // execute(address[],uint256)
-		info.Method == "0x82947abe": // airdropERC20(address,address[],uint256[],uint256)
-		handle = handleSpamDrop
-	case
 		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
 		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
 		info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
