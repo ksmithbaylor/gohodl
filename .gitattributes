@@ -6,3 +6,4 @@ data/evm_tx_hashes/* filter=git-crypt diff=git-crypt
 data/txs.csv filter=git-crypt diff=git-crypt
 data/ctc.csv filter=git-crypt diff=git-crypt
 data/ctc-pre-2024.csv filter=git-crypt diff=git-crypt
+data/ctc-2024.csv filter=git-crypt diff=git-crypt

@@ -4,4 +4,5 @@ data/*
 !data/txs.csv
 !data/ctc.csv
 !data/ctc-pre-2024.csv
+!data/ctc-2024.csv
 scripts/ctc-helpers/_tx-timestamp-updates
