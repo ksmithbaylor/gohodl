@@ -1,6 +1,7 @@
 internal/handlers/kevin/private.go filter=git-crypt diff=git-crypt
 internal/abis/used_methods.go filter=git-crypt diff=git-crypt
 scripts/ctc-helpers/index.js filter=git-crypt diff=git-crypt
+scripts/ctc-helpers/index.browser.js filter=git-crypt diff=git-crypt
 config.yml filter=git-crypt diff=git-crypt
 data/evm_tx_hashes/* filter=git-crypt diff=git-crypt
 data/txs.csv filter=git-crypt diff=git-crypt
