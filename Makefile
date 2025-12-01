@@ -1,4 +1,4 @@
-.PHONY: refresh
+.PHONY: refresh ctc
 
 refresh:
 	SKIP_EXPORT=true go run cmd/ctc/main.go
