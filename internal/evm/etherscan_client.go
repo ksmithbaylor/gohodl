@@ -3,6 +3,8 @@ package evm
 import (
 	"fmt"
 	"reflect"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,43 +13,61 @@ import (
 )
 
 const PER_PAGE = 100
+const ETHERSCAN_RPS = 2
+const ETHERSCAN_API_BASE = "https://api.etherscan.io/v2/api"
+const ROUTESCAN_API_BASE = "https://api.routescan.io/v2/network/mainnet/evm"
+
+var ETHERSCAN_NOT_SUPPORTED_CHAINS = []uint{
+	// 43114, // Avalanche
+	// 10,    // Optimism
+}
+
+var etherscanKey string
+
+var throttle <-chan time.Time
 
 type EtherscanClient struct {
 	network Network
 	client  *etherscan.Client
-	ticks   chan struct{}
-	rps     uint
 }
 
 func NewEtherscanClient(network Network) (*EtherscanClient, error) {
 	e := network.Etherscan
 
-	if e.URL == "" {
-		return nil, fmt.Errorf("Invalid etherscan config for %s", network.Name)
+	if network.ChainID == 1 {
+		etherscanKey = e.Key
+	} else if etherscanKey == "" {
+		return nil, fmt.Errorf("Ethereum must be first in network list")
 	}
 
-	if e.RPS == 0 {
-		e.RPS = 5
+	if throttle == nil {
+		throttle = time.Tick(time.Duration(1000/(ETHERSCAN_RPS)) * time.Millisecond)
 	}
 
 	client := EtherscanClient{
 		network: network,
-		ticks:   make(chan struct{}),
-		rps:     e.RPS,
+	}
+
+	baseUrl := ETHERSCAN_API_BASE + "?"
+	apiKey := etherscanKey
+	isEtherscan := true
+	if slices.Contains(ETHERSCAN_NOT_SUPPORTED_CHAINS, network.ChainID) {
+		baseUrl = ROUTESCAN_API_BASE + "/" + strconv.FormatUint(uint64(network.ChainID), 10) + "/etherscan/api?"
+		apiKey = "NoApiKeyNeeded"
+		isEtherscan = false
 	}
 
 	client.client = etherscan.NewCustomized(etherscan.Customization{
-		BaseURL: e.URL + "?",
-		Key:     e.Key,
+		BaseURL: baseUrl,
+		Key:     apiKey,
 		BeforeRequest: func(_, _ string, params map[string]any) error {
-			client.wait(params)
+			if isEtherscan {
+				params["chainId"] = strconv.FormatUint(uint64(network.ChainID), 10)
+			}
+			<-throttle
 			return nil
 		},
 	})
-
-	go func() {
-		client.ticks <- struct{}{}
-	}()
 
 	return &client, nil
 }
@@ -87,14 +107,6 @@ func (c *EtherscanClient) GetAllTransactionHashes(address string, startBlock, en
 		labeledGetter{"erc721", withStartEnd(startBlock, endBlock, withAnyReturn(withAnyContractAddress(c.client.ERC721Transfers)))},
 		labeledGetter{"erc1155", withStartEnd(startBlock, endBlock, withAnyReturn(withAnyContractAddress(c.client.ERC1155Transfers)))},
 	)
-}
-
-func (c *EtherscanClient) wait(params map[string]any) {
-	<-c.ticks
-	go func() {
-		time.Sleep(time.Duration(1000/(c.rps)) * time.Millisecond)
-		c.ticks <- struct{}{}
-	}()
 }
 
 func (c *EtherscanClient) getAllTypesOfTransactionHash(address string, txGetters ...labeledGetter) ([]string, error) {

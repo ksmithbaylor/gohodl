@@ -13,34 +13,19 @@ type AllNodeClients map[string]core.NodeClient
 
 func NewAllNodeClients(networks []core.Network) AllNodeClients {
 	clients := make(map[string]core.NodeClient)
-	var clientsMu sync.Mutex
 
 	errs := make([]error, 0)
-	var errsMu sync.Mutex
-
-	var wg sync.WaitGroup
 
 	fmt.Printf("Getting node clients for %d networks...\n", len(networks))
 
 	for _, network := range networks {
-		wg.Add(1)
-		go func(network core.Network) {
-			defer wg.Done()
-			client, err := GetNodeClientForNetwork(network)
-			if err != nil {
-				errsMu.Lock()
-				errs = append(errs, fmt.Errorf("Failed to make node client for %s: %w", network.GetName(), err))
-				errsMu.Unlock()
-				return
-			}
+		client, err := GetNodeClientForNetwork(network)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("Failed to make node client for %s: %w", network.GetName(), err))
+		}
 
-			clientsMu.Lock()
-			clients[network.GetName()] = client
-			clientsMu.Unlock()
-		}(network)
+		clients[network.GetName()] = client
 	}
-
-	wg.Wait()
 
 	if len(errs) > 0 {
 		for _, err := range errs {
