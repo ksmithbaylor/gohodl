@@ -164,6 +164,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleUniswapRemoveLiquidity
 	case info.Method == "0x65b2489b":
 		handle = handleTokenSwapLabeled("curve")
+	case info.Method == "0xe21fd0e9":
+		handle = handleTokenSwapLabeled("kyberswap")
 	case info.Method == "0x999b6464":
 		handle = handleTokenSwapLabeled("rainbow")
 	case info.Method == "0x12aa3caf":
@@ -180,7 +182,7 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMiscWithLabel("moonwell governance vote")
 	case info.Method == "0x2046d075":
 		handle = handleRewardWithLabel("misc reward")
-	case info.Method == "0xfaac67e3":
+	case info.Method == "0xe21fd0e9":
 		defer client.OpenTransactionInExplorer(info.Hash)
 		return true, NOT_HANDLED
 		// case info.Method == "0xac9650d8": // multicall
