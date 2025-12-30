@@ -5,7 +5,7 @@ import (
 	"fmt"
 	// "strings"
 
-	// "github.com/ksmithbaylor/gohodl/internal/abis"
+	"github.com/ksmithbaylor/gohodl/internal/abis"
 	// "github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
@@ -64,10 +64,10 @@ func (h personalHandler) HandleTransaction(
 		handle = handleNoData
 	case slices.Contains(spamContracts, info.To):
 		return true, nil
+	case info.Method == abis.ERC20_APPROVE:
+		handle = handleErc20Approve
 		// case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
 		//   handle = handleErc20Transfer
-		// case info.Method == abis.ERC20_APPROVE:
-		//   handle = handleErc20Approve
 		// case
 		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
 		//   info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
