@@ -97,10 +97,11 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveRepayWithATokens
 	case info.Method == abis.AAVE_SET_USER_E_MODE:
 		handle = handleAaveSetUserEMode
-		// case
-		//   info.Method == abis.AAVE_WITHDRAW,
-		//   info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
-		//   handle = handleAaveWithdraw
+	case
+		info.Method == abis.AAVE_WITHDRAW,
+		info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
+		defer client.OpenTransactionInExplorer(info.Hash)
+		handle = handleAaveWithdraw
 		// case
 		//   info.Method == abis.AAVE_CLAIM_REWARDS,
 		//   info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
