@@ -167,8 +167,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFriendTechSell
 	case info.Method == "0x52c7f8dc":
 		handle = handleRewardWithLabel("XEN Crypto")
-		// case info.Method == "0x56781388":
-		//   handle = handleMiscWithLabel("moonwell governance vote")
+	case info.Method == "0x56781388":
+		handle = handleMiscWithLabel("moonwell governance vote")
 		// case info.Method == "0x2046d075":
 		//   handle = handleRewardWithLabel("misc reward")
 		// case info.Method == "0xac9650d8": // multicall
