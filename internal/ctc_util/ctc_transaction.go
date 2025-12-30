@@ -1,6 +1,7 @@
 package ctc_util
 
 import (
+	"slices"
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -27,6 +28,10 @@ type CTCTransaction struct {
 	ReferencePriceCurrency string
 }
 
+var freeTransactions = []string{
+	"0x67fafd541e0f60aa8bd6656e459177de7f8b6e528a49f8e1fd4e2ed8fc68ee83",
+}
+
 func NewFeeTransaction(
 	blockTime uint64,
 	network, id, from, description string,
@@ -42,7 +47,7 @@ func NewFeeTransaction(
 	}
 
 	ctcTx.AddTransactionFeeIfMine(from, network, receipt)
-	if ctcTx.FeeAmount.IsZero() {
+	if ctcTx.FeeAmount.IsZero() && !slices.Contains(freeTransactions, id) {
 		panic("fee tx but did not pay a fee")
 	}
 
