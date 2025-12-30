@@ -72,16 +72,16 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0x1a1da075",
 		info.Method == "0xca350aa6":
 		handle = handleBulkWithdrawFrom("coinbase")
-		// case
-		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
-		//   info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
-		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
-		//   info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_ETH,
-		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
-		//   info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
-		//   info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
-		//   info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
-		//   handle = handleTokenSwapLabeled("uniswap")
+	case
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_ETH_FOR_TOKENS,
+		info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_ETH,
+		info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_ETH,
+		info.Method == abis.UNISWAP_V2_SWAP_ETH_FOR_EXACT_TOKENS,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
+		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
+		handle = handleTokenSwapLabeled("uniswap")
 		// case
 		//   info.Method == abis.AAVE_SUPPLY,
 		//   info.Method == "0x474cf53d": // depositETH(address,address,uint16)
