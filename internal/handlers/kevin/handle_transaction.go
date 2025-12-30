@@ -9,7 +9,7 @@ import (
 	// "github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
-	// "golang.org/x/exp/slices"
+	"golang.org/x/exp/slices"
 )
 
 var _ fmt.Stringer // Allow commenting and uncommenting printlns
@@ -62,8 +62,8 @@ func (h personalHandler) HandleTransaction(
 		handle = handleFailed
 	case info.Method == "":
 		handle = handleNoData
-		// case slices.Contains(spamContracts, info.To):
-		//   return true, nil
+	case slices.Contains(spamContracts, info.To):
+		return true, nil
 		// case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
 		//   handle = handleErc20Transfer
 		// case info.Method == abis.ERC20_APPROVE:
