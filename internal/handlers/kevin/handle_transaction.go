@@ -138,11 +138,11 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMoonwellStakingCooldown
 	case info.Method == abis.MOONWELL_STAKING_REDEEM:
 		handle = handleMoonwellStakingRedeem
-		// case slices.Contains(
-		//   WRAPPED_NATIVE_CONTRACTS,
-		//   fmt.Sprintf("%s-%s", info.Network, info.To),
-		// ) && (info.Method == abis.WRAPPED_NATIVE_DEPOSIT || info.Method == abis.WRAPPED_NATIVE_WITHDRAW):
-		//   handle = handleTokenSwapLabeled("wrapped native")
+	case slices.Contains(
+		WRAPPED_NATIVE_CONTRACTS,
+		fmt.Sprintf("%s-%s", info.Network, info.To),
+	) && (info.Method == abis.WRAPPED_NATIVE_DEPOSIT || info.Method == abis.WRAPPED_NATIVE_WITHDRAW):
+		handle = handleTokenSwapLabeled("wrapped native")
 		// case
 		//   info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
 		//   info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
