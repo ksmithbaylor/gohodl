@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ksmithbaylor/gohodl/internal/abis"
-	// "github.com/ksmithbaylor/gohodl/internal/config"
+	"github.com/ksmithbaylor/gohodl/internal/config"
 	"github.com/ksmithbaylor/gohodl/internal/evm"
 	"github.com/ksmithbaylor/gohodl/internal/handlers"
 	"golang.org/x/exp/slices"
@@ -64,6 +64,15 @@ func (h personalHandler) HandleTransaction(
 		handle = handleNoData
 	case slices.Contains(spamContracts, info.To):
 		return true, nil
+	case
+		slices.Contains(spamMethods, info.Method) &&
+			!config.Config.IsMyEvmAddressString(info.From):
+		if info.Time > END_OF_2023 && info.Time <= END_OF_2025 {
+			return true, nil // Verified all through 2025, spam
+		} else {
+			client.OpenTransactionInExplorer(info.Hash, true)
+			return false, nil
+		}
 	case info.Method == abis.ERC20_APPROVE:
 		handle = handleErc20Approve
 	case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
@@ -169,19 +178,11 @@ func (h personalHandler) HandleTransaction(
 		handle = handleRewardWithLabel("XEN Crypto")
 	case info.Method == "0x56781388":
 		handle = handleMiscWithLabel("moonwell governance vote")
-		// case info.Method == "0x2046d075":
-		//   handle = handleRewardWithLabel("misc reward")
+	case info.Method == "0x2046d075":
+		defer client.OpenTransactionInExplorer(info.Hash)
+		handle = handleRewardWithLabel("misc reward")
 		// case info.Method == "0xac9650d8": // multicall
 		//   handle = handleOneOff
-		// case
-		//   slices.Contains(spamMethods, info.Method) &&
-		//     !config.Config.IsMyEvmAddressString(info.From):
-		//   if info.Time > END_OF_2023 && info.Time <= END_OF_2025 {
-		//     return true, nil // Verified all through 2025, spam
-		//   } else {
-		//     client.OpenTransactionInExplorer(info.Hash, true)
-		//     return false, nil
-		//   }
 		// default:
 		//   handle = handleOneOff
 	}
