@@ -17,8 +17,10 @@ import (
 	"github.com/ksmithbaylor/gohodl/internal/util"
 )
 
+// https://www.unixtimestamp.com/
 var END_OF_2023 = 1704067199
 var END_OF_2024 = 1735689599
+var END_OF_2025 = 1767225599
 
 func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 	if os.Getenv("SKIP_EXPORT") != "" {
@@ -89,7 +91,7 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 			panic("Invalid timestamp: " + row[0])
 		}
 
-		if timestamp <= END_OF_2023 || timestamp > END_OF_2024 {
+		if timestamp <= END_OF_2024 || timestamp > END_OF_2025 {
 			continue
 		}
 
