@@ -24,6 +24,7 @@ func handleErc20Transfer(bundle handlers.TransactionBundle, client *evm.Client, 
 	}
 
 	if len(events) != 1 {
+		fmt.Println(bundle.Info.Hash, bundle.Info.Network)
 		panic("Found more than one event in ERC20 transfer call")
 	}
 
@@ -124,7 +125,7 @@ func handleErc20Approve(bundle handlers.TransactionBundle, client *evm.Client, e
 	}
 
 	if len(events) != 1 {
-		panic("Found more than one event in ERC20 transfer call")
+		panic("Found more than one event in ERC20 approve call")
 	}
 
 	approval := events[0]
