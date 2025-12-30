@@ -86,7 +86,8 @@ create temp view unique_methods as
       "0x9ec68f0f",
       "0xa06c1a33",
       "0xe34a5d4d",
-      "0xfaac67e3"
+      "0xfaac67e3",
+      "0x0e17d9ae"
     )
   group by method
   order by how_many desc;
@@ -100,86 +101,86 @@ from unique_methods
 order by how_many, method desc;
 select count(*) as 'unique methods' from unique_methods;
 
-create temp view unique_destinations as
- select
-   network,
-   "to",
-   count(*) as how_many,
-   count(distinct method) as methods
- from txs
- where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
-  and txs.timestamp > 1735689599
-  and txs.timestamp <= 1767225599
-  and txs."to" not in (
-    "0xfB929B79923bC0fac8178f33d3437b8251B3F67F",
-    "0xEb9CaaFC9cd52434FC906DC6eF28F24509d9b309",
-    "0xCd0b1872134e805Eea557d0c57638537FeE4C9F5",
-    "0x580C3cB959Bab3C008dA553be5B517B8E77f9978",
-    "0x79624893F8fBd6c6e362Fdb60832BE71A03Ce61F",
-    "0x8CA9CFb27F04b3a16b6E675D76d2859a9B8b9149",
-    "0xC3236716cbDC725b518AC0A5d830FBaDcfd05032",
-    "0xEb9CaaFC9cd52434FC906DC6eF28F24509d9b309",
-    "0xCd0b1872134e805Eea557d0c57638537FeE4C9F5",
-    "0x72Fe31AAe72fea4e1f9048A8A3CA580EEBa3cd58",
-    "0xfB929B79923bC0fac8178f33d3437b8251B3F67F",
-    "0xCC2212FD511b5E13B52e0a89026adFB72114436A"
-  )
-  and txs.method not in (
-    "0x110bcd45",
-    "0x12514bba",
-    "0x12d94235",
-    "0x15270ace",
-    "0x163e1e61",
-    "0x26ededb8",
-    "0x2c10c112",
-    "0x327ca788",
-    "0x3fe561cf",
-    "0x41ed24a2",
-    "0x441ff998",
-    "0x4ee51a27",
-    "0x4f61d102",
-    "0x512d7cfd",
-    "0x520f3e69",
-    "0x588d826a",
-    "0x5c45079a",
-    "0x62b74da5",
-    "0x67243482",
-    "0x6c6c9c84",
-    "0x6c9d713d",
-    "0x6d244f2f",
-    "0x6e56cd92",
-    "0x729ad39e",
-    "0x74a72e41",
-    "0x7c8255db",
-    "0x7f4d683a",
-    "0x8062f732",
-    "0x8254c809",
-    "0x82947abe",
-    "0x927f59ba",
-    "0x9c96eec5",
-    "0xa8c6551f",
-    "0xb8ae5a2c",
-    "0xbd075b84",
-    "0xc01ae5d3",
-    "0xc204642c",
-    "0xc73a2d60",
-    "0xd43a632f",
-    "0xd57498ea",
-    "0xeeb9052f",
-    "0xfaf67b43"
-  )
- group by network, "to"
- order by how_many desc;
-
-select count(*) as 'unique destinations' from unique_destinations;
-select
- network,
- "to",
- how_many,
- methods,
- sum(how_many) over (order by how_many desc rows unbounded preceding) as cumulative
-from unique_destinations
-limit 20;
+--  create temp view unique_destinations as
+--   select
+--     network,
+--     "to",
+--     count(*) as how_many,
+--     count(distinct method) as methods
+--   from txs
+--   where txs.hash not in (select substr("ID (Optional)", 0, 67) from ctc)
+--    and txs.timestamp > 1735689599
+--    and txs.timestamp <= 1767225599
+--    and txs."to" not in (
+--      "0xfB929B79923bC0fac8178f33d3437b8251B3F67F",
+--      "0xEb9CaaFC9cd52434FC906DC6eF28F24509d9b309",
+--      "0xCd0b1872134e805Eea557d0c57638537FeE4C9F5",
+--      "0x580C3cB959Bab3C008dA553be5B517B8E77f9978",
+--      "0x79624893F8fBd6c6e362Fdb60832BE71A03Ce61F",
+--      "0x8CA9CFb27F04b3a16b6E675D76d2859a9B8b9149",
+--      "0xC3236716cbDC725b518AC0A5d830FBaDcfd05032",
+--      "0xEb9CaaFC9cd52434FC906DC6eF28F24509d9b309",
+--      "0xCd0b1872134e805Eea557d0c57638537FeE4C9F5",
+--      "0x72Fe31AAe72fea4e1f9048A8A3CA580EEBa3cd58",
+--      "0xfB929B79923bC0fac8178f33d3437b8251B3F67F",
+--      "0xCC2212FD511b5E13B52e0a89026adFB72114436A"
+--    )
+--    and txs.method not in (
+--      "0x110bcd45",
+--      "0x12514bba",
+--      "0x12d94235",
+--      "0x15270ace",
+--      "0x163e1e61",
+--      "0x26ededb8",
+--      "0x2c10c112",
+--      "0x327ca788",
+--      "0x3fe561cf",
+--      "0x41ed24a2",
+--      "0x441ff998",
+--      "0x4ee51a27",
+--      "0x4f61d102",
+--      "0x512d7cfd",
+--      "0x520f3e69",
+--      "0x588d826a",
+--      "0x5c45079a",
+--      "0x62b74da5",
+--      "0x67243482",
+--      "0x6c6c9c84",
+--      "0x6c9d713d",
+--      "0x6d244f2f",
+--      "0x6e56cd92",
+--      "0x729ad39e",
+--      "0x74a72e41",
+--      "0x7c8255db",
+--      "0x7f4d683a",
+--      "0x8062f732",
+--      "0x8254c809",
+--      "0x82947abe",
+--      "0x927f59ba",
+--      "0x9c96eec5",
+--      "0xa8c6551f",
+--      "0xb8ae5a2c",
+--      "0xbd075b84",
+--      "0xc01ae5d3",
+--      "0xc204642c",
+--      "0xc73a2d60",
+--      "0xd43a632f",
+--      "0xd57498ea",
+--      "0xeeb9052f",
+--      "0xfaf67b43"
+--    )
+--   group by network, "to"
+--   order by how_many desc;
+--  
+--  select count(*) as 'unique destinations' from unique_destinations;
+--  select
+--   network,
+--   "to",
+--   how_many,
+--   methods,
+--   sum(how_many) over (order by how_many desc rows unbounded preceding) as cumulative
+--  from unique_destinations
+--  limit 20;
 --
 -- create temp view unique_calls as
 --   select
