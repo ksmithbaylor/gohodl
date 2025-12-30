@@ -87,10 +87,10 @@ func (h personalHandler) HandleTransaction(
 		info.Method == "0x474cf53d": // depositETH(address,address,uint16)
 		handle = handleAaveSupply
 	case info.Method == abis.AAVE_DEPOSIT:
-		defer client.OpenTransactionInExplorer(info.Hash)
 		handle = handleAaveDeposit
-		// case info.Method == abis.AAVE_BORROW:
-		//   handle = handleAaveBorrow
+	case info.Method == abis.AAVE_BORROW:
+		// defer client.OpenTransactionInExplorer(info.Hash)
+		handle = handleAaveBorrow
 		// case info.Method == abis.AAVE_REPAY,
 		//   info.Method == "0x02c5fcf8": // repayETH(address,uint256,uint256,address)
 		//   handle = handleAaveRepay
