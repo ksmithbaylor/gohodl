@@ -153,14 +153,14 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
 		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
 		handle = handleUniswapRemoveLiquidity
-		// case info.Method == "0x65b2489b":
-		//   handle = handleTokenSwapLabeled("curve")
-		// case info.Method == "0x999b6464":
-		//   handle = handleTokenSwapLabeled("rainbow")
-		// case info.Method == "0x12aa3caf":
-		//   handle = handleTokenSwapLabeled("1inch")
-		// case info.Method == "0x415565b0":
-		//   handle = handleTokenSwapLabeled("0x")
+	case info.Method == "0x65b2489b":
+		handle = handleTokenSwapLabeled("curve")
+	case info.Method == "0x999b6464":
+		handle = handleTokenSwapLabeled("rainbow")
+	case info.Method == "0x12aa3caf":
+		handle = handleTokenSwapLabeled("1inch")
+	case info.Method == "0x415565b0":
+		handle = handleTokenSwapLabeled("0x")
 		// case info.Method == abis.FRIEND_TECH_BUY_SHARES:
 		//   handle = handleFriendTechBuy
 		// case info.Method == abis.FRIEND_TECH_SELL_SHARES:
