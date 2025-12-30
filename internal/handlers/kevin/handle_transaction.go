@@ -143,16 +143,16 @@ func (h personalHandler) HandleTransaction(
 		fmt.Sprintf("%s-%s", info.Network, info.To),
 	) && (info.Method == abis.WRAPPED_NATIVE_DEPOSIT || info.Method == abis.WRAPPED_NATIVE_WITHDRAW):
 		handle = handleTokenSwapLabeled("wrapped native")
-		// case
-		//   info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
-		//   info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
-		//   handle = handleUniswapAddLiquidity
-		// case
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH,
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_PERMIT,
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
-		//   info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
-		//   handle = handleUniswapRemoveLiquidity
+	case
+		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY,
+		info.Method == abis.UNISWAP_V2_ADD_LIQUIDITY_ETH:
+		handle = handleUniswapAddLiquidity
+	case
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_PERMIT,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT,
+		info.Method == abis.UNISWAP_V2_REMOVE_LIQUIDITY_ETH_PERMIT_FOTT:
+		handle = handleUniswapRemoveLiquidity
 		// case info.Method == "0x65b2489b":
 		//   handle = handleTokenSwapLabeled("curve")
 		// case info.Method == "0x999b6464":
