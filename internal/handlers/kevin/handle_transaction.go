@@ -100,13 +100,13 @@ func (h personalHandler) HandleTransaction(
 	case
 		info.Method == abis.AAVE_WITHDRAW,
 		info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
-		defer client.OpenTransactionInExplorer(info.Hash)
 		handle = handleAaveWithdraw
-		// case
-		//   info.Method == abis.AAVE_CLAIM_REWARDS,
-		//   info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
-		//   info.Method == "0x3111e7b3": // claimRewards(address[],uint256,address)
-		//   handle = handleAaveClaimRewards
+	case
+		info.Method == abis.AAVE_CLAIM_REWARDS,
+		info.Method == abis.AAVE_CLAIM_ALL_REWARDS,
+		info.Method == "0x3111e7b3": // claimRewards(address[],uint256,address)
+		defer client.OpenTransactionInExplorer(info.Hash)
+		handle = handleAaveClaimRewards
 		// case info.Method == abis.MOONWELL_ENTER_MARKETS:
 		//   handle = handleMoonwellEnterMarkets
 		// case
