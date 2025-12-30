@@ -84,7 +84,8 @@ create temp view unique_methods as
       "0xeeb9052f",
       "0xfaf67b43",
       "0x9ec68f0f",
-      "0xa06c1a33"
+      "0xa06c1a33",
+      "0xe34a5d4d"
     )
   group by method
   order by how_many desc;
@@ -201,3 +202,5 @@ limit 20;
 --   sum(how_many) over (order by how_many desc rows unbounded preceding) as cumulative
 -- from unique_calls
 -- limit 50;
+
+.exit
