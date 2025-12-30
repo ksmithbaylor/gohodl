@@ -52,6 +52,7 @@ var spamMethods = []string{
 	"0xeeb9052f", // AirDrop(address[],uint256)
 	"0xfaf67b43", // unknown
 	"0x9ec68f0f", // multiSend(address,address[],uint256[])
+	"0xa06c1a33", // transfer(address[])
 }
 
 var spamContracts = []string{

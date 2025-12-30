@@ -82,7 +82,9 @@ create temp view unique_methods as
       "0xd43a632f",
       "0xd57498ea",
       "0xeeb9052f",
-      "0xfaf67b43"
+      "0xfaf67b43",
+      "0x9ec68f0f",
+      "0xa06c1a33"
     )
   group by method
   order by how_many desc;
