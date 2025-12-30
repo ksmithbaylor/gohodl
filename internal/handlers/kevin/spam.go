@@ -54,6 +54,7 @@ var spamMethods = []string{
 	"0x9ec68f0f", // multiSend(address,address[],uint256[])
 	"0xa06c1a33", // transfer(address[])
 	"0xe34a5d4d", // batchTransfer(address,address,address[],uint256[])
+	"0xfaac67e3", // mintBatch(bytes)
 }
 
 var spamContracts = []string{
