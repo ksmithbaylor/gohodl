@@ -92,12 +92,11 @@ func (h personalHandler) HandleTransaction(
 		handle = handleAaveBorrow
 	case info.Method == abis.AAVE_REPAY,
 		info.Method == "0x02c5fcf8": // repayETH(address,uint256,uint256,address)
-		defer client.OpenTransactionInExplorer(info.Hash)
 		handle = handleAaveRepay
-		// case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
-		//   handle = handleAaveRepayWithATokens
-		// case info.Method == abis.AAVE_SET_USER_E_MODE:
-		//   handle = handleAaveSetUserEMode
+	case info.Method == abis.AAVE_REPAY_WITH_A_TOKENS:
+		handle = handleAaveRepayWithATokens
+	case info.Method == abis.AAVE_SET_USER_E_MODE:
+		handle = handleAaveSetUserEMode
 		// case
 		//   info.Method == abis.AAVE_WITHDRAW,
 		//   info.Method == "0x80500d20": // withdrawETH(address,uint256,address)
