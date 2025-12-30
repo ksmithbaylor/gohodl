@@ -60,8 +60,8 @@ func (h personalHandler) HandleTransaction(
 	switch {
 	case !info.Success:
 		handle = handleFailed
-		// case info.Method == "":
-		//   handle = handleNoData
+	case info.Method == "":
+		handle = handleNoData
 		// case slices.Contains(spamContracts, info.To):
 		//   return true, nil
 		// case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
