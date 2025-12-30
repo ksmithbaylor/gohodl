@@ -66,6 +66,10 @@ func (h personalHandler) HandleTransaction(
 		return true, nil
 	case info.Method == abis.ERC20_APPROVE:
 		handle = handleErc20Approve
+	case
+		info.Method == "0x1a1da075",
+		info.Method == "0xca350aa6":
+		handle = handleBulkWithdrawFrom("coinbase")
 		// case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
 		//   handle = handleErc20Transfer
 		// case
@@ -78,10 +82,6 @@ func (h personalHandler) HandleTransaction(
 		//   info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
 		//   info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
 		//   handle = handleTokenSwapLabeled("uniswap")
-		// case
-		//   info.Method == "0x1a1da075",
-		//   info.Method == "0xca350aa6":
-		//   handle = handleBulkWithdrawFrom("coinbase")
 		// case
 		//   info.Method == abis.AAVE_SUPPLY,
 		//   info.Method == "0x474cf53d": // depositETH(address,address,uint16)
