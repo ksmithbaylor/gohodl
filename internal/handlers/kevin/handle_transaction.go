@@ -161,14 +161,14 @@ func (h personalHandler) HandleTransaction(
 		handle = handleTokenSwapLabeled("1inch")
 	case info.Method == "0x415565b0":
 		handle = handleTokenSwapLabeled("0x")
-		// case info.Method == abis.FRIEND_TECH_BUY_SHARES:
-		//   handle = handleFriendTechBuy
-		// case info.Method == abis.FRIEND_TECH_SELL_SHARES:
-		//   handle = handleFriendTechSell
+	case info.Method == abis.FRIEND_TECH_BUY_SHARES:
+		handle = handleFriendTechBuy
+	case info.Method == abis.FRIEND_TECH_SELL_SHARES:
+		handle = handleFriendTechSell
+	case info.Method == "0x52c7f8dc":
+		handle = handleRewardWithLabel("XEN Crypto")
 		// case info.Method == "0x56781388":
 		//   handle = handleMiscWithLabel("moonwell governance vote")
-		// case info.Method == "0x52c7f8dc":
-		//   handle = handleRewardWithLabel("XEN Crypto")
 		// case info.Method == "0x2046d075":
 		//   handle = handleRewardWithLabel("misc reward")
 		// case info.Method == "0xac9650d8": // multicall
