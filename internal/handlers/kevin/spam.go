@@ -53,6 +53,21 @@ var spamMethods = []string{
 	"0xfaf67b43", // unknown
 }
 
+var spamContracts = []string{
+	"0xfB929B79923bC0fac8178f33d3437b8251B3F67F",
+	"0xEb9CaaFC9cd52434FC906DC6eF28F24509d9b309",
+	"0xCd0b1872134e805Eea557d0c57638537FeE4C9F5",
+	"0x580C3cB959Bab3C008dA553be5B517B8E77f9978",
+	"0x79624893F8fBd6c6e362Fdb60832BE71A03Ce61F",
+	"0x8CA9CFb27F04b3a16b6E675D76d2859a9B8b9149",
+	"0xC3236716cbDC725b518AC0A5d830FBaDcfd05032",
+	"0xEb9CaaFC9cd52434FC906DC6eF28F24509d9b309",
+	"0xCd0b1872134e805Eea557d0c57638537FeE4C9F5",
+	"0x72Fe31AAe72fea4e1f9048A8A3CA580EEBa3cd58",
+	"0xfB929B79923bC0fac8178f33d3437b8251B3F67F",
+	"0xCC2212FD511b5E13B52e0a89026adFB72114436A",
+}
+
 func handleSpam(bundle handlers.TransactionBundle, client *evm.Client, export handlers.CTCWriter) error {
 	ctcTx := &ctc_util.CTCTransaction{
 		Timestamp:   time.Unix(int64(bundle.Block.Time), 0).UTC(),
