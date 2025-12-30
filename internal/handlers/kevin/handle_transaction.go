@@ -66,12 +66,12 @@ func (h personalHandler) HandleTransaction(
 		return true, nil
 	case info.Method == abis.ERC20_APPROVE:
 		handle = handleErc20Approve
+	case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
+		handle = handleErc20Transfer
 	case
 		info.Method == "0x1a1da075",
 		info.Method == "0xca350aa6":
 		handle = handleBulkWithdrawFrom("coinbase")
-		// case info.Method == abis.ERC20_TRANSFER || info.Method == abis.ERC20_TRANSFER_FROM:
-		//   handle = handleErc20Transfer
 		// case
 		//   info.Method == abis.UNISWAP_V2_SWAP_EXACT_TOKENS_FOR_TOKENS,
 		//   info.Method == abis.UNISWAP_V2_SWAP_TOKENS_FOR_EXACT_TOKENS,
