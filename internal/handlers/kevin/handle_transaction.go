@@ -82,10 +82,11 @@ func (h personalHandler) HandleTransaction(
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE,
 		info.Method == abis.UNISWAP_UNIVERSAL_EXECUTE_0:
 		handle = handleTokenSwapLabeled("uniswap")
-		// case
-		//   info.Method == abis.AAVE_SUPPLY,
-		//   info.Method == "0x474cf53d": // depositETH(address,address,uint16)
-		//   handle = handleAaveSupply
+	case
+		info.Method == abis.AAVE_SUPPLY,
+		info.Method == "0x474cf53d": // depositETH(address,address,uint16)
+		defer client.OpenTransactionInExplorer(info.Hash)
+		handle = handleAaveSupply
 		// case info.Method == abis.AAVE_DEPOSIT:
 		//   handle = handleAaveDeposit
 		// case info.Method == abis.AAVE_BORROW:
