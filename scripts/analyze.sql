@@ -96,15 +96,6 @@ from unique_methods
 order by how_many, method desc;
 select count(*) as 'unique methods' from unique_methods;
 
-select
-  "to",
-  how_many,
-  methods,
-  sum(how_many) over (order by how_many desc, "to" rows unbounded preceding) as cumulative
-from unique_contracts
-order by how_many, "to" desc;
-select count(*) as 'unique contracts' from unique_contracts;
-
 create temp view unique_destinations as
  select
    network,
