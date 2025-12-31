@@ -185,10 +185,8 @@ func (h personalHandler) HandleTransaction(
 	case info.Method == "0x1f079c81":
 		defer client.OpenTransactionInExplorer(info.Hash)
 		return true, NOT_HANDLED
-		// case info.Method == "0xac9650d8": // multicall
-		//   handle = handleOneOff
-		// default:
-		//   handle = handleOneOff
+	default:
+		handle = handleOneOff
 	}
 
 	if handle != nil {
