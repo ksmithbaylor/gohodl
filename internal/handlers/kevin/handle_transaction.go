@@ -54,9 +54,6 @@ func (h personalHandler) HandleTransaction(
 
 	var handle handlers.TransactionHandlerFunc
 
-	fmt.Println("-------------------------------------------------------------")
-	// defer client.OpenTransactionInExplorer(info.Hash)
-
 	switch {
 	case !info.Success:
 		handle = handleFailed
