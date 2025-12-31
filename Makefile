@@ -6,3 +6,6 @@ refresh:
 
 ctc:
 	SKIP_IDENTIFY=true SKIP_FETCH=true SKIP_ANALYZE=true go run cmd/ctc/main.go
+
+ctc-open:
+	SKIP_IDENTIFY=true SKIP_FETCH=true SKIP_ANALYZE=true OPEN=true go run cmd/ctc/main.go
