@@ -50,6 +50,11 @@ func IdentifyTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		go func(network core.Network) {
 			defer wg.Done()
 
+			if network.GetDeprecated() {
+				fmt.Printf("Skipping identify step for deprecated network %s\n", network.GetName())
+				return
+			}
+
 			indexer, found := indexers[network.GetName()]
 			if !found {
 				fmt.Printf("No indexer found for %s, skipping\n", network.GetName())

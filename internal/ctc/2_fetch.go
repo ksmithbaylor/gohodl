@@ -77,6 +77,11 @@ func FetchTransactions(db *util.FileDB, clients generic.AllNodeClients) map[stri
 			continue
 		}
 
+		if evmClient.Network.GetDeprecated() {
+			fmt.Printf("Skipping fetch step for deprecated network %s\n", network)
+			continue
+		}
+
 		wg.Add(1)
 		go fetch(&wg, evmClient, txsDB, receiptsDB, blocksDB, network, txs)
 	}

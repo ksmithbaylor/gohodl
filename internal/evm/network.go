@@ -18,6 +18,7 @@ type Network struct {
 	NativeAssetSymbol string      `mapstructure:"native_asset"`
 	RPCs              []string    `mapstructure:"rpcs"`
 	SettlesTo         NetworkName `mapstructure:"settles_to"`
+	Deprecated        bool        `mapstructure:"deprecated"`
 	ExplorerURLs      struct {
 		Tx   string `mapstructure:"tx"`
 		Addr string `mapstructure:"addr"`
@@ -35,6 +36,10 @@ func (n Network) GetKind() core.NetworkKind {
 
 func (n Network) GetName() string {
 	return n.Name.String()
+}
+
+func (n Network) GetDeprecated() bool {
+	return n.Deprecated
 }
 
 func (n Network) NativeAsset() core.Asset {
