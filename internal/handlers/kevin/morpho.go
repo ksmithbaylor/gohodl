@@ -25,7 +25,7 @@ func handleMorphoClaimRewards(bundle handlers.TransactionBundle, client *evm.Cli
 				panic("Unexpected net transfers for morpho claim rewards")
 			}
 			if !amount.Value.IsPositive() {
-				panic("Outflow for aave claim rewards")
+				panic("Outflow for morpho claim rewards")
 			}
 			claimed = append(claimed, *amount)
 		}
