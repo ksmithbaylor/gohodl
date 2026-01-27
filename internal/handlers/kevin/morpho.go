@@ -38,18 +38,18 @@ func handleMorphoClaimRewards(bundle handlers.TransactionBundle, client *evm.Cli
 	ctcTx := ctc_util.NewFeeTransaction(
 		bundle.Block.Time,
 		bundle.Info.Network,
-		bundle.Info.Hash,
+		bundle.Info.Hash+"-1",
 		bundle.Info.From,
 		"Fee for Morpho rewards claim",
 		bundle.Receipt,
 	)
 	err = export(ctcTx.ToCSV())
 
-	for _, amount := range claimed {
+	for i, amount := range claimed {
 		ctcTx = &ctc_util.CTCTransaction{
 			Timestamp:    time.Unix(int64(bundle.Block.Time), 0).UTC(),
 			Blockchain:   bundle.Info.Network,
-			ID:           bundle.Info.Hash,
+			ID:           fmt.Sprintf("%s-%d", bundle.Info.Hash, i+2),
 			Type:         ctc_util.CTCInterest,
 			BaseCurrency: amount.Asset.Symbol,
 			BaseAmount:   amount.Value,
