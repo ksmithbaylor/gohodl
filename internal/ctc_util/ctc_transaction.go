@@ -2,6 +2,8 @@ package ctc_util
 
 import (
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -88,8 +90,16 @@ func (t *CTCTransaction) ToCSV() []string {
 		blockchain = "eth"
 	}
 
+	timestamp := t.Timestamp
+	if idx := strings.LastIndex(t.ID, "-"); idx != -1 {
+		suffix := t.ID[idx+1:]
+		if num, err := strconv.Atoi(suffix); err == nil && num > 1 {
+			timestamp = timestamp.Add(time.Duration(num-1) * time.Second)
+		}
+	}
+
 	return []string{
-		t.Timestamp.Format("2006-01-02 15:04:05"),
+		timestamp.Format("2006-01-02 15:04:05"),
 		string(t.Type),
 		t.BaseCurrency,
 		emptyIfZero(t.BaseAmount.String()),

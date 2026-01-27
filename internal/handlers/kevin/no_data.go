@@ -120,7 +120,7 @@ func handleRegularNoDataTx(bundle handlers.TransactionBundle, client *evm.Client
 	// Make sure sends have the other side as well
 	if toMe && fromMe {
 		if ctcTx.Type != ctc_util.CTCSend {
-			panic("to me and from me but not send")
+			panic("native to me and from me but not send")
 		}
 		ctcTx.ID = bundle.Info.Hash + "-1"
 		err = export(ctcTx.ToCSV())
