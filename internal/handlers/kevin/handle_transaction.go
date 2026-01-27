@@ -179,9 +179,6 @@ func (h personalHandler) HandleTransaction(
 		handle = handleMiscWithLabel("moonwell governance vote")
 	case info.Method == "0x2046d075":
 		handle = handleRewardWithLabel("misc reward")
-	case info.Method == "0x1f079c81":
-		defer client.OpenTransactionInExplorer(info.Hash)
-		return true, NOT_HANDLED
 	default:
 		handle = handleOneOff
 	}
