@@ -134,6 +134,16 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 		}
 	}
 
+	usedIds := make(map[string]struct{})
+
+	for _, row := range rowsToWrite {
+		id := row[11]
+		if _, alreadyUsed := usedIds[id]; alreadyUsed {
+			fmt.Printf("DUPLICATE: %s\n", id)
+		}
+		usedIds[id] = struct{}{}
+	}
+
 	sort.Slice(rowsToWrite, func(i, j int) bool {
 		return rowsToWrite[i][0] < rowsToWrite[j][0]
 	})
