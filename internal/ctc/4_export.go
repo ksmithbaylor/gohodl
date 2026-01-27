@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/core/types"
 
@@ -136,17 +137,34 @@ func ExportTransactions(db *util.FileDB, clients generic.AllNodeClients) {
 
 	usedIds := make(map[string]struct{})
 
-	for _, row := range rowsToWrite {
+	sort.Slice(rowsToWrite, func(i, j int) bool {
+		return rowsToWrite[i][0] < rowsToWrite[j][0]
+	})
+
+	for i, row := range rowsToWrite {
 		id := row[11]
+
+		// Check for duplicates
 		if _, alreadyUsed := usedIds[id]; alreadyUsed {
 			fmt.Printf("DUPLICATE: %s\n", id)
 		}
 		usedIds[id] = struct{}{}
-	}
 
-	sort.Slice(rowsToWrite, func(i, j int) bool {
-		return rowsToWrite[i][0] < rowsToWrite[j][0]
-	})
+		// Check for interleaving
+		if i > 0 {
+			if idx := strings.LastIndex(id, "-"); idx != -1 {
+				suffix := id[idx+1:]
+				if num, err := strconv.Atoi(suffix); err == nil && num >= 2 {
+					baseID := id[:idx]
+					expectedPrevID := baseID + "-" + strconv.Itoa(num-1)
+					prevID := rowsToWrite[i-1][11]
+					if prevID != expectedPrevID {
+						fmt.Printf("INTERLEAVED: %s should be preceded by %s, but was preceded by %s\n", id, expectedPrevID, prevID)
+					}
+				}
+			}
+		}
+	}
 
 	err = ctcCsvWriter.WriteAll(rowsToWrite)
 	if err != nil {
